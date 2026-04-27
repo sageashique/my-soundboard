@@ -1,0 +1,45 @@
+'use client'
+import { forwardRef, useImperativeHandle, useRef } from 'react'
+import type { PadState } from '@/lib/types'
+
+export interface PadHandle {
+  flash: () => void
+}
+
+interface Props {
+  pad: PadState
+  selected: boolean
+  onClick: () => void
+}
+
+const Pad = forwardRef<PadHandle, Props>(function Pad({ pad, selected, onClick }, ref) {
+  const elRef = useRef<HTMLDivElement>(null)
+
+  useImperativeHandle(ref, () => ({
+    flash() {
+      const el = elRef.current
+      if (!el) return
+      el.classList.remove('fire')
+      void el.offsetWidth
+      el.classList.add('fire')
+      setTimeout(() => el.classList.remove('fire'), 200)
+    },
+  }))
+
+  return (
+    <div
+      ref={elRef}
+      className={`pad c-${pad.color}${selected ? ' sel' : ''}`}
+      onClick={onClick}
+      role="button"
+      aria-label={`${pad.key.toUpperCase()} – ${pad.label}`}
+    >
+      <span className="pad-key">{pad.key.toUpperCase()}</span>
+      {pad.customBuf && <span className="custom-dot" aria-hidden />}
+      <span className="pad-icon">{pad.icon}</span>
+      <span className="pad-label">{pad.label}</span>
+    </div>
+  )
+})
+
+export default Pad
