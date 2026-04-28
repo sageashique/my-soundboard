@@ -66,6 +66,7 @@ export default function Soundboard({ user }: Props) {
 
   // Raw audio buffer for upload
   const pendingRawRef = useRef<ArrayBuffer | null>(null)
+  const pendingMimeTypeRef = useRef<string>('audio/mp4')
 
   // Drop zone ref
   const dzRef = useRef<HTMLDivElement>(null)
@@ -224,7 +225,7 @@ export default function Soundboard({ user }: Props) {
           const storagePath = `${user.id}/pad-${selPad}`
           const { error: upErr } = await supabase.storage
             .from(STORAGE_BUCKET)
-            .upload(storagePath, pendingRawRef.current, { contentType: 'audio/mpeg', upsert: true })
+            .upload(storagePath, new Blob([pendingRawRef.current], { type: pendingMimeTypeRef.current }), { contentType: pendingMimeTypeRef.current, upsert: true })
           if (upErr) throw upErr
 
           const rawCopy = pendingRawRef.current.slice(0)
@@ -248,6 +249,8 @@ export default function Soundboard({ user }: Props) {
           return
         }
       } else {
+        // No new file — editing label/color/emoji on an already-uploaded track
+        if (!p.customTrackPath) { setStatus('Drop an audio file first'); return }
         const label2 = editLabel || p.label
         const emoji2 = editEmoji.trim() || p.icon
         setPads(prev => prev.map((pd, i) => i === selPad ? { ...pd, label: label2, icon: emoji2, color: selColor } : pd))
@@ -330,6 +333,7 @@ export default function Soundboard({ user }: Props) {
     if (!file.type.startsWith('audio/')) { setStatus('Not an audio file'); return }
     try {
       const raw = await file.arrayBuffer()
+      pendingMimeTypeRef.current = file.type || 'audio/mp4'
       const a = getAC()
       const buf = await a.decodeAudioData(raw.slice(0))
       pendingRawRef.current = raw
