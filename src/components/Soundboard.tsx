@@ -133,8 +133,8 @@ export default function Soundboard({ user }: Props) {
   }
 
   // ── Stop All ───────────────────────────────────────────────────
-  const stopAll = useCallback(async () => {
-    if (ctxRef.current?.state === 'suspended') await ctxRef.current.resume()
+  const stopAll = useCallback(() => {
+    if (ctxRef.current?.state !== 'running') ctxRef.current?.resume()
     if (masterRef.current && ctxRef.current) {
       const a = ctxRef.current
       masterRef.current.gain.cancelScheduledValues(a.currentTime)
@@ -151,10 +151,13 @@ export default function Soundboard({ user }: Props) {
   }, [volume])
 
   // ── Fire a pad ─────────────────────────────────────────────────
-  const fire = useCallback(async (index: number) => {
+  const fire = useCallback((index: number) => {
     const a = getAC()
-    if (a.state === 'suspended') await a.resume()
     const p = pads[index]
+
+    // Resume without awaiting — must stay synchronous within gesture handler
+    // await would expire iOS Safari's gesture token on older devices
+    if (a.state !== 'running') a.resume()
 
     if (!overlapMode && currentSourceRef.current) {
       try { currentSourceRef.current.stop() } catch { /* already stopped */ }
@@ -588,12 +591,16 @@ export default function Soundboard({ user }: Props) {
             ref={el => { padRefs.current[i] = el }}
             pad={pad}
             selected={selPad === i}
-            onClick={() => { getAC(); editing ? pickPad(i) : fire(i) }}
+            onClick={() => {
+              const a = getAC()
+              if (a.state !== 'running') a.resume()
+              editing ? pickPad(i) : fire(i)
+            }}
           />
         ))}
 
         {/* Stop bar */}
-        <div className="pad-stop" onClick={stopAll}>
+        <div className="pad-stop" onClick={() => { const a = getAC(); if (a.state !== 'running') a.resume(); stopAll() }}>
           <span className="pad-stop-icon">⏹</span>
           <span className="pad-stop-label">Stop</span>
           <span className="pad-stop-key">Space</span>
