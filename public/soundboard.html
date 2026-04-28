@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soundboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+  :root {
+    --bg: #f5f4f0; --surface: #ffffff; --surface2: #f0ede8;
+    --border: #e2ddd8; --border2: #ccc8c2;
+    --text: #1c1a18; --text2: #6b6560; --text3: #a09a94;
+    --red: #d94f3d; --green: #3a7d5a; --blue: #3562a6;
+    --yellow: #c9870a; --purple: #7047b0; --pink: #c44d87;
+    --cell: 140px;
+    --gap: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; padding: 36px 24px 60px;
+  }
+
+  /* HEADER */
+  .top { width: 100%; max-width: 600px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+  .wordmark { font-size: 13px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; }
+  .vol-row { display: flex; align-items: center; gap: 8px; }
+  .vol-row span { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); }
+  input[type="range"] { -webkit-appearance: none; width: 80px; height: 2px; background: var(--border2); border-radius: 1px; outline: none; cursor: pointer; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: var(--text); border-radius: 50%; }
+
+  .status-bar { width: 100%; max-width: 600px; margin-bottom: 20px; display: flex; justify-content: center; }
+  #statusMsg {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    width: 100%;
+    font-size: 13px; font-weight: 500; letter-spacing: 0.02em;
+    padding: 10px 20px; border-radius: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text3);
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+  }
+  #statusMsg.active {
+    background: rgba(58,125,90,0.08); border-color: rgba(58,125,90,0.25);
+    color: var(--green);
+  }
+  #statusMsg.stopped {
+    background: rgba(217,79,61,0.07); border-color: rgba(217,79,61,0.2);
+    color: var(--red);
+  }
+
+  /*
+    NUMPAD GRID — Apple numpad layout (bottom 4 rows):
+    Row 1: 7  8  9  −
+    Row 2: 4  5  6  +   ← + is double height (spans rows 2-3)
+    Row 3: 1  2  3  +
+    Row 4: 0(wide)  .  enter ← enter is double height (spans rows 3-4), 0 is double wide
+
+    CSS Grid: 4 cols × 4 rows
+  */
+  .numpad {
+    width: 100%;
+    max-width: 600px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, var(--cell)) 56px;
+    gap: var(--gap);
+    margin-bottom: 28px;
+  }
+
+  /* Stop bar */
+  .pad-stop {
+    grid-column: 1 / span 4;
+    grid-row: 5;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: background 0.1s, border-color 0.1s, transform 0.07s;
+    user-select: none;
+    touch-action: manipulation;
+  }
+  .pad-stop:hover { background: var(--surface2); border-color: var(--border2); }
+  .pad-stop:active { transform: scale(0.98); }
+  .pad-stop.fire { animation: tap 0.14s ease-out; }
+  .pad-stop-icon { font-size: 16px; line-height: 1; }
+  .pad-stop-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); }
+  .pad-stop-key { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); opacity: 0.6; }
+
+  .pad {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.1s, border-color 0.1s, transform 0.07s;
+    user-select: none;
+    touch-action: manipulation;
+    min-height: 0;
+  }
+  .pad:hover { background: var(--surface2); border-color: var(--border2); }
+  .pad:active { transform: scale(0.96); }
+  .pad.sel { border-color: var(--text); background: var(--surface2); box-shadow: inset 0 0 0 1px var(--text); }
+  .pad.fire { animation: tap 0.14s ease-out; }
+  @keyframes tap { 0% { transform: scale(0.93); } 60% { transform: scale(1.03); } 100% { transform: scale(1); } }
+
+  /* color accent strip */
+  .pad::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 16px; bottom: 16px;
+    width: 4px;
+    border-radius: 0 3px 3px 0;
+    background: var(--pad-color, transparent);
+  }
+  .pad.c-red    { --pad-color: var(--red); }
+  .pad.c-green  { --pad-color: var(--green); }
+  .pad.c-blue   { --pad-color: var(--blue); }
+  .pad.c-yellow { --pad-color: var(--yellow); }
+  .pad.c-purple { --pad-color: var(--purple); }
+  .pad.c-pink   { --pad-color: var(--pink); }
+  .pad.fire::before { opacity: 0.4; }
+
+  /* Grid placement */
+  /* Row 1 */
+  .pad-7     { grid-column: 1; grid-row: 1; }
+  .pad-8     { grid-column: 2; grid-row: 1; }
+  .pad-9     { grid-column: 3; grid-row: 1; }
+  .pad-minus { grid-column: 4; grid-row: 1; }
+  /* Row 2 */
+  .pad-4     { grid-column: 1; grid-row: 2; }
+  .pad-5     { grid-column: 2; grid-row: 2; }
+  .pad-6     { grid-column: 3; grid-row: 2; }
+  .pad-plus  { grid-column: 4; grid-row: 2; }
+  /* Row 3 */
+  .pad-1     { grid-column: 1; grid-row: 3; }
+  .pad-2     { grid-column: 2; grid-row: 3; }
+  .pad-3     { grid-column: 3; grid-row: 3; }
+  /* Row 4 */
+  .pad-0     { grid-column: 1 / span 2; grid-row: 4; } /* double wide */
+  .pad-dot   { grid-column: 3; grid-row: 4; }
+  .pad-enter { grid-column: 4; grid-row: 3 / span 2; } /* double height */
+
+  .pad-num {
+    position: absolute;
+    top: 10px; left: 13px;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--text3);
+  }
+  .custom-dot {
+    position: absolute;
+    top: 11px; right: 11px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+  }
+  .pad-icon { font-size: 28px; line-height: 1; }
+  .pad-label {
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--text2); text-align: center;
+    max-width: 90%; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+    padding: 0 10px;
+  }
+
+  /* Responsive */
+  @media (max-width: 560px) {
+    :root { --cell: 100px; }
+    .pad-icon { font-size: 22px; }
+  }
+  @media (max-width: 400px) {
+    :root { --cell: 76px; --gap: 7px; }
+    .pad-icon { font-size: 18px; }
+    .pad-label { display: none; }
+  }
+
+  /* DIVIDER */
+  .divider { width: 100%; max-width: 600px; height: 1px; background: var(--border); margin-bottom: 24px; }
+
+  /* CONTROLS BAR */
+  .controls-bar { width: 100%; max-width: 600px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+  .toggle-group { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; }
+  .toggle-label { font-size: 12px; font-weight: 500; color: var(--text2); white-space: nowrap; }
+  .toggle { position: relative; width: 34px; height: 18px; cursor: pointer; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-track { position: absolute; inset: 0; background: var(--border2); border-radius: 9px; transition: background 0.2s; }
+  .toggle input:checked + .toggle-track { background: var(--green); }
+  .toggle-thumb { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: #fff; border-radius: 50%; transition: transform 0.2s; pointer-events: none; }
+  .toggle input:checked ~ .toggle-thumb { transform: translateX(16px); }
+  .vsep { width: 1px; height: 24px; background: var(--border); }
+
+  /* BUTTONS */
+  .btn { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; padding: 8px 14px; border-radius: 8px; cursor: pointer; transition: all 0.12s; border: 1px solid; white-space: nowrap; }
+  .btn-outline { background: transparent; border-color: var(--border2); color: var(--text2); }
+  .btn-outline:hover { border-color: var(--text); color: var(--text); background: var(--surface2); }
+  .btn-outline.on { border-color: var(--text); color: var(--text); background: var(--surface2); }
+  .btn-solid { background: var(--text); border-color: var(--text); color: #fff; }
+  .btn-solid:hover { opacity: 0.85; }
+  .btn-solid:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-danger { background: var(--red); border-color: var(--red); color: #fff; }
+  .btn-danger:hover { opacity: 0.85; }
+  .btn-confirm { background: var(--green); border-color: var(--green); color: #fff; }
+  .btn-confirm:hover { opacity: 0.85; }
+  .btn-danger-outline { background: transparent; border-color: var(--red); color: var(--red); }
+  .btn-danger-outline:hover { background: rgba(217,79,61,0.06); }
+  .btn-danger-outline:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* RESET ALL */
+  .reset-all-section { width: 100%; max-width: 600px; padding: 4px 0 8px; }
+  .reset-confirm-msg { font-size: 13px; color: var(--text2); }
+  .reset-confirm-actions { display: flex; gap: 10px; margin-top: 12px; }
+
+  /* EDIT PANEL */
+  .edit-panel { width: 100%; max-width: 600px; display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; gap: 12px; flex-wrap: wrap; align-items: flex-start; margin-bottom: 24px; }
+  .edit-panel.show { display: flex; }
+  .panel-header { width: 100%; display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .panel-title { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text2); }
+  .edit-hint { font-size: 12px; color: var(--text3); margin-left: 12px; }
+  .source-toggle-group { width: 100%; }
+  .source-toggle { display: flex; background: var(--surface2); border-radius: 8px; padding: 3px; gap: 3px; }
+  .src-btn { flex: 1; padding: 6px 0; font-size: 12px; font-weight: 500; border: none; background: transparent; color: var(--text2); border-radius: 6px; cursor: pointer; transition: background 0.15s, color 0.15s; }
+  .src-btn.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .panel-actions { width: 100%; display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .panel-group { display: flex; align-items: center; gap: 8px; }
+  .panel-label { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); white-space: nowrap; }
+  select, input[type="text"] { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: 'Inter', sans-serif; font-size: 13px; padding: 7px 10px; border-radius: 7px; outline: none; transition: border-color 0.15s; }
+  select:focus, input[type="text"]:focus { border-color: var(--border2); }
+  input[type="text"] { width: 130px; }
+  .color-row { display: flex; gap: 6px; }
+  .cdot { width: 16px; height: 16px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s, border-color 0.1s; }
+  .cdot:hover { transform: scale(1.15); }
+  .cdot.sel { border-color: var(--text); }
+  .cdot.d-red    { background: var(--red); }
+  .cdot.d-green  { background: var(--green); }
+  .cdot.d-blue   { background: var(--blue); }
+  .cdot.d-yellow { background: var(--yellow); }
+  .cdot.d-purple { background: var(--purple); }
+  .cdot.d-pink   { background: var(--pink); }
+
+  /* DROP ZONE */
+  .drop-zone { border: 1px dashed var(--border2); border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: border-color 0.15s, background 0.15s; position: relative; background: var(--bg); flex: 1; min-width: 200px; }
+  .drop-zone:hover, .drop-zone.over { border-color: var(--text); background: var(--surface2); }
+  .drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .dz-text { font-size: 12px; color: var(--text2); line-height: 1.5; }
+  .dz-text strong { color: var(--text); font-weight: 500; }
+  .dz-text small { font-size: 11px; color: var(--text3); display: block; }
+  .emoji-input { width: 70px !important; text-align: center; font-size: 18px !important; padding: 5px 8px !important; }
+
+  /* MODAL */
+  .modal-wrap { display: none; position: fixed; inset: 0; background: rgba(28,26,24,0.5); z-index: 100; align-items: center; justify-content: center; }
+  .modal-wrap.show { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; padding: 28px; max-width: 360px; width: 90%; }
+  .modal h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+  .modal p { font-size: 13px; color: var(--text2); line-height: 1.55; margin-bottom: 22px; }
+  .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
+</style>
+</head>
+<body>
+
+<!-- MODAL -->
+<div class="modal-wrap" id="modal">
+  <div class="modal">
+    <h3 id="modalTitle"></h3>
+    <p id="modalBody"></p>
+    <div class="modal-btns">
+      <button class="btn btn-outline" id="modalCancel">Cancel</button>
+      <button class="btn btn-danger" id="modalOk">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="top">
+  <div class="wordmark">Soundboard</div>
+</div>
+
+<!-- NUMPAD — Apple layout bottom 4 rows -->
+<div class="numpad" id="numpad">
+  <!-- JS renders pads into grid positions via data-key classes -->
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <span id="statusMsg">Ready</span>
+</div>
+
+<div class="divider"></div>
+
+<!-- CONTROLS BAR -->
+<div class="controls-bar">
+  <div class="vol-row">
+    <span>Vol</span>
+    <input type="range" id="vol" min="0" max="1" step="0.05" value="0.8" />
+  </div>
+  <div class="vsep"></div>
+  <div class="toggle-group">
+    <span class="toggle-label">Sound overlap</span>
+    <label class="toggle">
+      <input type="checkbox" id="overlapToggle" />
+      <span class="toggle-track"></span>
+      <span class="toggle-thumb"></span>
+    </label>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- EDIT MODE -->
+<div class="controls-bar">
+  <button class="btn btn-outline" id="editBtn">Edit mode</button>
+  <span class="edit-hint" id="editHint"></span>
+</div>
+
+<!-- UNIFIED CONFIG PANEL -->
+<div class="edit-panel" id="editPanel">
+  <div class="panel-header">
+    <span class="panel-title" id="panelTitle">Select a pad</span>
+  </div>
+
+  <!-- SOURCE TOGGLE -->
+  <div class="panel-group source-toggle-group">
+    <span class="panel-label">Source</span>
+    <div class="source-toggle">
+      <button class="src-btn active" id="srcBuiltin">Built-in</button>
+      <button class="src-btn" id="srcCustom">Custom</button>
+    </div>
+  </div>
+
+  <!-- BUILT-IN SOUND -->
+  <div id="builtinFields" class="panel-group">
+    <span class="panel-label">Sound</span>
+    <select id="soundSel">
+      <option value="kick">🥁 Kick</option>
+      <option value="snare">🪘 Snare</option>
+      <option value="hihat">🎵 Hi-Hat</option>
+      <option value="clap">👏 Clap</option>
+      <option value="rimshot">🎯 Rimshot</option>
+      <option value="bass">🎸 808 Bass</option>
+      <option value="synth">🎹 Synth</option>
+      <option value="riser">⬆️ Riser</option>
+      <option value="scratch">💿 Scratch</option>
+      <option value="airhorn">📯 Air Horn</option>
+      <option value="laugh">😂 Laugh</option>
+      <option value="noti">🔔 Notif</option>
+      <option value="siren">🚨 Siren</option>
+      <option value="swoosh">💨 Swoosh</option>
+    </select>
+  </div>
+
+  <!-- CUSTOM UPLOAD -->
+  <div id="customFields" style="display:none; flex-direction:column; gap:14px; width:100%;">
+    <div class="panel-group">
+      <span class="panel-label">Audio</span>
+      <div class="drop-zone" id="dz">
+        <input type="file" id="fileIn" accept="audio/*" />
+        <div class="dz-text">
+          <strong>Drop file here</strong> or click to browse
+          <small>MP3 · WAV · OGG · M4A</small>
+        </div>
+      </div>
+    </div>
+    <div class="panel-group">
+      <span class="panel-label">Emoji</span>
+      <input type="text" id="trackEmojiIn" class="emoji-input" placeholder="🎵" maxlength="2" />
+    </div>
+  </div>
+
+  <!-- SHARED FIELDS -->
+  <div class="panel-group">
+    <span class="panel-label">Label</span>
+    <input type="text" id="labelIn" placeholder="Pad label..." maxlength="14" />
+  </div>
+  <div class="panel-group">
+    <span class="panel-label">Color</span>
+    <div class="color-row">
+      <div class="cdot d-red sel"    data-c="red"></div>
+      <div class="cdot d-green"      data-c="green"></div>
+      <div class="cdot d-blue"       data-c="blue"></div>
+      <div class="cdot d-yellow"     data-c="yellow"></div>
+      <div class="cdot d-purple"     data-c="purple"></div>
+      <div class="cdot d-pink"       data-c="pink"></div>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="panel-actions">
+    <button class="btn btn-danger-outline" id="resetPadBtn" disabled>Reset pad</button>
+    <button class="btn btn-solid" id="assignBtn" disabled>Save</button>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- RESET ALL -->
+<div class="reset-all-section">
+  <div id="resetAllDefault">
+    <button class="btn btn-danger-outline" id="resetAllBtn">Reset all to defaults</button>
+  </div>
+  <div id="resetAllConfirm" style="display:none;">
+    <span class="reset-confirm-msg">This will clear all custom sounds, labels, and colors. Are you sure?</span>
+    <div class="reset-confirm-actions">
+      <button class="btn btn-outline" id="resetAllCancelBtn">Cancel</button>
+      <button class="btn btn-danger" id="resetAllConfirmBtn">Yes, reset everything</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const AC = window.AudioContext || window.webkitAudioContext;
+let ctx = null, master = null;
+const volEl = document.getElementById('vol');
+const statusEl = document.getElementById('statusMsg');
+function ac() {
+  if (!ctx) { ctx = new AC(); master = ctx.createGain(); master.gain.value = +volEl.value; master.connect(ctx.destination); }
+  return ctx;
+}
+volEl.addEventListener('input', () => { if (master) master.gain.value = +volEl.value; });
+function setStatus(msg, state='idle') {
+  statusEl.textContent = msg;
+  statusEl.className = state === 'active' ? 'active' : state === 'stopped' ? 'stopped' : '';
+}
+
+let selPad = null, editing = false, selColor = 'red', overlapMode = false;
+let currentSource = null, pendingBuf = null, pendingFileName = null;
+const activeSources = new Set();
+
+function stopAll() {
+  // Ramp stop gain to 0 instantly to silence everything
+  if (master) {
+    const a = ac();
+    master.gain.cancelScheduledValues(a.currentTime);
+    master.gain.setValueAtTime(0, a.currentTime);
+    // Restore volume after a brief moment
+    setTimeout(() => { if (master) master.gain.setValueAtTime(+volEl.value, a.currentTime); }, 80);
+  }
+  // Stop all tracked sources
+  activeSources.forEach(s => { try { s.stop(); } catch(e) {} });
+  activeSources.clear();
+  currentSource = null;
+  const stopBar = document.getElementById('stopBar');
+  if (stopBar) { stopBar.classList.remove('fire'); void stopBar.offsetWidth; stopBar.classList.add('fire'); setTimeout(() => stopBar.classList.remove('fire'), 200); }
+  setStatus('⏹ Stopped', 'stopped');
+}
+
+/*
+  PAD DEFINITIONS — keyed to Apple numpad positions
+  gridClass maps to CSS grid placement rules above.
+  keyTrigger: keyboard key that fires this pad (where safe from OS interception)
+*/
+const PAD_DEFS = [
+  { id: 'p7',     gridClass: 'pad-7',     label: '7',     keyLabel: '7', sound: 'kick',    icon: '🥁', color: 'red',    keyTrigger: '7' },
+  { id: 'p8',     gridClass: 'pad-8',     label: '8',     keyLabel: '8', sound: 'snare',   icon: '🪘', color: 'green',  keyTrigger: '8' },
+  { id: 'p9',     gridClass: 'pad-9',     label: '9',     keyLabel: '9', sound: 'hihat',   icon: '🎵', color: 'blue',   keyTrigger: '9' },
+  { id: 'pminus', gridClass: 'pad-minus', label: 'Minus', keyLabel: '−', sound: 'clap',    icon: '👏', color: 'yellow', keyTrigger: '-' },
+  { id: 'p4',     gridClass: 'pad-4',     label: '4',     keyLabel: '4', sound: 'rimshot', icon: '🎯', color: 'purple', keyTrigger: '4' },
+  { id: 'p5',     gridClass: 'pad-5',     label: '5',     keyLabel: '5', sound: 'bass',    icon: '🎸', color: 'pink',   keyTrigger: '5' },
+  { id: 'p6',     gridClass: 'pad-6',     label: '6',     keyLabel: '6', sound: 'synth',   icon: '🎹', color: 'red',    keyTrigger: '6' },
+  { id: 'pplus',  gridClass: 'pad-plus',  label: 'Plus',  keyLabel: '+', sound: 'riser',   icon: '⬆️', color: 'green',  keyTrigger: '=' },
+  { id: 'p1',     gridClass: 'pad-1',     label: '1',     keyLabel: '1', sound: 'scratch', icon: '💿', color: 'blue',   keyTrigger: '1' },
+  { id: 'p2',     gridClass: 'pad-2',     label: '2',     keyLabel: '2', sound: 'airhorn', icon: '📯', color: 'yellow', keyTrigger: '2' },
+  { id: 'p3',     gridClass: 'pad-3',     label: '3',     keyLabel: '3', sound: 'laugh',   icon: '😂', color: 'purple', keyTrigger: '3' },
+  { id: 'penter', gridClass: 'pad-enter', label: 'Enter', keyLabel: '↵', sound: 'noti',    icon: '🔔', color: 'pink',   keyTrigger: 'Enter' },
+  { id: 'p0',     gridClass: 'pad-0',     label: '0',     keyLabel: '0', sound: 'siren',   icon: '🚨', color: 'red',    keyTrigger: '0' },
+  { id: 'pdot',   gridClass: 'pad-dot',   label: 'Dot',   keyLabel: '.', sound: 'swoosh',  icon: '💨', color: 'green',  keyTrigger: '.' },
+];
+
+// runtime pad state (label, icon, color, sound, customBuf, customName can all be mutated)
+let pads = PAD_DEFS.map(d => ({ ...d, customBuf: null, customName: null }));
+
+const IC = {kick:'🥁',snare:'🪘',hihat:'🎵',clap:'👏',rimshot:'🎯',bass:'🎸',synth:'🎹',riser:'⬆️',scratch:'💿',airhorn:'📯',laugh:'😂',noti:'🔔',siren:'🚨',swoosh:'💨'};
+const LB = {kick:'Kick',snare:'Snare',hihat:'Hi-Hat',clap:'Clap',rimshot:'Rimshot',bass:'808 Bass',synth:'Synth',riser:'Riser',scratch:'Scratch',airhorn:'Air Horn',laugh:'Laugh',noti:'Notif',siren:'Siren',swoosh:'Swoosh'};
+const CL = ['red','green','blue','yellow','purple','pink'];
+
+const S = {
+  kick:(a)=>{const o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(master);o.frequency.setValueAtTime(150,a.currentTime);o.frequency.exponentialRampToValueAtTime(.01,a.currentTime+.4);g.gain.setValueAtTime(1,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.4);o.start();o.stop(a.currentTime+.4);return o;},
+  snare:(a)=>{const b=a.createBuffer(1,a.sampleRate*.2,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;const s=a.createBufferSource(),g=a.createGain(),f=a.createBiquadFilter();f.type='highpass';f.frequency.value=2000;s.buffer=b;s.connect(f);f.connect(g);g.connect(master);g.gain.setValueAtTime(.8,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.15);s.start();s.stop(a.currentTime+.2);return s;},
+  hihat:(a)=>{const b=a.createBuffer(1,a.sampleRate*.08,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;const s=a.createBufferSource(),g=a.createGain(),f=a.createBiquadFilter();f.type='highpass';f.frequency.value=7000;s.buffer=b;s.connect(f);f.connect(g);g.connect(master);g.gain.setValueAtTime(.6,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.06);s.start();s.stop(a.currentTime+.08);return s;},
+  clap:(a)=>{let last=null;for(let i=0;i<3;i++){const b=a.createBuffer(1,a.sampleRate*.05,a.sampleRate),d=b.getChannelData(0);for(let j=0;j<d.length;j++)d[j]=Math.random()*2-1;const s=a.createBufferSource(),g=a.createGain(),f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=1200;s.buffer=b;s.connect(f);f.connect(g);g.connect(master);const t=a.currentTime+i*.015;g.gain.setValueAtTime(.7,t);g.gain.exponentialRampToValueAtTime(.001,t+.05);s.start(t);s.stop(t+.06);last=s;}return last;},
+  rimshot:(a)=>{const o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(master);o.type='triangle';o.frequency.value=400;g.gain.setValueAtTime(.9,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.05);o.start();o.stop(a.currentTime+.05);return o;},
+  bass:(a)=>{const o=a.createOscillator(),g=a.createGain(),f=a.createBiquadFilter();f.type='lowpass';f.frequency.value=200;o.connect(f);f.connect(g);g.connect(master);o.type='sawtooth';o.frequency.setValueAtTime(60,a.currentTime);o.frequency.exponentialRampToValueAtTime(30,a.currentTime+.5);g.gain.setValueAtTime(1,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.5);o.start();o.stop(a.currentTime+.5);return o;},
+  synth:(a)=>{const o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(master);o.type='square';o.frequency.value=440;g.gain.setValueAtTime(.4,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.3);o.start();o.stop(a.currentTime+.3);return o;},
+  riser:(a)=>{const o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(master);o.type='sawtooth';o.frequency.setValueAtTime(80,a.currentTime);o.frequency.exponentialRampToValueAtTime(2000,a.currentTime+1.2);g.gain.setValueAtTime(.3,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+1.4);o.start();o.stop(a.currentTime+1.4);return o;},
+  scratch:(a)=>{const b=a.createBuffer(1,a.sampleRate*.2,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.sin(i*.5)*Math.random();const s=a.createBufferSource(),g=a.createGain(),f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=800;f.Q.value=5;s.buffer=b;s.connect(f);f.connect(g);g.connect(master);g.gain.setValueAtTime(.8,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.18);s.start();s.stop(a.currentTime+.2);return s;},
+  airhorn:(a)=>{let last=null;[233,311,466].forEach(fr=>{const o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(master);o.type='sawtooth';o.frequency.value=fr;g.gain.setValueAtTime(.25,a.currentTime);g.gain.setValueAtTime(.25,a.currentTime+.6);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.9);o.start();o.stop(a.currentTime+.9);last=o;});return last;},
+  laugh:(a)=>{let last=null;for(let i=0;i<5;i++){const o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(master);o.type='sine';const t=a.currentTime+i*.12;o.frequency.setValueAtTime(220+i*20,t);o.frequency.exponentialRampToValueAtTime(180,t+.1);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.4,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+.1);o.start(t);o.stop(t+.12);last=o;}return last;},
+  noti:(a)=>{let last=null;[880,1100].forEach((fr,i)=>{const o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(master);o.type='sine';o.frequency.value=fr;const t=a.currentTime+i*.1;g.gain.setValueAtTime(.4,t);g.gain.exponentialRampToValueAtTime(.001,t+.1);o.start(t);o.stop(t+.1);last=o;});return last;},
+  siren:(a)=>{const o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(master);o.type='sawtooth';o.frequency.setValueAtTime(600,a.currentTime);o.frequency.linearRampToValueAtTime(1200,a.currentTime+.4);o.frequency.linearRampToValueAtTime(600,a.currentTime+.8);g.gain.setValueAtTime(.3,a.currentTime);g.gain.setValueAtTime(.3,a.currentTime+.75);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.85);o.start();o.stop(a.currentTime+.85);return o;},
+  swoosh:(a)=>{const b=a.createBuffer(1,a.sampleRate*.35,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.sin(Math.PI*i/d.length);const s=a.createBufferSource(),g=a.createGain(),f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=1200;f.Q.value=0.8;s.buffer=b;s.connect(f);f.connect(g);g.connect(master);g.gain.setValueAtTime(.5,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.35);s.start();s.stop(a.currentTime+.38);return s;}
+};
+
+// build key trigger map
+const keyMap = {};
+pads.forEach((p, i) => { if (p.keyTrigger) keyMap[p.keyTrigger] = i; });
+
+function render() {
+  const grid = document.getElementById('numpad');
+  grid.innerHTML = '';
+  pads.forEach((p, i) => {
+    const el = document.createElement('div');
+    el.className = `pad ${p.gridClass} c-${p.color}${selPad === i ? ' sel' : ''}`;
+    el.innerHTML = `<span class="pad-num">${p.keyLabel}</span>${p.customBuf ? '<span class="custom-dot"></span>' : ''}<span class="pad-icon">${p.icon}</span><span class="pad-label">${p.label}</span>`;
+    el.addEventListener('click', () => { ac(); editing ? pickPad(i) : fire(i, el); });
+    grid.appendChild(el);
+  });
+  // Re-append stop bar (survives innerHTML reset)
+  const stop = document.createElement('div');
+  stop.id = 'stopBar';
+  stop.className = 'pad-stop';
+  stop.innerHTML = '<span class="pad-stop-icon">⏹</span><span class="pad-stop-label">Stop</span><span class="pad-stop-key">Space</span>';
+  stop.addEventListener('click', stopAll);
+  grid.appendChild(stop);
+}
+
+function fire(i, el) {
+  const a = ac();
+  if (a.state === 'suspended') a.resume();
+  const p = pads[i];
+  if (!overlapMode && currentSource) { try { currentSource.stop(); } catch(e) {} currentSource = null; }
+  let src = null;
+  if (p.customBuf) { const s = a.createBufferSource(); s.buffer = p.customBuf; s.connect(master); s.start(); src = s; }
+  else { if (S[p.sound]) src = S[p.sound](a); }
+  if (src) {
+    activeSources.add(src);
+    src.onended = () => {
+      activeSources.delete(src);
+      if (activeSources.size === 0) setStatus('Ready');
+    };
+  }
+  if (!overlapMode) currentSource = src;
+  if (!el) el = document.querySelectorAll('.pad')[i];
+  if (el) { el.classList.remove('fire'); void el.offsetWidth; el.classList.add('fire'); setTimeout(() => el.classList.remove('fire'), 200); }
+  setStatus(`${p.icon} ${p.label}`, 'active');
+}
+
+// ── Unified Edit Mode ──
+let useCustomSource = false;
+
+function updateSourceToggle() {
+  document.getElementById('srcBuiltin').classList.toggle('active', !useCustomSource);
+  document.getElementById('srcCustom').classList.toggle('active', useCustomSource);
+  document.getElementById('builtinFields').style.display = useCustomSource ? 'none' : '';
+  document.getElementById('customFields').style.display = useCustomSource ? 'flex' : 'none';
+}
+
+function pickPad(i) {
+  selPad = i;
+  const p = pads[i];
+  useCustomSource = !!p.customBuf;
+  updateSourceToggle();
+  document.getElementById('soundSel').value = p.sound || 'kick';
+  document.getElementById('labelIn').value = p.label;
+  document.getElementById('trackEmojiIn').value = p.customBuf ? p.icon : '';
+  selColor = p.color;
+  document.querySelectorAll('.cdot').forEach(x => x.classList.toggle('sel', x.dataset.c === selColor));
+  pendingBuf = null; pendingFileName = null; resetDZ();
+  document.getElementById('panelTitle').textContent = `Pad [${p.keyLabel}] — ${p.label}`;
+  document.getElementById('assignBtn').disabled = false;
+  document.getElementById('resetPadBtn').disabled = !p.customBuf;
+  render();
+  document.getElementById('editPanel').classList.add('show');
+  setStatus(`Pad [${p.keyLabel}] selected`);
+}
+
+document.getElementById('srcBuiltin').addEventListener('click', () => { useCustomSource = false; updateSourceToggle(); });
+document.getElementById('srcCustom').addEventListener('click', () => { useCustomSource = true; updateSourceToggle(); });
+
+document.getElementById('editBtn').addEventListener('click', () => {
+  editing = !editing;
+  document.getElementById('editBtn').className = 'btn btn-outline' + (editing ? ' on' : '');
+  document.getElementById('editBtn').textContent = editing ? 'Done' : 'Edit mode';
+  document.getElementById('editHint').textContent = editing ? 'Tap a pad to configure it' : '';
+  if (!editing) { selPad = null; document.getElementById('editPanel').classList.remove('show'); render(); }
+  setStatus(editing ? 'Tap a pad to configure it' : 'Ready');
+});
+
+document.getElementById('assignBtn').addEventListener('click', () => {
+  if (selPad === null) return;
+  const p = pads[selPad];
+  const label = document.getElementById('labelIn').value;
+  if (useCustomSource) {
+    if (!pendingBuf && !p.customBuf) { setStatus('Drop an audio file first'); return; }
+    if (pendingBuf) { p.customBuf = pendingBuf; p.customName = pendingFileName; }
+    p.icon = document.getElementById('trackEmojiIn').value.trim() || '🎵';
+    p.label = label || p.customName || 'Custom';
+    p.sound = null;
+  } else {
+    p.customBuf = null; p.customName = null;
+    p.sound = document.getElementById('soundSel').value;
+    p.label = label || LB[p.sound];
+    p.icon = IC[p.sound] || '🔊';
+  }
+  p.color = selColor;
+  pendingBuf = null; pendingFileName = null;
+  document.getElementById('panelTitle').textContent = `Pad [${p.keyLabel}] — ${p.label}`;
+  document.getElementById('resetPadBtn').disabled = !p.customBuf;
+  resetDZ(); render(); setStatus(`Saved → [${p.keyLabel}] ${p.label}`, 'active');
+});
+
+document.getElementById('resetPadBtn').addEventListener('click', () => {
+  if (selPad === null) return;
+  const p = pads[selPad]; const def = PAD_DEFS[selPad];
+  confirm2('Reset pad?', `Remove custom track from [${p.keyLabel}] and restore its default sound (${LB[def.sound]})?`, 'Reset', 'danger', () => {
+    p.customBuf = null; p.customName = null; p.label = def.label; p.icon = def.icon; p.sound = def.sound; p.color = def.color;
+    useCustomSource = false; updateSourceToggle();
+    document.getElementById('soundSel').value = def.sound;
+    document.getElementById('labelIn').value = def.label;
+    document.getElementById('trackEmojiIn').value = '';
+    selColor = def.color;
+    document.querySelectorAll('.cdot').forEach(x => x.classList.toggle('sel', x.dataset.c === selColor));
+    document.getElementById('resetPadBtn').disabled = true;
+    document.getElementById('panelTitle').textContent = `Pad [${p.keyLabel}] — ${p.label}`;
+    resetDZ(); render(); setStatus(`Pad [${p.keyLabel}] reset to default`);
+  });
+});
+
+document.querySelectorAll('.cdot').forEach(d => {
+  d.addEventListener('click', () => {
+    selColor = d.dataset.c;
+    document.querySelectorAll('.cdot').forEach(x => x.classList.remove('sel'));
+    d.classList.add('sel');
+  });
+});
+
+document.getElementById('soundSel').addEventListener('change', e => {
+  const li = document.getElementById('labelIn');
+  if (!li.value || Object.values(LB).includes(li.value)) li.value = LB[e.target.value] || '';
+});
+
+document.getElementById('overlapToggle').addEventListener('change', e => {
+  overlapMode = e.target.checked;
+  setStatus(overlapMode ? 'Sound overlap on' : 'Sound overlap off');
+});
+
+// ── File Handling ──
+function resetDZ() {
+  document.querySelector('.dz-text').innerHTML = '<strong>Drop file here</strong> or click to browse<small>MP3 · WAV · OGG · M4A</small>';
+}
+
+document.getElementById('fileIn').addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); e.target.value = ''; });
+const dz = document.getElementById('dz');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+
+function handleFile(file) {
+  if (!file.type.startsWith('audio/')) { setStatus('Not an audio file'); return; }
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    try {
+      const buf = await ac().decodeAudioData(ev.target.result.slice(0));
+      pendingBuf = buf; pendingFileName = file.name.replace(/\.[^.]+$/, '');
+      document.querySelector('.dz-text').innerHTML = `<strong>${pendingFileName}</strong><small>${(file.size/1024).toFixed(0)} KB · Ready to assign</small>`;
+      const lbl = document.getElementById('labelIn');
+      if (!lbl.value) lbl.value = pendingFileName.slice(0, 14);
+      document.getElementById('assignBtn').disabled = false;
+    } catch { setStatus('Could not decode audio file'); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ── Modal ──
+let _cb = null;
+function confirm2(title, body, okLabel, style, cb) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').textContent = body;
+  const ok = document.getElementById('modalOk');
+  ok.textContent = okLabel;
+  ok.className = `btn ${style === 'danger' ? 'btn-danger' : 'btn-confirm'}`;
+  _cb = cb; document.getElementById('modal').classList.add('show');
+}
+document.getElementById('modalCancel').addEventListener('click', () => { document.getElementById('modal').classList.remove('show'); _cb = null; });
+document.getElementById('modalOk').addEventListener('click', () => { document.getElementById('modal').classList.remove('show'); if (_cb) { _cb(); _cb = null; } });
+
+// ── Keyboard ──
+const held = new Set();
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  const k = e.key;
+  if (held.has(k)) return;
+  held.add(k);
+  if (k === ' ') { e.preventDefault(); stopAll(); return; }
+  if (keyMap[k] !== undefined) { e.preventDefault(); fire(keyMap[k]); }
+});
+document.addEventListener('keyup', e => held.delete(e.key));
+
+// ── Reset All ──
+document.getElementById('resetAllBtn').addEventListener('click', () => {
+  document.getElementById('resetAllDefault').style.display = 'none';
+  document.getElementById('resetAllConfirm').style.display = 'block';
+});
+document.getElementById('resetAllCancelBtn').addEventListener('click', () => {
+  document.getElementById('resetAllConfirm').style.display = 'none';
+  document.getElementById('resetAllDefault').style.display = 'block';
+});
+document.getElementById('resetAllConfirmBtn').addEventListener('click', () => {
+  stopAll();
+  pads = PAD_DEFS.map(d => ({ ...d, customBuf: null, customName: null }));
+  selPad = null; editing = false; useCustomSource = false;
+  document.getElementById('editPanel').classList.remove('show');
+  document.getElementById('editBtn').className = 'btn btn-outline';
+  document.getElementById('editBtn').textContent = 'Edit mode';
+  document.getElementById('editHint').textContent = '';
+  document.getElementById('resetAllConfirm').style.display = 'none';
+  document.getElementById('resetAllDefault').style.display = 'block';
+  render();
+  setStatus('All pads reset to defaults');
+});
+
+render();
+</script>
+</body>
+</html>
