@@ -7,6 +7,9 @@ import { playSound } from '@/lib/sounds'
 import type { ModalState, PadState } from '@/lib/types'
 import Pad, { type PadHandle } from './Pad'
 import Modal from './Modal'
+import dynamic from 'next/dynamic'
+
+const EmojiPicker = dynamic(() => import('@emoji-mart/react'), { ssr: false })
 
 const STORAGE_BUCKET = 'custom-tracks'
 
@@ -34,6 +37,10 @@ export default function Soundboard({ user }: Props) {
 
   // Reset all confirm
   const [showResetConfirm, setShowResetConfirm] = useState(false)
+
+  // Emoji picker
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const emojiPickerRef = useRef<HTMLDivElement>(null)
 
   const [modal, setModal] = useState<ModalState | null>(null)
   const [dbLoading, setDbLoading] = useState(true)
@@ -347,6 +354,17 @@ export default function Soundboard({ user }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pads, overlapMode, editing, selPad, stopAll])
 
+  // ── Close emoji picker on outside click ───────────────────────
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) {
+        setShowEmojiPicker(false)
+      }
+    }
+    if (showEmojiPicker) document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showEmojiPicker])
+
   // ── Sign out ────────────────────────────────────────────────────
   async function handleSignOut() { await supabase.auth.signOut() }
 
@@ -517,10 +535,29 @@ export default function Soundboard({ user }: Props) {
               </div>
               <div className="panel-group" style={{ marginTop: 12 }}>
                 <span className="panel-label">Emoji</span>
-                <input
-                  type="text" className="emoji-input" placeholder="🎵" maxLength={2}
-                  value={editEmoji} onChange={e => setEditEmoji(e.target.value)}
-                />
+                <div className="emoji-picker-wrap" ref={emojiPickerRef}>
+                  <button
+                    className="emoji-trigger"
+                    onClick={() => setShowEmojiPicker(p => !p)}
+                    title="Pick emoji"
+                  >
+                    {editEmoji || '🎵'}
+                  </button>
+                  {showEmojiPicker && (
+                    <div className="emoji-popover">
+                      <EmojiPicker
+                        data={async () => (await fetch('https://cdn.jsdelivr.net/npm/@emoji-mart/data')).json()}
+                        onEmojiSelect={(e: { native: string }) => {
+                          setEditEmoji(e.native)
+                          setShowEmojiPicker(false)
+                        }}
+                        theme="light"
+                        previewPosition="none"
+                        skinTonePosition="none"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
