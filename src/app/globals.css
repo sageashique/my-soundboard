@@ -590,6 +590,27 @@ input[type='text'] { width: 130px; }
 .dz-text small { font-size: 11px; color: var(--text3); display: block; }
 .emoji-input { width: 70px !important; text-align: center; font-size: 18px !important; padding: 5px 8px !important; }
 
+/* EMOJI PICKER */
+.emoji-picker-wrap { position: relative; display: inline-block; }
+.emoji-trigger {
+  width: 44px; height: 38px;
+  font-size: 20px; line-height: 1;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+.emoji-trigger:hover { background: var(--surface2); border-color: var(--border2); }
+.emoji-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 200;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
 /* MODAL */
 .modal-wrap {
   position: fixed;
