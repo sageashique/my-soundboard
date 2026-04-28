@@ -197,16 +197,39 @@ input[type='range']::-webkit-slider-thumb {
   background: var(--text);
   border-radius: 50%;
 }
-.status-msg {
-  font-size: 12px;
-  color: var(--text3);
-  letter-spacing: 0.02em;
-  min-width: 120px;
-  text-align: right;
-  transition: color 0.2s;
-  white-space: nowrap;
+/* STATUS BAR */
+.status-bar {
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
 }
-.status-msg.on { color: var(--green); }
+.status-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.status-pill.active {
+  background: rgba(58,125,90,0.08);
+  border-color: rgba(58,125,90,0.25);
+  color: var(--green);
+}
+.status-pill.stopped {
+  background: rgba(217,79,61,0.07);
+  border-color: rgba(217,79,61,0.2);
+  color: var(--red);
+}
 
 /* PAD GRID */
 .numpad {
@@ -214,9 +237,9 @@ input[type='range']::-webkit-slider-thumb {
   max-width: 600px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(4, var(--cell));
+  grid-template-rows: repeat(4, var(--cell)) 56px;
   gap: var(--gap);
-  margin-bottom: 28px;
+  margin-bottom: 20px;
 }
 
 /* Apple numpad grid placement */
@@ -234,6 +257,30 @@ input[type='range']::-webkit-slider-thumb {
 .pad-0     { grid-column: 1 / span 2; grid-row: 4; }
 .pad-dot   { grid-column: 3; grid-row: 4; }
 .pad-enter { grid-column: 4; grid-row: 3 / span 2; }
+
+/* Stop bar — row 5 of numpad grid */
+.pad-stop {
+  grid-column: 1 / span 4;
+  grid-row: 5;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s, transform 0.07s;
+  user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.pad-stop:hover { background: var(--surface2); border-color: var(--border2); }
+.pad-stop:active { transform: scale(0.98); }
+.pad-stop.fire { animation: tap 0.14s ease-out; }
+.pad-stop-icon { font-size: 16px; line-height: 1; }
+.pad-stop-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); }
+.pad-stop-key { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); opacity: 0.6; }
 
 .pad {
   background: var(--surface);
@@ -410,15 +457,70 @@ input[type='range']::-webkit-slider-thumb {
   width: 100%;
   max-width: 600px;
   display: flex;
+  flex-direction: column;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 16px 20px;
   gap: 12px;
-  flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 24px;
 }
+.panel-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.panel-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+.edit-hint { font-size: 12px; color: var(--text3); }
+.source-toggle-group { width: 100%; }
+.source-toggle {
+  display: flex;
+  background: var(--surface2);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 3px;
+}
+.src-btn {
+  flex: 1;
+  padding: 6px 0;
+  font-size: 12px;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  color: var(--text2);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-family: 'Inter', sans-serif;
+}
+.src-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.custom-fields { display: flex; flex-direction: column; gap: 0; width: 100%; }
+.panel-actions {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+/* RESET ALL */
+.reset-all-section { width: 100%; max-width: 600px; padding: 4px 0 8px; }
+.reset-confirm-msg { font-size: 13px; color: var(--text2); }
+.reset-confirm-actions { display: flex; gap: 10px; margin-top: 12px; }
 .panel-group { display: flex; align-items: center; gap: 8px; }
 .panel-label {
   font-size: 11px;
@@ -459,33 +561,7 @@ input[type='text'] { width: 130px; }
 .cdot.d-purple { background: var(--purple); }
 .cdot.d-pink   { background: var(--pink); }
 
-/* CUSTOM TRACKS */
-.upload-section { width: 100%; max-width: 600px; }
-.section-label {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text3);
-  margin-bottom: 14px;
-}
-.track-config {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.config-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.config-row .panel-label { min-width: 48px; }
-.pad-select { min-width: 200px; }
+/* DROP ZONE */
 .drop-zone {
   border: 1px dashed var(--border2);
   border-radius: 10px;
@@ -513,16 +589,6 @@ input[type='text'] { width: 130px; }
 .dz-text strong { color: var(--text); font-weight: 500; }
 .dz-text small { font-size: 11px; color: var(--text3); display: block; }
 .emoji-input { width: 70px !important; text-align: center; font-size: 18px !important; padding: 5px 8px !important; }
-.config-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  padding-top: 4px;
-  border-top: 1px solid var(--border);
-  flex-wrap: wrap;
-}
-.current-track-info { font-size: 12px; color: var(--text3); flex: 1; min-width: 100px; }
-.current-track-info strong { color: var(--text2); font-weight: 500; }
 
 /* MODAL */
 .modal-wrap {
@@ -563,7 +629,6 @@ input[type='text'] { width: 130px; }
   :root { --cell: 100px; }
   .pad-icon { font-size: 22px; }
   .top { flex-direction: column; align-items: flex-start; }
-  .status-msg { text-align: left; }
 }
 @media (max-width: 400px) {
   :root { --cell: 76px; --gap: 7px; }

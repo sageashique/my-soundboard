@@ -1,6 +1,7 @@
 type GN = GainNode
+type AudioNode = AudioBufferSourceNode | OscillatorNode
 
-export function playSound(name: string, ctx: AudioContext, master: GN): AudioBufferSourceNode | null {
+export function playSound(name: string, ctx: AudioContext, master: GN): AudioNode | null {
   const t = ctx.currentTime
   switch (name) {
     case 'kick': {
@@ -11,7 +12,7 @@ export function playSound(name: string, ctx: AudioContext, master: GN): AudioBuf
       g.gain.setValueAtTime(1, t)
       g.gain.exponentialRampToValueAtTime(0.001, t + 0.4)
       o.start(); o.stop(t + 0.4)
-      return null
+      return o
     }
     case 'snare': {
       const buf = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate)
@@ -61,7 +62,7 @@ export function playSound(name: string, ctx: AudioContext, master: GN): AudioBuf
       g.gain.setValueAtTime(0.9, t)
       g.gain.exponentialRampToValueAtTime(0.001, t + 0.05)
       o.start(); o.stop(t + 0.05)
-      return null
+      return o
     }
     case 'bass': {
       const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter()
@@ -73,7 +74,7 @@ export function playSound(name: string, ctx: AudioContext, master: GN): AudioBuf
       g.gain.setValueAtTime(1, t)
       g.gain.exponentialRampToValueAtTime(0.001, t + 0.5)
       o.start(); o.stop(t + 0.5)
-      return null
+      return o
     }
     case 'synth': {
       const o = ctx.createOscillator(), g = ctx.createGain()
@@ -82,7 +83,7 @@ export function playSound(name: string, ctx: AudioContext, master: GN): AudioBuf
       g.gain.setValueAtTime(0.4, t)
       g.gain.exponentialRampToValueAtTime(0.001, t + 0.3)
       o.start(); o.stop(t + 0.3)
-      return null
+      return o
     }
     case 'riser': {
       const o = ctx.createOscillator(), g = ctx.createGain()
@@ -93,7 +94,7 @@ export function playSound(name: string, ctx: AudioContext, master: GN): AudioBuf
       g.gain.setValueAtTime(0.3, t)
       g.gain.exponentialRampToValueAtTime(0.001, t + 1.4)
       o.start(); o.stop(t + 1.4)
-      return null
+      return o
     }
     case 'scratch': {
       const buf = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate)
@@ -108,6 +109,7 @@ export function playSound(name: string, ctx: AudioContext, master: GN): AudioBuf
       return s
     }
     case 'airhorn': {
+      let last: OscillatorNode | null = null
       ;[233, 311, 466].forEach(fr => {
         const o = ctx.createOscillator(), g = ctx.createGain()
         o.connect(g); g.connect(master)
@@ -116,10 +118,12 @@ export function playSound(name: string, ctx: AudioContext, master: GN): AudioBuf
         g.gain.setValueAtTime(0.25, t + 0.6)
         g.gain.exponentialRampToValueAtTime(0.001, t + 0.9)
         o.start(); o.stop(t + 0.9)
+        last = o
       })
-      return null
+      return last
     }
     case 'laugh': {
+      let last: OscillatorNode | null = null
       for (let i = 0; i < 5; i++) {
         const o = ctx.createOscillator(), g = ctx.createGain()
         o.connect(g); g.connect(master)
@@ -131,10 +135,12 @@ export function playSound(name: string, ctx: AudioContext, master: GN): AudioBuf
         g.gain.linearRampToValueAtTime(0.4, st + 0.01)
         g.gain.exponentialRampToValueAtTime(0.001, st + 0.1)
         o.start(st); o.stop(st + 0.12)
+        last = o
       }
-      return null
+      return last
     }
     case 'noti': {
+      let last: OscillatorNode | null = null
       ;[880, 1100].forEach((fr, i) => {
         const o = ctx.createOscillator(), g = ctx.createGain()
         o.connect(g); g.connect(master)
@@ -143,8 +149,9 @@ export function playSound(name: string, ctx: AudioContext, master: GN): AudioBuf
         g.gain.setValueAtTime(0.4, st)
         g.gain.exponentialRampToValueAtTime(0.001, st + 0.1)
         o.start(st); o.stop(st + 0.1)
+        last = o
       })
-      return null
+      return last
     }
     case 'siren': {
       const o = ctx.createOscillator(), g = ctx.createGain()
@@ -157,7 +164,7 @@ export function playSound(name: string, ctx: AudioContext, master: GN): AudioBuf
       g.gain.setValueAtTime(0.3, t + 0.75)
       g.gain.exponentialRampToValueAtTime(0.001, t + 0.85)
       o.start(); o.stop(t + 0.85)
-      return null
+      return o
     }
     case 'swoosh': {
       const buf = ctx.createBuffer(1, ctx.sampleRate * 0.35, ctx.sampleRate)
