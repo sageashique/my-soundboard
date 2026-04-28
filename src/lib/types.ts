@@ -9,7 +9,9 @@ export interface PadConfig {
 }
 
 export interface PadState extends PadConfig {
-  key: string
+  gridClass: string
+  keyLabel: string
+  keyTrigger: string
   customBuf: AudioBuffer | null
 }
 

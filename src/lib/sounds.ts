@@ -134,41 +134,6 @@ export function playSound(name: string, ctx: AudioContext, master: GN): AudioBuf
       }
       return null
     }
-    case 'vine': {
-      const o = ctx.createOscillator(), g = ctx.createGain()
-      o.connect(g); g.connect(master)
-      o.type = 'sine'
-      o.frequency.setValueAtTime(80, t)
-      o.frequency.exponentialRampToValueAtTime(30, t + 0.6)
-      g.gain.setValueAtTime(1, t)
-      g.gain.exponentialRampToValueAtTime(0.001, t + 0.6)
-      o.start(); o.stop(t + 0.6)
-      return null
-    }
-    case 'bruh': {
-      ;[120, 115, 110, 100].forEach((fr, i) => {
-        const o = ctx.createOscillator(), g = ctx.createGain()
-        o.connect(g); g.connect(master)
-        o.type = 'sawtooth'; o.frequency.value = fr
-        const st = t + i * 0.07
-        g.gain.setValueAtTime(0.3, st)
-        g.gain.exponentialRampToValueAtTime(0.001, st + 0.08)
-        o.start(st); o.stop(st + 0.1)
-      })
-      return null
-    }
-    case 'oof': {
-      const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter()
-      f.type = 'lowpass'; f.frequency.value = 400
-      o.connect(f); f.connect(g); g.connect(master)
-      o.type = 'sine'
-      o.frequency.setValueAtTime(260, t)
-      o.frequency.linearRampToValueAtTime(120, t + 0.3)
-      g.gain.setValueAtTime(0.7, t)
-      g.gain.exponentialRampToValueAtTime(0.001, t + 0.35)
-      o.start(); o.stop(t + 0.35)
-      return null
-    }
     case 'noti': {
       ;[880, 1100].forEach((fr, i) => {
         const o = ctx.createOscillator(), g = ctx.createGain()
@@ -193,6 +158,18 @@ export function playSound(name: string, ctx: AudioContext, master: GN): AudioBuf
       g.gain.exponentialRampToValueAtTime(0.001, t + 0.85)
       o.start(); o.stop(t + 0.85)
       return null
+    }
+    case 'swoosh': {
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.35, ctx.sampleRate)
+      const d = buf.getChannelData(0)
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * i / d.length)
+      const s = ctx.createBufferSource(), g = ctx.createGain(), f = ctx.createBiquadFilter()
+      f.type = 'bandpass'; f.frequency.value = 1200; f.Q.value = 0.8
+      s.buffer = buf; s.connect(f); f.connect(g); g.connect(master)
+      g.gain.setValueAtTime(0.5, t)
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.35)
+      s.start(); s.stop(t + 0.38)
+      return s
     }
     default:
       return null

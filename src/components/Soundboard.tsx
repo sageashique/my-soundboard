@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
-import { defaultPads, SOUND_ICONS, SOUND_LABELS, PAD_KEYS } from '@/lib/constants'
+import { defaultPads, SOUND_ICONS, SOUND_LABELS, KEY_TO_INDEX, getDefaultForIndex } from '@/lib/constants'
 import { playSound } from '@/lib/sounds'
 import type { ModalState, PadState, PendingFile } from '@/lib/types'
 import Pad, { type PadHandle } from './Pad'
@@ -238,16 +238,18 @@ export default function Soundboard({ user }: Props) {
         try {
           const storagePath = `${user.id}/pad-${idx}`
           await supabase.storage.from(STORAGE_BUCKET).remove([storagePath])
-          const defLabel = SOUND_LABELS[pad.sound]
-          const defIcon = SOUND_ICONS[pad.sound]
+          const def = getDefaultForIndex(idx)
+          const defLabel = def?.defaultLabel ?? SOUND_LABELS[pad.sound]
+          const defIcon = def?.icon ?? SOUND_ICONS[pad.sound]
+          const defSound = def?.sound ?? pad.sound
           setPads(prev => prev.map((p, i) => i === idx
-            ? { ...p, label: defLabel, icon: defIcon, customBuf: null, customTrackPath: null, customTrackName: null }
+            ? { ...p, sound: defSound, label: defLabel, icon: defIcon, customBuf: null, customTrackPath: null, customTrackName: null }
             : p
           ))
           await supabase.from('pad_configs').upsert({
             user_id: user.id,
             pad_index: idx,
-            sound: pad.sound,
+            sound: defSound,
             label: defLabel,
             color: pad.color,
             icon: defIcon,
@@ -350,11 +352,10 @@ export default function Soundboard({ user }: Props) {
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return
-      const k = e.key.toLowerCase()
-      if (heldRef.current.has(k)) return
-      heldRef.current.add(k)
-      const idx = PAD_KEYS.indexOf(k)
-      if (idx !== -1) {
+      if (heldRef.current.has(e.key)) return
+      heldRef.current.add(e.key)
+      const idx = KEY_TO_INDEX[e.key]
+      if (idx !== undefined) {
         e.preventDefault()
         if (editing && selPad !== idx) {
           pickPad(idx)
@@ -363,7 +364,7 @@ export default function Soundboard({ user }: Props) {
         }
       }
     }
-    function onKeyUp(e: KeyboardEvent) { heldRef.current.delete(e.key.toLowerCase()) }
+    function onKeyUp(e: KeyboardEvent) { heldRef.current.delete(e.key) }
     window.addEventListener('keydown', onKeyDown)
     window.addEventListener('keyup', onKeyUp)
     return () => {

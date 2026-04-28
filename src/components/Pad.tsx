@@ -29,12 +29,12 @@ const Pad = forwardRef<PadHandle, Props>(function Pad({ pad, selected, onClick }
   return (
     <div
       ref={elRef}
-      className={`pad c-${pad.color}${selected ? ' sel' : ''}`}
+      className={`pad ${pad.gridClass} c-${pad.color}${selected ? ' sel' : ''}`}
       onClick={onClick}
       role="button"
-      aria-label={`${pad.key.toUpperCase()} – ${pad.label}`}
+      aria-label={`${pad.keyLabel} – ${pad.label}`}
     >
-      <span className="pad-key">{pad.key.toUpperCase()}</span>
+      <span className="pad-key">{pad.keyLabel}</span>
       {pad.customBuf && <span className="custom-dot" aria-hidden />}
       <span className="pad-icon">{pad.icon}</span>
       <span className="pad-label">{pad.label}</span>

@@ -56,7 +56,7 @@ export default function CustomTrackSection({
             <option value="">— Select a pad —</option>
             {pads.map((p, i) => (
               <option key={i} value={String(i)}>
-                {p.key.toUpperCase()}. {p.icon} {p.label}{p.customBuf ? ' ●' : ''}
+                [{p.keyLabel}] {p.icon} {p.label}{p.customBuf ? ' ●' : ''}
               </option>
             ))}
           </select>
