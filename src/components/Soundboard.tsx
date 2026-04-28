@@ -344,11 +344,15 @@ export default function Soundboard({ user }: Props) {
 
   // ── Load pad configs + board name from Supabase ─────────────────
   useEffect(() => {
+    console.log('[useEffect] FIRED — user.id:', user?.id ?? 'UNDEFINED')
     async function load() {
+      console.log('[load] START')
       try {
+        console.log('[load] fetching user_settings...')
         // Load board name
-        const { data: settings } = await supabase
+        const { data: settings, error: settingsError } = await supabase
           .from('user_settings').select('board_name').eq('user_id', user.id).single()
+        console.log('[load] user_settings result:', settings, '| error:', settingsError)
         if (settings?.board_name) {
           setBoardName(settings.board_name)
           setNameInput(settings.board_name)
@@ -388,7 +392,7 @@ export default function Soundboard({ user }: Props) {
         setDbLoading(false)
       }
     }
-    load()
+    load().catch(err => console.error('[load] UNCAUGHT ERROR:', err))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.id])
 
