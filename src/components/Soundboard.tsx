@@ -46,6 +46,9 @@ export default function Soundboard({ user }: Props) {
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
 
+  // Help overlay
+  const [showHelp, setShowHelp] = useState(false)
+
   // Emoji picker
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const emojiPickerRef = useRef<HTMLDivElement>(null)
@@ -471,8 +474,47 @@ export default function Soundboard({ user }: Props) {
         </div>
         <div className="top-right">
             <span className="user-email">{user.email}</span>
+            <button className="help-btn" onClick={() => setShowHelp(true)} aria-label="Help">?</button>
         </div>
       </div>
+
+      {/* Help overlay */}
+      {showHelp && (
+        <div className="help-overlay" onClick={() => setShowHelp(false)}>
+          <div className="help-panel" onClick={e => e.stopPropagation()}>
+            <div className="help-header">
+              <span className="help-title">How to use your Soundboard</span>
+              <button className="help-close" onClick={() => setShowHelp(false)} aria-label="Close">✕</button>
+            </div>
+            <div className="help-body">
+              <div className="help-section">
+                <div className="help-section-title">Playing sounds</div>
+                <p>Tap any pad to trigger its sound. Each pad also has a keyboard shortcut shown in the top-left corner of the pad.</p>
+              </div>
+              <div className="help-section">
+                <div className="help-section-title">Stopping sounds</div>
+                <p>Press the <strong>Stop</strong> bar or hit <strong>Space</strong> to stop all audio instantly.</p>
+              </div>
+              <div className="help-section">
+                <div className="help-section-title">Volume &amp; overlap</div>
+                <p>Use the volume slider to control master output. Toggle <strong>Sound Overlap</strong> to let sounds layer on top of each other instead of cutting off.</p>
+              </div>
+              <div className="help-section">
+                <div className="help-section-title">Editing a pad</div>
+                <p>Press <strong>Edit mode</strong>, then tap any pad to configure it. Switch to <strong>Custom</strong> to upload your own audio file (MP3, WAV, M4A, and more; max 2 MB, 60 sec) — great for dropping in samples, drops, or any sound you want at your fingertips. On <strong>Built-in</strong>, choose from 14 synthesized sounds. Either way, you can set a custom label, color, and emoji.</p>
+              </div>
+              <div className="help-section">
+                <div className="help-section-title">Board name</div>
+                <p>Click your board name in the top-left to rename it. Changes save automatically.</p>
+              </div>
+              <div className="help-section">
+                <div className="help-section-title">Saving</div>
+                <p>Each pad saves individually when you click <strong>Save</strong> in the edit panel. Your setup persists across devices.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Pad grid */}
       <div className="numpad">
