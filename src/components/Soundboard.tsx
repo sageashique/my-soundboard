@@ -124,13 +124,17 @@ export default function Soundboard({ user }: Props) {
 
     let src: AudioBufferSourceNode | OscillatorNode | null = null
 
+    console.log('[fire] index:', index, '| customBuf:', p.customBuf, '| customRawBuf bytes:', p.customRawBuf?.byteLength ?? null)
+
     if (p.customBuf && masterRef.current) {
+      console.log('[fire] branch: customBuf (already decoded)')
       const s = a.createBufferSource()
       s.buffer = p.customBuf
       s.connect(masterRef.current)
       s.start()
       src = s
     } else if (p.customRawBuf && masterRef.current) {
+      console.log('[fire] branch: customRawBuf (lazy decode), bytes:', p.customRawBuf.byteLength)
       // Lazy decode for mobile — decode on first tap after user gesture
       const raw = p.customRawBuf!
       a.decodeAudioData(raw.slice(0)).then(buf => {
@@ -149,6 +153,7 @@ export default function Soundboard({ user }: Props) {
       setStatus(`${p.icon} ${p.label}`, 'active')
       return
     } else if (masterRef.current) {
+      console.log('[fire] branch: playSound (built-in), sound:', p.sound)
       src = playSound(p.sound, a, masterRef.current)
     }
 
@@ -223,10 +228,12 @@ export default function Soundboard({ user }: Props) {
           if (upErr) throw upErr
 
           const rawCopy = pendingRawRef.current.slice(0)
+          console.log('[handleSave] upload done — storagePath:', storagePath, '| rawCopy bytes:', rawCopy.byteLength)
           setPads(prev => prev.map((pd, i) => i === selPad
             ? { ...pd, label, icon: emoji, customBuf: pendingBuf!, customRawBuf: rawCopy, customTrackPath: storagePath, customTrackName: pendingFileName!, color: selColor }
             : pd
           ))
+          console.log('[handleSave] customRawBuf set on pad', selPad)
           await supabase.from('pad_configs').upsert({
             user_id: user.id, pad_index: selPad,
             sound: p.sound, label, color: selColor, icon: emoji,
@@ -382,17 +389,21 @@ export default function Soundboard({ user }: Props) {
   }, [user.id])
 
   async function loadCustomAudio(padIndex: number, storagePath: string) {
+    console.log('[loadCustomAudio] padIndex:', padIndex, '| storagePath:', storagePath)
     try {
       const { data, error } = await supabase.storage.from(STORAGE_BUCKET).download(storagePath)
+      console.log('[loadCustomAudio] download result — data:', !!data, '| error:', error)
       if (error || !data) return
       const raw = await data.arrayBuffer()
+      console.log('[loadCustomAudio] raw ArrayBuffer size:', raw.byteLength)
       // Store raw buffer — decoded lazily on first tap (mobile AudioContext fix)
       setPads(prev => prev.map((p, i) => i === padIndex
         ? { ...p, customRawBuf: raw.slice(0) }
         : p
       ))
+      console.log('[loadCustomAudio] customRawBuf set on pad', padIndex)
     } catch (err) {
-      console.warn(`Could not load audio for pad ${padIndex}:`, err)
+      console.warn(`[loadCustomAudio] ERROR for pad ${padIndex}:`, err)
     }
   }
 
