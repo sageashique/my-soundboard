@@ -13,6 +13,7 @@ export interface PadState extends PadConfig {
   keyLabel: string
   keyTrigger: string
   customBuf: AudioBuffer | null
+  customRawBuf: ArrayBuffer | null
 }
 
 export interface ModalState {

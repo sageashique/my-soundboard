@@ -60,6 +60,7 @@ export function defaultPads(): PadState[] {
     customTrackPath: null,
     customTrackName: null,
     customBuf: null,
+    customRawBuf: null,
   }))
 }
 
