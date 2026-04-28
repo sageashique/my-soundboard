@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { defaultPads, SOUND_ICONS, SOUND_LABELS, COLORS, KEY_TO_INDEX, getDefaultForIndex } from '@/lib/constants'
 import { playSound } from '@/lib/sounds'
 import type { ModalState, PadState } from '@/lib/types'
-import Pad from './Pad'
+import Pad, { type PadHandle } from './Pad'
 import Modal from './Modal'
 
 const STORAGE_BUCKET = 'custom-tracks'
@@ -43,6 +43,9 @@ export default function Soundboard({ user }: Props) {
   const masterRef = useRef<GainNode | null>(null)
   const currentSourceRef = useRef<AudioBufferSourceNode | OscillatorNode | null>(null)
   const activeSourcesRef = useRef<Set<AudioBufferSourceNode | OscillatorNode>>(new Set())
+
+  // Pad refs for flash animation
+  const padRefs = useRef<(PadHandle | null)[]>([])
 
   // Keyboard held keys
   const heldRef = useRef(new Set<string>())
