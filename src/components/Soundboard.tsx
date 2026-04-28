@@ -117,7 +117,6 @@ export default function Soundboard({ user }: Props) {
       masterRef.current.gain.value = volume
       masterRef.current.connect(ctxRef.current.destination)
     }
-    if (ctxRef.current.state === 'suspended') ctxRef.current.resume()
     return ctxRef.current
   }
 
@@ -134,7 +133,8 @@ export default function Soundboard({ user }: Props) {
   }
 
   // ── Stop All ───────────────────────────────────────────────────
-  const stopAll = useCallback(() => {
+  const stopAll = useCallback(async () => {
+    if (ctxRef.current?.state === 'suspended') await ctxRef.current.resume()
     if (masterRef.current && ctxRef.current) {
       const a = ctxRef.current
       masterRef.current.gain.cancelScheduledValues(a.currentTime)
@@ -151,8 +151,9 @@ export default function Soundboard({ user }: Props) {
   }, [volume])
 
   // ── Fire a pad ─────────────────────────────────────────────────
-  const fire = useCallback((index: number) => {
+  const fire = useCallback(async (index: number) => {
     const a = getAC()
+    if (a.state === 'suspended') await a.resume()
     const p = pads[index]
 
     if (!overlapMode && currentSourceRef.current) {
