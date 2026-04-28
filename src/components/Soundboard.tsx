@@ -13,41 +13,6 @@ const EmojiPicker = dynamic(() => import('@emoji-mart/react'), { ssr: false })
 
 const STORAGE_BUCKET = 'custom-tracks'
 
-const ACCEPTED_FORMATS = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/wave', 'audio/ogg', 'audio/mp4', 'audio/m4a', 'audio/aac', 'audio/x-aiff', 'audio/aiff', 'audio/flac', 'audio/x-flac']
-const MAX_FILE_BYTES = 2 * 1024 * 1024 // 2MB
-const MAX_DURATION_SEC = 60
-const MIN_DURATION_SEC = 0.1
-
-function encodeWav(buf: AudioBuffer): ArrayBuffer {
-  const numCh = buf.numberOfChannels
-  const numSamples = buf.length
-  const sampleRate = buf.sampleRate
-  const bytesPerSample = 2
-  const blockAlign = numCh * bytesPerSample
-  const byteRate = sampleRate * blockAlign
-  const dataSize = numSamples * blockAlign
-  const ab = new ArrayBuffer(44 + dataSize)
-  const view = new DataView(ab)
-  const writeStr = (o: number, s: string) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)) }
-  writeStr(0, 'RIFF'); view.setUint32(4, 36 + dataSize, true); writeStr(8, 'WAVE')
-  writeStr(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true)
-  view.setUint16(22, numCh, true); view.setUint32(24, sampleRate, true)
-  view.setUint32(28, byteRate, true); view.setUint16(32, blockAlign, true)
-  view.setUint16(34, bytesPerSample * 8, true); writeStr(36, 'data')
-  view.setUint32(40, dataSize, true)
-  // Interleave channels as 16-bit PCM
-  const channels = Array.from({ length: numCh }, (_, c) => buf.getChannelData(c))
-  let offset = 44
-  for (let i = 0; i < numSamples; i++) {
-    for (let c = 0; c < numCh; c++) {
-      const s = Math.max(-1, Math.min(1, channels[c][i]))
-      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true)
-      offset += 2
-    }
-  }
-  return ab
-}
-
 interface Props { user: User }
 
 export default function Soundboard({ user }: Props) {
@@ -73,8 +38,6 @@ export default function Soundboard({ user }: Props) {
   const [useCustomSource, setUseCustomSource] = useState(false)
   const [pendingBuf, setPendingBuf] = useState<AudioBuffer | null>(null)
   const [pendingFileName, setPendingFileName] = useState<string | null>(null)
-  const [uploadError, setUploadError] = useState<string | null>(null)
-  const [pendingDuration, setPendingDuration] = useState<number | null>(null)
   const [editLabel, setEditLabel] = useState('')
   const [editEmoji, setEditEmoji] = useState('')
   const [editSound, setEditSound] = useState('kick')
@@ -103,7 +66,6 @@ export default function Soundboard({ user }: Props) {
 
   // Raw audio buffer for upload
   const pendingRawRef = useRef<ArrayBuffer | null>(null)
-  const pendingMimeTypeRef = useRef<string>('audio/mp4')
 
   // Drop zone ref
   const dzRef = useRef<HTMLDivElement>(null)
@@ -117,6 +79,7 @@ export default function Soundboard({ user }: Props) {
       masterRef.current.gain.value = volume
       masterRef.current.connect(ctxRef.current.destination)
     }
+    if (ctxRef.current.state === 'suspended') ctxRef.current.resume()
     return ctxRef.current
   }
 
@@ -134,7 +97,6 @@ export default function Soundboard({ user }: Props) {
 
   // ── Stop All ───────────────────────────────────────────────────
   const stopAll = useCallback(() => {
-    if (ctxRef.current?.state !== 'running') ctxRef.current?.resume()
     if (masterRef.current && ctxRef.current) {
       const a = ctxRef.current
       masterRef.current.gain.cancelScheduledValues(a.currentTime)
@@ -155,10 +117,6 @@ export default function Soundboard({ user }: Props) {
     const a = getAC()
     const p = pads[index]
 
-    // Resume without awaiting — must stay synchronous within gesture handler
-    // await would expire iOS Safari's gesture token on older devices
-    if (a.state !== 'running') a.resume()
-
     if (!overlapMode && currentSourceRef.current) {
       try { currentSourceRef.current.stop() } catch { /* already stopped */ }
       currentSourceRef.current = null
@@ -166,19 +124,15 @@ export default function Soundboard({ user }: Props) {
 
     let src: AudioBufferSourceNode | OscillatorNode | null = null
 
-    console.log('[fire] index:', index, '| customBuf:', p.customBuf, '| customRawBuf bytes:', p.customRawBuf?.byteLength ?? null)
-
     if (p.customBuf && masterRef.current) {
-      console.log('[fire] branch: customBuf (already decoded)')
       const s = a.createBufferSource()
       s.buffer = p.customBuf
       s.connect(masterRef.current)
       s.start()
       src = s
-    } else if (p.customRawBuf && masterRef.current) {
-      console.log('[fire] branch: customRawBuf (lazy decode), bytes:', p.customRawBuf.byteLength)
+    } else if ((p as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf && masterRef.current) {
       // Lazy decode for mobile — decode on first tap after user gesture
-      const raw = p.customRawBuf!
+      const raw = (p as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf!
       a.decodeAudioData(raw.slice(0)).then(buf => {
         setPads(prev => prev.map((pd, i) => i === index ? { ...pd, customBuf: buf } : pd))
         if (!masterRef.current) return
@@ -195,7 +149,6 @@ export default function Soundboard({ user }: Props) {
       setStatus(`${p.icon} ${p.label}`, 'active')
       return
     } else if (masterRef.current) {
-      console.log('[fire] branch: playSound (built-in), sound:', p.sound)
       src = playSound(p.sound, a, masterRef.current)
     }
 
@@ -240,14 +193,12 @@ export default function Soundboard({ user }: Props) {
     const p = pads[index]
     setSelPad(index)
     setSelColor(p.color)
-    setUseCustomSource(!!p.customBuf || !!p.customRawBuf)
+    setUseCustomSource(!!p.customBuf || !!(p as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf)
     setEditSound(p.sound || 'kick')
     setEditLabel(p.label)
     setEditEmoji(p.customBuf ? p.icon : '')
     setPendingBuf(null)
     setPendingFileName(null)
-    setUploadError(null)
-    setPendingDuration(null)
     pendingRawRef.current = null
     setStatus(`Pad [${p.keyLabel}] selected`)
   }
@@ -268,16 +219,14 @@ export default function Soundboard({ user }: Props) {
           const storagePath = `${user.id}/pad-${selPad}`
           const { error: upErr } = await supabase.storage
             .from(STORAGE_BUCKET)
-            .upload(storagePath, new Blob([pendingRawRef.current], { type: pendingMimeTypeRef.current }), { contentType: pendingMimeTypeRef.current, upsert: true })
+            .upload(storagePath, pendingRawRef.current, { contentType: 'audio/mpeg', upsert: true })
           if (upErr) throw upErr
 
           const rawCopy = pendingRawRef.current.slice(0)
-          console.log('[handleSave] upload done — storagePath:', storagePath, '| rawCopy bytes:', rawCopy.byteLength)
           setPads(prev => prev.map((pd, i) => i === selPad
-            ? { ...pd, label, icon: emoji, customBuf: pendingBuf!, customRawBuf: rawCopy, customTrackPath: storagePath, customTrackName: pendingFileName!, color: selColor }
+            ? { ...pd, label, icon: emoji, customBuf: pendingBuf!, customRawBuf: rawCopy, customTrackPath: storagePath, customTrackName: pendingFileName!, color: selColor } as PadState
             : pd
           ))
-          console.log('[handleSave] customRawBuf set on pad', selPad)
           await supabase.from('pad_configs').upsert({
             user_id: user.id, pad_index: selPad,
             sound: p.sound, label, color: selColor, icon: emoji,
@@ -292,8 +241,6 @@ export default function Soundboard({ user }: Props) {
           return
         }
       } else {
-        // No new file — editing label/color/emoji on an already-uploaded track
-        if (!p.customTrackPath) { setStatus('Drop an audio file first'); return }
         const label2 = editLabel || p.label
         const emoji2 = editEmoji.trim() || p.icon
         setPads(prev => prev.map((pd, i) => i === selPad ? { ...pd, label: label2, icon: emoji2, color: selColor } : pd))
@@ -373,56 +320,28 @@ export default function Soundboard({ user }: Props) {
 
   // ── File upload ────────────────────────────────────────────────
   async function handleFile(file: File) {
-    // Format check
-    if (!file.type.startsWith('audio/') && !ACCEPTED_FORMATS.includes(file.type)) {
-      setUploadError('Unsupported format. Use MP3, WAV, M4A, AAC, OGG, AIFF, or FLAC.')
-      return
-    }
-    // Size check
-    if (file.size > MAX_FILE_BYTES) {
-      setUploadError(`File too large — max 2MB. This file is ${(file.size / 1024 / 1024).toFixed(1)}MB.`)
-      return
-    }
-    setUploadError(null)
-    setStatus('Decoding…')
+    if (!file.type.startsWith('audio/')) { setStatus('Not an audio file'); return }
     try {
       const raw = await file.arrayBuffer()
       const a = getAC()
       const buf = await a.decodeAudioData(raw.slice(0))
-      // Duration checks
-      if (buf.duration < MIN_DURATION_SEC) {
-        setUploadError('File too short — minimum 0.1 seconds.')
-        return
-      }
-      if (buf.duration > MAX_DURATION_SEC) {
-        setUploadError(`File too long — max 60 seconds. This file is ${buf.duration.toFixed(1)}s.`)
-        return
-      }
-      const wavRaw = encodeWav(buf)
-      pendingRawRef.current = wavRaw
-      pendingMimeTypeRef.current = 'audio/wav'
+      pendingRawRef.current = raw
       setPendingBuf(buf)
       const name = file.name.replace(/\.[^.]+$/, '')
       setPendingFileName(name)
-      setPendingDuration(buf.duration)
       if (!editLabel) setEditLabel(name.slice(0, 20))
-      console.log('[handleFile] transcoded to WAV, size:', wavRaw.byteLength, 'duration:', buf.duration)
     } catch {
-      setUploadError('Could not decode this file. Try converting to MP3 or WAV first.')
+      setStatus('Could not decode audio file')
     }
   }
 
   // ── Load pad configs + board name from Supabase ─────────────────
   useEffect(() => {
-    console.log('[useEffect] FIRED — user.id:', user?.id ?? 'UNDEFINED')
     async function load() {
-      console.log('[load] START')
       try {
-        console.log('[load] fetching user_settings...')
         // Load board name
-        const { data: settings, error: settingsError } = await supabase
+        const { data: settings } = await supabase
           .from('user_settings').select('board_name').eq('user_id', user.id).single()
-        console.log('[load] user_settings result:', settings, '| error:', settingsError)
         if (settings?.board_name) {
           setBoardName(settings.board_name)
           setNameInput(settings.board_name)
@@ -431,7 +350,6 @@ export default function Soundboard({ user }: Props) {
         // Load pad configs
         const { data, error } = await supabase
           .from('pad_configs').select('*').eq('user_id', user.id)
-        console.log('[load] data length:', data?.length ?? 'NULL', '| error:', error)
         if (error) throw error
         if (!data || data.length === 0) { setDbLoading(false); return }
 
@@ -450,11 +368,8 @@ export default function Soundboard({ user }: Props) {
         setPads(loaded)
         setDbLoading(false)
 
-        console.log('[load] pad_configs rows:', data.length, data.map(r => ({ i: r.pad_index, path: r.custom_track_path })))
         for (const row of data) {
-          console.log('[load] checking row', row.pad_index, '| custom_track_path:', row.custom_track_path)
           if (!row.custom_track_path) continue
-          console.log('[load] calling loadCustomAudio for pad', row.pad_index)
           loadCustomAudio(row.pad_index, row.custom_track_path)
         }
       } catch (err) {
@@ -462,44 +377,22 @@ export default function Soundboard({ user }: Props) {
         setDbLoading(false)
       }
     }
-    load().catch(err => console.error('[load] UNCAUGHT ERROR:', err))
+    load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.id])
 
   async function loadCustomAudio(padIndex: number, storagePath: string) {
-    console.log('[loadCustomAudio] CALLED for pad', padIndex, 'path:', storagePath)
     try {
       const { data, error } = await supabase.storage.from(STORAGE_BUCKET).download(storagePath)
-      console.log('[loadCustomAudio] download result — data:', !!data, '| error:', error)
       if (error || !data) return
       const raw = await data.arrayBuffer()
-      console.log('[loadCustomAudio] raw ArrayBuffer size:', raw.byteLength)
-      // Decode with a temporary context — safe before user gesture, only playing requires gesture
-      const tempCtx = new AudioContext()
-      const buf = await tempCtx.decodeAudioData(raw.slice(0))
-      await tempCtx.close()
-      console.log('[loadCustomAudio] decoded successfully, duration:', buf.duration)
+      // Store raw buffer — decoded lazily on first tap (mobile AudioContext fix)
       setPads(prev => prev.map((p, i) => i === padIndex
-        ? { ...p, customBuf: buf, customRawBuf: raw.slice(0) }
+        ? { ...p, customRawBuf: raw.slice(0) } as PadState
         : p
       ))
-      console.log('[loadCustomAudio] customBuf set on pad', padIndex)
     } catch (err) {
-      console.warn('[loadCustomAudio] ERROR for pad', padIndex, ':', err)
-      // Fallback: store raw only, decode lazily on first tap
-      try {
-        const { data } = await supabase.storage.from(STORAGE_BUCKET).download(storagePath)
-        if (data) {
-          const raw = await data.arrayBuffer()
-          setPads(prev => prev.map((p, i) => i === padIndex
-            ? { ...p, customRawBuf: raw.slice(0) } as typeof p
-            : p
-          ))
-          console.log('[loadCustomAudio] fallback: stored raw buffer for pad', padIndex)
-        }
-      } catch (fallbackErr) {
-        console.warn('[loadCustomAudio] fallback also failed:', fallbackErr)
-      }
+      console.warn(`Could not load audio for pad ${padIndex}:`, err)
     }
   }
 
@@ -576,10 +469,7 @@ export default function Soundboard({ user }: Props) {
           )}
         </div>
         <div className="top-right">
-          <div className="user-row">
             <span className="user-email">{user.email}</span>
-            <button className="btn btn-outline" onClick={handleSignOut}>Sign out</button>
-          </div>
         </div>
       </div>
 
@@ -591,16 +481,12 @@ export default function Soundboard({ user }: Props) {
             ref={el => { padRefs.current[i] = el }}
             pad={pad}
             selected={selPad === i}
-            onClick={() => {
-              const a = getAC()
-              if (a.state !== 'running') a.resume()
-              editing ? pickPad(i) : fire(i)
-            }}
+            onClick={() => { getAC(); editing ? pickPad(i) : fire(i) }}
           />
         ))}
 
         {/* Stop bar */}
-        <div className="pad-stop" onClick={() => { const a = getAC(); if (a.state !== 'running') a.resume(); stopAll() }}>
+        <div className="pad-stop" onClick={stopAll}>
           <span className="pad-stop-icon">⏹</span>
           <span className="pad-stop-label">Stop</span>
           <span className="pad-stop-key">Space</span>
@@ -723,15 +609,10 @@ export default function Soundboard({ user }: Props) {
                     onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); (e.target as HTMLInputElement).value = '' }}
                   />
                   <div className="dz-text">
-                    {uploadError ? (
-                      <><strong className="dz-error">{uploadError}</strong><small>MP3 · WAV · M4A · AAC · OGG · max 2MB · max 60s</small></>
-                    ) : pendingFileName && pendingDuration !== null ? (
-                      <><strong>{pendingFileName}</strong><small>{pendingDuration.toFixed(1)}s · Ready to assign</small></>
-                    ) : pendingFileName ? (
-                      <><strong>{pendingFileName}</strong><small>Ready to assign</small></>
-                    ) : (
-                      <><strong>Drop file here</strong> or click to browse<small>MP3 · WAV · M4A · AAC · OGG · max 2MB · max 60s</small></>
-                    )}
+                    {pendingFileName
+                      ? <><strong>{pendingFileName}</strong><small>Ready to assign</small></>
+                      : <><strong>Drop file here</strong> or click to browse<small>MP3 · WAV · OGG · M4A</small></>
+                    }
                   </div>
                 </div>
               </div>
@@ -789,7 +670,7 @@ export default function Soundboard({ user }: Props) {
           <div className="panel-actions">
             <button
               className="btn btn-danger-outline"
-              disabled={!selectedPad.customBuf && !selectedPad.customRawBuf}
+              disabled={!selectedPad.customBuf && !(selectedPad as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf}
               onClick={handleResetPad}
             >
               Reset pad
@@ -801,12 +682,15 @@ export default function Soundboard({ user }: Props) {
 
       <div className="divider" />
 
-      {/* Reset all */}
+      {/* Bottom bar — reset all + sign out */}
       <div className="reset-all-section">
         {!showResetConfirm ? (
-          <button className="btn btn-danger-outline" onClick={() => setShowResetConfirm(true)}>
-            Reset all to defaults
-          </button>
+          <div className="bottom-bar">
+            <button className="btn btn-danger-outline" onClick={() => setShowResetConfirm(true)}>
+              Reset all to defaults
+            </button>
+            <button className="btn btn-outline" onClick={handleSignOut}>Sign out</button>
+          </div>
         ) : (
           <div>
             <span className="reset-confirm-msg">
