@@ -130,9 +130,9 @@ export default function Soundboard({ user }: Props) {
       s.connect(masterRef.current)
       s.start()
       src = s
-    } else if ((p as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf && masterRef.current) {
+    } else if (p.customRawBuf && masterRef.current) {
       // Lazy decode for mobile — decode on first tap after user gesture
-      const raw = (p as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf!
+      const raw = p.customRawBuf!
       a.decodeAudioData(raw.slice(0)).then(buf => {
         setPads(prev => prev.map((pd, i) => i === index ? { ...pd, customBuf: buf } : pd))
         if (!masterRef.current) return
@@ -193,7 +193,7 @@ export default function Soundboard({ user }: Props) {
     const p = pads[index]
     setSelPad(index)
     setSelColor(p.color)
-    setUseCustomSource(!!p.customBuf || !!(p as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf)
+    setUseCustomSource(!!p.customBuf || !!p.customRawBuf)
     setEditSound(p.sound || 'kick')
     setEditLabel(p.label)
     setEditEmoji(p.customBuf ? p.icon : '')
@@ -224,7 +224,7 @@ export default function Soundboard({ user }: Props) {
 
           const rawCopy = pendingRawRef.current.slice(0)
           setPads(prev => prev.map((pd, i) => i === selPad
-            ? { ...pd, label, icon: emoji, customBuf: pendingBuf!, customRawBuf: rawCopy, customTrackPath: storagePath, customTrackName: pendingFileName!, color: selColor } as PadState
+            ? { ...pd, label, icon: emoji, customBuf: pendingBuf!, customRawBuf: rawCopy, customTrackPath: storagePath, customTrackName: pendingFileName!, color: selColor }
             : pd
           ))
           await supabase.from('pad_configs').upsert({
@@ -388,7 +388,7 @@ export default function Soundboard({ user }: Props) {
       const raw = await data.arrayBuffer()
       // Store raw buffer — decoded lazily on first tap (mobile AudioContext fix)
       setPads(prev => prev.map((p, i) => i === padIndex
-        ? { ...p, customRawBuf: raw.slice(0) } as PadState
+        ? { ...p, customRawBuf: raw.slice(0) }
         : p
       ))
     } catch (err) {
@@ -673,7 +673,7 @@ export default function Soundboard({ user }: Props) {
           <div className="panel-actions">
             <button
               className="btn btn-danger-outline"
-              disabled={!selectedPad.customBuf && !(selectedPad as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf}
+              disabled={!selectedPad.customBuf && !selectedPad.customRawBuf}
               onClick={handleResetPad}
             >
               Reset pad
