@@ -404,14 +404,32 @@ export default function Soundboard({ user }: Props) {
       if (error || !data) return
       const raw = await data.arrayBuffer()
       console.log('[loadCustomAudio] raw ArrayBuffer size:', raw.byteLength)
-      // Store raw buffer — decoded lazily on first tap (mobile AudioContext fix)
+      // Decode with a temporary context — safe before user gesture, only playing requires gesture
+      const tempCtx = new AudioContext()
+      const buf = await tempCtx.decodeAudioData(raw.slice(0))
+      await tempCtx.close()
+      console.log('[loadCustomAudio] decoded successfully, duration:', buf.duration)
       setPads(prev => prev.map((p, i) => i === padIndex
-        ? { ...p, customRawBuf: raw.slice(0) }
+        ? { ...p, customBuf: buf, customRawBuf: raw.slice(0) }
         : p
       ))
-      console.log('[loadCustomAudio] customRawBuf set on pad', padIndex)
+      console.log('[loadCustomAudio] customBuf set on pad', padIndex)
     } catch (err) {
-      console.warn(`[loadCustomAudio] ERROR for pad ${padIndex}:`, err)
+      console.warn('[loadCustomAudio] ERROR for pad', padIndex, ':', err)
+      // Fallback: store raw only, decode lazily on first tap
+      try {
+        const { data } = await supabase.storage.from(STORAGE_BUCKET).download(storagePath)
+        if (data) {
+          const raw = await data.arrayBuffer()
+          setPads(prev => prev.map((p, i) => i === padIndex
+            ? { ...p, customRawBuf: raw.slice(0) } as typeof p
+            : p
+          ))
+          console.log('[loadCustomAudio] fallback: stored raw buffer for pad', padIndex)
+        }
+      } catch (fallbackErr) {
+        console.warn('[loadCustomAudio] fallback also failed:', fallbackErr)
+      }
     }
   }
 
