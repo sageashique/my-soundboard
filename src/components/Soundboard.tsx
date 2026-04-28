@@ -23,9 +23,16 @@ export default function Soundboard({ user }: Props) {
   const [overlapMode, setOverlapMode] = useState(false)
   const [volume, setVolume] = useState(0.8)
 
-  // Status: idle | active | stopped
+  // Status
   const [statusMsg, setStatusMsg] = useState('Ready')
   const [statusState, setStatusState] = useState<'idle' | 'active' | 'stopped'>('idle')
+
+  // Board name
+  const emailPrefix = user.email?.split('@')[0] ?? 'my'
+  const defaultBoardName = `${emailPrefix.toUpperCase()}'S SOUNDBOARD`
+  const [boardName, setBoardName] = useState(defaultBoardName)
+  const [editingName, setEditingName] = useState(false)
+  const [nameInput, setNameInput] = useState(defaultBoardName)
 
   // Unified edit panel state
   const [useCustomSource, setUseCustomSource] = useState(false)
@@ -123,6 +130,24 @@ export default function Soundboard({ user }: Props) {
       s.connect(masterRef.current)
       s.start()
       src = s
+    } else if ((p as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf && masterRef.current) {
+      // Lazy decode for mobile — decode on first tap after user gesture
+      const raw = (p as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf!
+      a.decodeAudioData(raw.slice(0)).then(buf => {
+        setPads(prev => prev.map((pd, i) => i === index ? { ...pd, customBuf: buf } : pd))
+        if (!masterRef.current) return
+        const s = a.createBufferSource()
+        s.buffer = buf
+        s.connect(masterRef.current)
+        s.start()
+        activeSourcesRef.current.add(s)
+        s.onended = () => {
+          activeSourcesRef.current.delete(s)
+          if (activeSourcesRef.current.size === 0) setStatus('Ready', 'idle')
+        }
+      }).catch(() => setStatus('Could not decode audio', 'stopped'))
+      setStatus(`${p.icon} ${p.label}`, 'active')
+      return
     } else if (masterRef.current) {
       src = playSound(p.sound, a, masterRef.current)
     }
@@ -140,12 +165,35 @@ export default function Soundboard({ user }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pads, overlapMode])
 
+  // ── Board name ─────────────────────────────────────────────────
+  function startEditName() {
+    setNameInput(boardName)
+    setEditingName(true)
+  }
+  async function saveNameHandler() {
+    const val = nameInput.trim().toUpperCase() || defaultBoardName
+    setBoardName(val)
+    setEditingName(false)
+    try {
+      await supabase.from('user_settings').upsert(
+        { user_id: user.id, board_name: val, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' }
+      )
+    } catch (err) {
+      console.error('Failed to save board name:', err)
+    }
+  }
+  function cancelEditName() {
+    setEditingName(false)
+    setNameInput(boardName)
+  }
+
   // ── Pick pad in edit mode ───────────────────────────────────────
   function pickPad(index: number) {
     const p = pads[index]
     setSelPad(index)
     setSelColor(p.color)
-    setUseCustomSource(!!p.customBuf)
+    setUseCustomSource(!!p.customBuf || !!(p as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf)
     setEditSound(p.sound || 'kick')
     setEditLabel(p.label)
     setEditEmoji(p.customBuf ? p.icon : '')
@@ -174,8 +222,9 @@ export default function Soundboard({ user }: Props) {
             .upload(storagePath, pendingRawRef.current, { contentType: 'audio/mpeg', upsert: true })
           if (upErr) throw upErr
 
+          const rawCopy = pendingRawRef.current.slice(0)
           setPads(prev => prev.map((pd, i) => i === selPad
-            ? { ...pd, label, icon: emoji, customBuf: pendingBuf!, customRawBuf: pendingRawRef.current!.slice(0), customTrackPath: storagePath, customTrackName: pendingFileName!, color: selColor }
+            ? { ...pd, label, icon: emoji, customBuf: pendingBuf!, customRawBuf: rawCopy, customTrackPath: storagePath, customTrackName: pendingFileName!, color: selColor } as PadState
             : pd
           ))
           await supabase.from('pad_configs').upsert({
@@ -192,18 +241,18 @@ export default function Soundboard({ user }: Props) {
           return
         }
       } else {
-        // Update label/emoji/color only on existing custom track
-        setPads(prev => prev.map((pd, i) => i === selPad ? { ...pd, label, icon: emoji, color: selColor } : pd))
+        const label2 = editLabel || p.label
+        const emoji2 = editEmoji.trim() || p.icon
+        setPads(prev => prev.map((pd, i) => i === selPad ? { ...pd, label: label2, icon: emoji2, color: selColor } : pd))
         await supabase.from('pad_configs').upsert({
           user_id: user.id, pad_index: selPad,
-          sound: p.sound, label, color: selColor, icon: emoji,
+          sound: p.sound, label: label2, color: selColor, icon: emoji2,
           custom_track_path: p.customTrackPath, custom_track_name: p.customTrackName,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id,pad_index' })
-        setStatus(`Saved → [${p.keyLabel}] ${label}`, 'active')
+        setStatus(`Saved → [${p.keyLabel}] ${label2}`, 'active')
       }
     } else {
-      // Built-in sound
       const label = editLabel || SOUND_LABELS[editSound]
       const icon = SOUND_ICONS[editSound] || '🔊'
       setPads(prev => prev.map((pd, i) => i === selPad
@@ -280,16 +329,25 @@ export default function Soundboard({ user }: Props) {
       setPendingBuf(buf)
       const name = file.name.replace(/\.[^.]+$/, '')
       setPendingFileName(name)
-      if (!editLabel) setEditLabel(name.slice(0, 14))
+      if (!editLabel) setEditLabel(name.slice(0, 20))
     } catch {
       setStatus('Could not decode audio file')
     }
   }
 
-  // ── Load pad configs from Supabase on mount ─────────────────────
+  // ── Load pad configs + board name from Supabase ─────────────────
   useEffect(() => {
     async function load() {
       try {
+        // Load board name
+        const { data: settings } = await supabase
+          .from('user_settings').select('board_name').eq('user_id', user.id).single()
+        if (settings?.board_name) {
+          setBoardName(settings.board_name)
+          setNameInput(settings.board_name)
+        }
+
+        // Load pad configs
         const { data, error } = await supabase
           .from('pad_configs').select('*').eq('user_id', user.id)
         if (error) throw error
@@ -315,7 +373,7 @@ export default function Soundboard({ user }: Props) {
           loadCustomAudio(row.pad_index, row.custom_track_path)
         }
       } catch (err) {
-        console.error('Failed to load pad configs:', err)
+        console.error('Failed to load data:', err)
         setDbLoading(false)
       }
     }
@@ -328,10 +386,11 @@ export default function Soundboard({ user }: Props) {
       const { data, error } = await supabase.storage.from(STORAGE_BUCKET).download(storagePath)
       if (error || !data) return
       const raw = await data.arrayBuffer()
-      const tempCtx = new AudioContext()
-      const buf = await tempCtx.decodeAudioData(raw)
-      await tempCtx.close()
-      setPads(prev => prev.map((p, i) => i === padIndex ? { ...p, customBuf: buf } : p))
+      // Store raw buffer — decoded lazily on first tap (mobile AudioContext fix)
+      setPads(prev => prev.map((p, i) => i === padIndex
+        ? { ...p, customRawBuf: raw.slice(0) } as PadState
+        : p
+      ))
     } catch (err) {
       console.warn(`Could not load audio for pad ${padIndex}:`, err)
     }
@@ -382,7 +441,33 @@ export default function Soundboard({ user }: Props) {
 
       {/* Header */}
       <div className="top">
-        <div className="wordmark">Soundboard</div>
+        <div className="wordmark-wrap">
+          {!editingName ? (
+            <div className="wordmark-name-wrap">
+              <span
+                className="wordmark"
+                onClick={startEditName}
+                title="Click to rename"
+              >
+                {boardName}
+              </span>
+              <span className="wordmark-hint">click to rename</span>
+            </div>
+          ) : (
+            <div className="wordmark-edit">
+              <input
+                className="wordmark-input"
+                value={nameInput}
+                maxLength={30}
+                onChange={e => setNameInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') saveNameHandler(); if (e.key === 'Escape') cancelEditName() }}
+                autoFocus
+              />
+              <button className="btn btn-solid btn-sm" onClick={saveNameHandler}>Save</button>
+              <button className="btn btn-outline btn-sm" onClick={cancelEditName}>Cancel</button>
+            </div>
+          )}
+        </div>
         <div className="top-right">
           <div className="user-row">
             <span className="user-email">{user.email}</span>
@@ -522,7 +607,8 @@ export default function Soundboard({ user }: Props) {
                   }}
                 >
                   <input
-                    type="file" accept="audio/*"
+                    type="file"
+                    accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.mp4,.aiff,.flac"
                     onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); (e.target as HTMLInputElement).value = '' }}
                   />
                   <div className="dz-text">
@@ -566,7 +652,7 @@ export default function Soundboard({ user }: Props) {
           <div className="panel-group">
             <span className="panel-label">Label</span>
             <input
-              type="text" placeholder="Pad label..." maxLength={14}
+              type="text" placeholder="Pad label..." maxLength={20}
               value={editLabel} onChange={e => setEditLabel(e.target.value)}
             />
           </div>
@@ -587,7 +673,7 @@ export default function Soundboard({ user }: Props) {
           <div className="panel-actions">
             <button
               className="btn btn-danger-outline"
-              disabled={!selectedPad.customBuf}
+              disabled={!selectedPad.customBuf && !(selectedPad as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf}
               onClick={handleResetPad}
             >
               Reset pad
