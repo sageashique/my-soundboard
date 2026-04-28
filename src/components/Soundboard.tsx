@@ -13,6 +13,41 @@ const EmojiPicker = dynamic(() => import('@emoji-mart/react'), { ssr: false })
 
 const STORAGE_BUCKET = 'custom-tracks'
 
+const ACCEPTED_FORMATS = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/wave', 'audio/ogg', 'audio/mp4', 'audio/m4a', 'audio/aac', 'audio/x-aiff', 'audio/aiff', 'audio/flac', 'audio/x-flac']
+const MAX_FILE_BYTES = 2 * 1024 * 1024 // 2MB
+const MAX_DURATION_SEC = 60
+const MIN_DURATION_SEC = 0.1
+
+function encodeWav(buf: AudioBuffer): ArrayBuffer {
+  const numCh = buf.numberOfChannels
+  const numSamples = buf.length
+  const sampleRate = buf.sampleRate
+  const bytesPerSample = 2
+  const blockAlign = numCh * bytesPerSample
+  const byteRate = sampleRate * blockAlign
+  const dataSize = numSamples * blockAlign
+  const ab = new ArrayBuffer(44 + dataSize)
+  const view = new DataView(ab)
+  const writeStr = (o: number, s: string) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)) }
+  writeStr(0, 'RIFF'); view.setUint32(4, 36 + dataSize, true); writeStr(8, 'WAVE')
+  writeStr(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true)
+  view.setUint16(22, numCh, true); view.setUint32(24, sampleRate, true)
+  view.setUint32(28, byteRate, true); view.setUint16(32, blockAlign, true)
+  view.setUint16(34, bytesPerSample * 8, true); writeStr(36, 'data')
+  view.setUint32(40, dataSize, true)
+  // Interleave channels as 16-bit PCM
+  const channels = Array.from({ length: numCh }, (_, c) => buf.getChannelData(c))
+  let offset = 44
+  for (let i = 0; i < numSamples; i++) {
+    for (let c = 0; c < numCh; c++) {
+      const s = Math.max(-1, Math.min(1, channels[c][i]))
+      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true)
+      offset += 2
+    }
+  }
+  return ab
+}
+
 interface Props { user: User }
 
 export default function Soundboard({ user }: Props) {
@@ -38,6 +73,8 @@ export default function Soundboard({ user }: Props) {
   const [useCustomSource, setUseCustomSource] = useState(false)
   const [pendingBuf, setPendingBuf] = useState<AudioBuffer | null>(null)
   const [pendingFileName, setPendingFileName] = useState<string | null>(null)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [pendingDuration, setPendingDuration] = useState<number | null>(null)
   const [editLabel, setEditLabel] = useState('')
   const [editEmoji, setEditEmoji] = useState('')
   const [editSound, setEditSound] = useState('kick')
@@ -205,6 +242,8 @@ export default function Soundboard({ user }: Props) {
     setEditEmoji(p.customBuf ? p.icon : '')
     setPendingBuf(null)
     setPendingFileName(null)
+    setUploadError(null)
+    setPendingDuration(null)
     pendingRawRef.current = null
     setStatus(`Pad [${p.keyLabel}] selected`)
   }
@@ -330,19 +369,42 @@ export default function Soundboard({ user }: Props) {
 
   // ── File upload ────────────────────────────────────────────────
   async function handleFile(file: File) {
-    if (!file.type.startsWith('audio/')) { setStatus('Not an audio file'); return }
+    // Format check
+    if (!file.type.startsWith('audio/') && !ACCEPTED_FORMATS.includes(file.type)) {
+      setUploadError('Unsupported format. Use MP3, WAV, M4A, AAC, OGG, AIFF, or FLAC.')
+      return
+    }
+    // Size check
+    if (file.size > MAX_FILE_BYTES) {
+      setUploadError(`File too large — max 2MB. This file is ${(file.size / 1024 / 1024).toFixed(1)}MB.`)
+      return
+    }
+    setUploadError(null)
+    setStatus('Decoding…')
     try {
       const raw = await file.arrayBuffer()
-      pendingMimeTypeRef.current = file.type || 'audio/mp4'
       const a = getAC()
       const buf = await a.decodeAudioData(raw.slice(0))
-      pendingRawRef.current = raw
+      // Duration checks
+      if (buf.duration < MIN_DURATION_SEC) {
+        setUploadError('File too short — minimum 0.1 seconds.')
+        return
+      }
+      if (buf.duration > MAX_DURATION_SEC) {
+        setUploadError(`File too long — max 60 seconds. This file is ${buf.duration.toFixed(1)}s.`)
+        return
+      }
+      const wavRaw = encodeWav(buf)
+      pendingRawRef.current = wavRaw
+      pendingMimeTypeRef.current = 'audio/wav'
       setPendingBuf(buf)
       const name = file.name.replace(/\.[^.]+$/, '')
       setPendingFileName(name)
+      setPendingDuration(buf.duration)
       if (!editLabel) setEditLabel(name.slice(0, 20))
+      console.log('[handleFile] transcoded to WAV, size:', wavRaw.byteLength, 'duration:', buf.duration)
     } catch {
-      setStatus('Could not decode audio file')
+      setUploadError('Could not decode this file. Try converting to MP3 or WAV first.')
     }
   }
 
@@ -653,10 +715,15 @@ export default function Soundboard({ user }: Props) {
                     onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); (e.target as HTMLInputElement).value = '' }}
                   />
                   <div className="dz-text">
-                    {pendingFileName
-                      ? <><strong>{pendingFileName}</strong><small>Ready to assign</small></>
-                      : <><strong>Drop file here</strong> or click to browse<small>MP3 · WAV · OGG · M4A</small></>
-                    }
+                    {uploadError ? (
+                      <><strong className="dz-error">{uploadError}</strong><small>MP3 · WAV · M4A · AAC · OGG · max 2MB · max 60s</small></>
+                    ) : pendingFileName && pendingDuration !== null ? (
+                      <><strong>{pendingFileName}</strong><small>{pendingDuration.toFixed(1)}s · Ready to assign</small></>
+                    ) : pendingFileName ? (
+                      <><strong>{pendingFileName}</strong><small>Ready to assign</small></>
+                    ) : (
+                      <><strong>Drop file here</strong> or click to browse<small>MP3 · WAV · M4A · AAC · OGG · max 2MB · max 60s</small></>
+                    )}
                   </div>
                 </div>
               </div>

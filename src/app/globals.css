@@ -609,6 +609,7 @@ input[type='text'] { width: 130px; }
 .dz-text { font-size: 12px; color: var(--text2); line-height: 1.5; }
 .dz-text strong { color: var(--text); font-weight: 500; }
 .dz-text small { font-size: 11px; color: var(--text3); display: block; }
+.dz-error { color: var(--red); font-weight: 500; }
 .emoji-input { width: 70px !important; text-align: center; font-size: 18px !important; padding: 5px 8px !important; }
 
 /* EMOJI PICKER */
