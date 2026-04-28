@@ -357,6 +357,7 @@ export default function Soundboard({ user }: Props) {
         // Load pad configs
         const { data, error } = await supabase
           .from('pad_configs').select('*').eq('user_id', user.id)
+        console.log('[load] data length:', data?.length ?? 'NULL', '| error:', error)
         if (error) throw error
         if (!data || data.length === 0) { setDbLoading(false); return }
 
@@ -375,8 +376,11 @@ export default function Soundboard({ user }: Props) {
         setPads(loaded)
         setDbLoading(false)
 
+        console.log('[load] pad_configs rows:', data.length, data.map(r => ({ i: r.pad_index, path: r.custom_track_path })))
         for (const row of data) {
+          console.log('[load] checking row', row.pad_index, '| custom_track_path:', row.custom_track_path)
           if (!row.custom_track_path) continue
+          console.log('[load] calling loadCustomAudio for pad', row.pad_index)
           loadCustomAudio(row.pad_index, row.custom_track_path)
         }
       } catch (err) {
@@ -389,7 +393,7 @@ export default function Soundboard({ user }: Props) {
   }, [user.id])
 
   async function loadCustomAudio(padIndex: number, storagePath: string) {
-    console.log('[loadCustomAudio] padIndex:', padIndex, '| storagePath:', storagePath)
+    console.log('[loadCustomAudio] CALLED for pad', padIndex, 'path:', storagePath)
     try {
       const { data, error } = await supabase.storage.from(STORAGE_BUCKET).download(storagePath)
       console.log('[loadCustomAudio] download result — data:', !!data, '| error:', error)
