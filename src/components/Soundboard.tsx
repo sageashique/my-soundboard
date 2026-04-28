@@ -2,16 +2,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
-import { defaultPads, SOUNDS, SOUND_ICONS, SOUND_LABELS, COLORS, KEY_TO_INDEX, getDefaultForIndex } from '@/lib/constants'
+import { defaultPads, SOUND_ICONS, SOUND_LABELS, COLORS, KEY_TO_INDEX, getDefaultForIndex } from '@/lib/constants'
 import { playSound } from '@/lib/sounds'
-import type { ModalState, PadState, PendingFile } from '@/lib/types'
-import Pad, { type PadHandle } from './Pad'
+import type { ModalState, PadState } from '@/lib/types'
+import Pad from './Pad'
 import Modal from './Modal'
 
 const STORAGE_BUCKET = 'custom-tracks'
 
 interface Props { user: User }
-type StatusState = 'idle' | 'active' | 'stopped'
 
 export default function Soundboard({ user }: Props) {
   const [pads, setPads] = useState<PadState[]>(defaultPads)
@@ -20,33 +19,39 @@ export default function Soundboard({ user }: Props) {
   const [selColor, setSelColor] = useState('red')
   const [overlapMode, setOverlapMode] = useState(false)
   const [volume, setVolume] = useState(0.8)
+
+  // Status: idle | active | stopped
   const [statusMsg, setStatusMsg] = useState('Ready')
-  const [statusState, setStatusState] = useState<StatusState>('idle')
+  const [statusState, setStatusState] = useState<'idle' | 'active' | 'stopped'>('idle')
 
   // Unified edit panel state
   const [useCustomSource, setUseCustomSource] = useState(false)
-  const [pendingFile, setPendingFile] = useState<PendingFile | null>(null)
-  const [dzDragOver, setDzDragOver] = useState(false)
+  const [pendingBuf, setPendingBuf] = useState<AudioBuffer | null>(null)
+  const [pendingFileName, setPendingFileName] = useState<string | null>(null)
   const [editLabel, setEditLabel] = useState('')
   const [editEmoji, setEditEmoji] = useState('')
   const [editSound, setEditSound] = useState('kick')
 
+  // Reset all confirm
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
+
   const [modal, setModal] = useState<ModalState | null>(null)
   const [dbLoading, setDbLoading] = useState(true)
-  const [showResetConfirm, setShowResetConfirm] = useState(false)
 
   // Audio refs
   const ctxRef = useRef<AudioContext | null>(null)
   const masterRef = useRef<GainNode | null>(null)
-  const volumeRef = useRef(0.8)
   const currentSourceRef = useRef<AudioBufferSourceNode | OscillatorNode | null>(null)
-  const activeSourcesRef = useRef(new Set<AudioBufferSourceNode | OscillatorNode>())
+  const activeSourcesRef = useRef<Set<AudioBufferSourceNode | OscillatorNode>>(new Set())
 
-  // DOM refs
-  const padRefs = useRef<(PadHandle | null)[]>(Array(14).fill(null))
-  const stopBarRef = useRef<HTMLDivElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  // Keyboard held keys
   const heldRef = useRef(new Set<string>())
+
+  // Raw audio buffer for upload
+  const pendingRawRef = useRef<ArrayBuffer | null>(null)
+
+  // Drop zone ref
+  const dzRef = useRef<HTMLDivElement>(null)
 
   // ── Audio context ──────────────────────────────────────────────
   function getAC(): AudioContext {
@@ -54,39 +59,41 @@ export default function Soundboard({ user }: Props) {
       const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
       ctxRef.current = new AC()
       masterRef.current = ctxRef.current.createGain()
-      masterRef.current.gain.value = volumeRef.current
+      masterRef.current.gain.value = volume
       masterRef.current.connect(ctxRef.current.destination)
     }
     if (ctxRef.current.state === 'suspended') ctxRef.current.resume()
     return ctxRef.current
   }
 
+  // ── Status ─────────────────────────────────────────────────────
+  function setStatus(msg: string, state: 'idle' | 'active' | 'stopped' = 'idle') {
+    setStatusMsg(msg)
+    setStatusState(state)
+  }
+
+  // ── Volume ─────────────────────────────────────────────────────
   function handleVolume(v: number) {
     setVolume(v)
-    volumeRef.current = v
     if (masterRef.current) masterRef.current.gain.value = v
   }
 
-  // ── Stop all ───────────────────────────────────────────────────
+  // ── Stop All ───────────────────────────────────────────────────
   const stopAll = useCallback(() => {
     if (masterRef.current && ctxRef.current) {
-      const t = ctxRef.current.currentTime
-      const restore = volumeRef.current
-      masterRef.current.gain.cancelScheduledValues(t)
-      masterRef.current.gain.setValueAtTime(0, t)
+      const a = ctxRef.current
+      masterRef.current.gain.cancelScheduledValues(a.currentTime)
+      masterRef.current.gain.setValueAtTime(0, a.currentTime)
       setTimeout(() => {
         if (masterRef.current && ctxRef.current)
-          masterRef.current.gain.setValueAtTime(restore, ctxRef.current.currentTime)
+          masterRef.current.gain.setValueAtTime(volume, ctxRef.current.currentTime)
       }, 80)
     }
     activeSourcesRef.current.forEach(s => { try { s.stop() } catch { /* already stopped */ } })
     activeSourcesRef.current.clear()
     currentSourceRef.current = null
-    const el = stopBarRef.current
-    if (el) { el.classList.remove('fire'); void el.offsetWidth; el.classList.add('fire'); setTimeout(() => el.classList.remove('fire'), 200) }
-    setStatusMsg('⏹ Stopped')
-    setStatusState('stopped')
-  }, [])
+    setStatus('⏹ Stopped', 'stopped')
+  }, [volume])
 
   // ── Fire a pad ─────────────────────────────────────────────────
   const fire = useCallback((index: number) => {
@@ -99,6 +106,7 @@ export default function Soundboard({ user }: Props) {
     }
 
     let src: AudioBufferSourceNode | OscillatorNode | null = null
+
     if (p.customBuf && masterRef.current) {
       const s = a.createBufferSource()
       s.buffer = p.customBuf
@@ -111,20 +119,14 @@ export default function Soundboard({ user }: Props) {
 
     if (src) {
       activeSourcesRef.current.add(src)
-      const captured = src
       src.onended = () => {
-        activeSourcesRef.current.delete(captured)
-        if (activeSourcesRef.current.size === 0) {
-          setStatusMsg('Ready')
-          setStatusState('idle')
-        }
+        activeSourcesRef.current.delete(src!)
+        if (activeSourcesRef.current.size === 0) setStatus('Ready', 'idle')
       }
     }
-    if (!overlapMode) currentSourceRef.current = src
 
-    padRefs.current[index]?.flash()
-    setStatusMsg(`${p.icon} ${p.label}`)
-    setStatusState('active')
+    if (!overlapMode) currentSourceRef.current = src
+    setStatus(`${p.icon} ${p.label}`, 'active')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pads, overlapMode])
 
@@ -134,196 +136,170 @@ export default function Soundboard({ user }: Props) {
     setSelPad(index)
     setSelColor(p.color)
     setUseCustomSource(!!p.customBuf)
+    setEditSound(p.sound || 'kick')
     setEditLabel(p.label)
     setEditEmoji(p.customBuf ? p.icon : '')
-    setEditSound(p.sound || 'kick')
-    setPendingFile(null)
-    setStatusMsg(`Pad [${p.keyLabel}] selected`)
-    setStatusState('idle')
+    setPendingBuf(null)
+    setPendingFileName(null)
+    pendingRawRef.current = null
+    setStatus(`Pad [${p.keyLabel}] selected`)
   }
 
-  // ── Unified save ───────────────────────────────────────────────
+  // ── Save pad ───────────────────────────────────────────────────
   async function handleSave() {
     if (selPad === null) return
-    const pad = pads[selPad]
-    const label = editLabel.trim()
+    const p = pads[selPad]
 
     if (useCustomSource) {
-      if (!pendingFile && !pad.customBuf) { setStatusMsg('Drop an audio file first'); return }
+      if (!pendingBuf && !p.customBuf) { setStatus('Drop an audio file first'); return }
+      const label = editLabel || pendingFileName || 'Custom'
+      const emoji = editEmoji.trim() || '🎵'
 
-      const doSave = async () => {
+      if (pendingBuf && pendingFileName && pendingRawRef.current) {
         try {
-          let buf = pad.customBuf
-          let storagePath = pad.customTrackPath ?? `${user.id}/pad-${selPad}`
-          let trackName = pad.customTrackName ?? ''
+          setStatus('Uploading…')
+          const storagePath = `${user.id}/pad-${selPad}`
+          const { error: upErr } = await supabase.storage
+            .from(STORAGE_BUCKET)
+            .upload(storagePath, pendingRawRef.current, { contentType: 'audio/mpeg', upsert: true })
+          if (upErr) throw upErr
 
-          if (pendingFile) {
-            setStatusMsg('Uploading…')
-            storagePath = `${user.id}/pad-${selPad}`
-            const { error: upErr } = await supabase.storage
-              .from(STORAGE_BUCKET)
-              .upload(storagePath, pendingFile.raw, { contentType: 'audio/mpeg', upsert: true })
-            if (upErr) throw upErr
-            const tempCtx = new AudioContext()
-            buf = await tempCtx.decodeAudioData(pendingFile.raw.slice(0))
-            await tempCtx.close()
-            trackName = pendingFile.name
-          }
-
-          const finalLabel = label || trackName || 'Custom'
-          const finalEmoji = editEmoji.trim() || '🎵'
-
-          setPads(prev => prev.map((p, i) => i === selPad
-            ? { ...p, label: finalLabel, icon: finalEmoji, color: selColor, customBuf: buf, customTrackPath: storagePath, customTrackName: trackName }
-            : p
+          setPads(prev => prev.map((pd, i) => i === selPad
+            ? { ...pd, label, icon: emoji, customBuf: pendingBuf!, customTrackPath: storagePath, customTrackName: pendingFileName!, color: selColor }
+            : pd
           ))
           await supabase.from('pad_configs').upsert({
             user_id: user.id, pad_index: selPad,
-            sound: pad.sound, label: finalLabel, color: selColor,
-            icon: finalEmoji, custom_track_path: storagePath, custom_track_name: trackName,
+            sound: p.sound, label, color: selColor, icon: emoji,
+            custom_track_path: storagePath, custom_track_name: pendingFileName,
             updated_at: new Date().toISOString(),
           }, { onConflict: 'user_id,pad_index' })
 
-          setPendingFile(null)
-          setStatusMsg(`Saved → [${pad.keyLabel}] ${finalLabel}`)
-          setStatusState('active')
+          setPendingBuf(null); setPendingFileName(null); pendingRawRef.current = null
+          setStatus(`Saved → [${p.keyLabel}] ${label}`, 'active')
         } catch (err) {
-          setStatusMsg(`Save failed: ${(err as Error).message}`)
-          setStatusState('idle')
+          setStatus(`Upload failed: ${(err as Error).message}`)
+          return
         }
-      }
-
-      if (pendingFile && pad.customBuf) {
-        setModal({
-          title: 'Replace custom track?',
-          body: `Replace "${pad.customTrackName}" with "${pendingFile.name}"?`,
-          okLabel: 'Replace', style: 'confirm', cb: doSave,
-        })
       } else {
-        await doSave()
+        // Update label/emoji/color only on existing custom track
+        setPads(prev => prev.map((pd, i) => i === selPad ? { ...pd, label, icon: emoji, color: selColor } : pd))
+        await supabase.from('pad_configs').upsert({
+          user_id: user.id, pad_index: selPad,
+          sound: p.sound, label, color: selColor, icon: emoji,
+          custom_track_path: p.customTrackPath, custom_track_name: p.customTrackName,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id,pad_index' })
+        setStatus(`Saved → [${p.keyLabel}] ${label}`, 'active')
       }
     } else {
-      // Built-in mode
-      const doSave = async () => {
-        try {
-          const finalLabel = label || SOUND_LABELS[editSound]
-          const finalIcon = SOUND_ICONS[editSound] || '🔊'
-
-          if (pad.customBuf && pad.customTrackPath)
-            await supabase.storage.from(STORAGE_BUCKET).remove([pad.customTrackPath])
-
-          setPads(prev => prev.map((p, i) => i === selPad
-            ? { ...p, sound: editSound, label: finalLabel, icon: finalIcon, color: selColor, customBuf: null, customTrackPath: null, customTrackName: null }
-            : p
-          ))
-          await supabase.from('pad_configs').upsert({
-            user_id: user.id, pad_index: selPad,
-            sound: editSound, label: finalLabel, color: selColor,
-            icon: finalIcon, custom_track_path: null, custom_track_name: null,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'user_id,pad_index' })
-
-          setStatusMsg(`Saved → [${pad.keyLabel}] ${finalLabel}`)
-          setStatusState('active')
-        } catch (err) {
-          setStatusMsg(`Save failed: ${(err as Error).message}`)
-          setStatusState('idle')
-        }
-      }
-
-      if (pad.customBuf) {
-        setModal({
-          title: 'Switch to built-in?',
-          body: `This will remove "${pad.customTrackName}" and switch to ${SOUND_LABELS[editSound]}.`,
-          okLabel: 'Switch', style: 'danger', cb: doSave,
-        })
-      } else {
-        await doSave()
-      }
+      // Built-in sound
+      const label = editLabel || SOUND_LABELS[editSound]
+      const icon = SOUND_ICONS[editSound] || '🔊'
+      setPads(prev => prev.map((pd, i) => i === selPad
+        ? { ...pd, sound: editSound, label, icon, color: selColor, customBuf: null, customTrackPath: null, customTrackName: null }
+        : pd
+      ))
+      await supabase.from('pad_configs').upsert({
+        user_id: user.id, pad_index: selPad,
+        sound: editSound, label, color: selColor, icon,
+        custom_track_path: null, custom_track_name: null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,pad_index' })
+      setStatus(`Saved → [${p.keyLabel}] ${label}`, 'active')
     }
   }
 
-  // ── Reset single pad ───────────────────────────────────────────
+  // ── Reset pad ──────────────────────────────────────────────────
   function handleResetPad() {
     if (selPad === null) return
-    const pad = pads[selPad]
-    const def = getDefaultForIndex(selPad)
+    const p = pads[selPad]
     setModal({
       title: 'Reset pad?',
-      body: `Remove custom track from [${pad.keyLabel}] and restore default (${def.defaultLabel})?`,
-      okLabel: 'Reset', style: 'danger',
+      body: `Remove custom track from [${p.keyLabel}] and restore its default sound?`,
+      okLabel: 'Reset',
+      style: 'danger',
       cb: async () => {
+        const def = getDefaultForIndex(selPad)
+        if (!def) return
         try {
-          if (pad.customTrackPath)
-            await supabase.storage.from(STORAGE_BUCKET).remove([pad.customTrackPath])
-          setPads(prev => prev.map((p, i) => i === selPad
-            ? { ...p, sound: def.sound, label: def.defaultLabel, icon: def.icon, color: def.color, customBuf: null, customTrackPath: null, customTrackName: null }
-            : p
+          if (p.customTrackPath) {
+            await supabase.storage.from(STORAGE_BUCKET).remove([p.customTrackPath])
+          }
+          setPads(prev => prev.map((pd, i) => i === selPad
+            ? { ...pd, sound: def.sound, label: def.defaultLabel, icon: def.icon, color: def.color, customBuf: null, customTrackPath: null, customTrackName: null }
+            : pd
           ))
           await supabase.from('pad_configs').upsert({
             user_id: user.id, pad_index: selPad,
-            sound: def.sound, label: def.defaultLabel, color: def.color,
-            icon: def.icon, custom_track_path: null, custom_track_name: null,
+            sound: def.sound, label: def.defaultLabel, color: def.color, icon: def.icon,
+            custom_track_path: null, custom_track_name: null,
             updated_at: new Date().toISOString(),
           }, { onConflict: 'user_id,pad_index' })
-          setSelColor(def.color)
           setUseCustomSource(false)
           setEditSound(def.sound)
           setEditLabel(def.defaultLabel)
           setEditEmoji('')
-          setPendingFile(null)
-          setStatusMsg(`Pad [${pad.keyLabel}] reset to default`)
-          setStatusState('idle')
+          setSelColor(def.color)
+          setStatus(`Pad [${p.keyLabel}] reset to default`)
         } catch (err) {
-          setStatusMsg(`Reset failed: ${(err as Error).message}`)
+          setStatus(`Reset failed: ${(err as Error).message}`)
         }
       },
     })
   }
 
-  // ── Reset all to defaults ──────────────────────────────────────
-  async function handleResetAll() {
+  // ── Reset all ─────────────────────────────────────────────────
+  function handleResetAll() {
     stopAll()
-    const paths = pads.filter(p => p.customTrackPath).map(p => p.customTrackPath!)
-    if (paths.length) await supabase.storage.from(STORAGE_BUCKET).remove(paths)
-    await supabase.from('pad_configs').delete().eq('user_id', user.id)
-    setPads(defaultPads())
+    setPads(defaultPads)
     setSelPad(null)
     setEditing(false)
     setShowResetConfirm(false)
-    setStatusMsg('All pads reset to defaults')
-    setStatusState('idle')
+    setStatus('All pads reset to defaults')
   }
 
-  // ── File drop / select in edit panel ──────────────────────────
-  async function handleFileSelect(file: File) {
-    if (!file.type.startsWith('audio/')) { setStatusMsg('Not an audio file'); return }
+  // ── File upload ────────────────────────────────────────────────
+  async function handleFile(file: File) {
+    if (!file.type.startsWith('audio/')) { setStatus('Not an audio file'); return }
     try {
       const raw = await file.arrayBuffer()
+      const a = getAC()
+      const buf = await a.decodeAudioData(raw.slice(0))
+      pendingRawRef.current = raw
+      setPendingBuf(buf)
       const name = file.name.replace(/\.[^.]+$/, '')
-      setPendingFile({ raw, name, size: file.size })
+      setPendingFileName(name)
       if (!editLabel) setEditLabel(name.slice(0, 14))
-      setStatusMsg(`${name} ready`)
     } catch {
-      setStatusMsg('Could not read file')
+      setStatus('Could not decode audio file')
     }
   }
 
-  // ── Load pad configs on mount ──────────────────────────────────
+  // ── Load pad configs from Supabase on mount ─────────────────────
   useEffect(() => {
     async function load() {
       try {
-        const { data, error } = await supabase.from('pad_configs').select('*').eq('user_id', user.id)
+        const { data, error } = await supabase
+          .from('pad_configs').select('*').eq('user_id', user.id)
         if (error) throw error
         if (!data || data.length === 0) { setDbLoading(false); return }
+
         const loaded = defaultPads()
         for (const row of data) {
           const i: number = row.pad_index
-          if (i < 0 || i >= 14) continue
-          loaded[i] = { ...loaded[i], sound: row.sound, label: row.label, color: row.color, icon: row.icon, customTrackPath: row.custom_track_path ?? null, customTrackName: row.custom_track_name ?? null, customBuf: null }
+          if (i < 0 || i >= loaded.length) continue
+          loaded[i] = {
+            ...loaded[i],
+            sound: row.sound, label: row.label, color: row.color, icon: row.icon,
+            customTrackPath: row.custom_track_path ?? null,
+            customTrackName: row.custom_track_name ?? null,
+            customBuf: null,
+          }
         }
         setPads(loaded)
         setDbLoading(false)
+
         for (const row of data) {
           if (!row.custom_track_path) continue
           loadCustomAudio(row.pad_index, row.custom_track_path)
@@ -351,7 +327,7 @@ export default function Soundboard({ user }: Props) {
     }
   }
 
-  // ── Keyboard events ────────────────────────────────────────────
+  // ── Keyboard events ─────────────────────────────────────────────
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return
@@ -359,32 +335,25 @@ export default function Soundboard({ user }: Props) {
       heldRef.current.add(e.key)
       if (e.key === ' ') { e.preventDefault(); stopAll(); return }
       const idx = KEY_TO_INDEX[e.key]
-      if (idx !== undefined) {
-        e.preventDefault()
-        if (editing && selPad !== idx) pickPad(idx)
-        else if (!editing) fire(idx)
-      }
+      if (idx !== undefined) { e.preventDefault(); editing ? pickPad(idx) : fire(idx) }
     }
     function onKeyUp(e: KeyboardEvent) { heldRef.current.delete(e.key) }
     window.addEventListener('keydown', onKeyDown)
     window.addEventListener('keyup', onKeyUp)
     return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pads, overlapMode, editing, selPad, fire, stopAll])
+  }, [pads, overlapMode, editing, selPad, stopAll])
 
-  // ── Modal + auth ───────────────────────────────────────────────
-  function dismissModal() { setModal(null) }
-  function confirmModal() { const cb = modal?.cb; setModal(null); cb?.() }
+  // ── Sign out ────────────────────────────────────────────────────
   async function handleSignOut() { await supabase.auth.signOut() }
 
-  function toggleEditing() {
-    if (editing) { setEditing(false); setSelPad(null); setStatusMsg('Ready'); setStatusState('idle') }
-    else { setEditing(true); setStatusMsg('Tap a pad to configure it'); setStatusState('idle') }
-  }
+  // ── Modal ───────────────────────────────────────────────────────
+  function dismissModal() { setModal(null) }
+  function confirmModal() { const cb = modal?.cb; setModal(null); cb?.() }
 
   if (dbLoading) return <div className="loading-screen">Loading your board…</div>
 
-  const editedPad = selPad !== null ? pads[selPad] : null
+  const selectedPad = selPad !== null ? pads[selPad] : null
 
   return (
     <div className="sb-page">
@@ -398,19 +367,10 @@ export default function Soundboard({ user }: Props) {
             <span className="user-email">{user.email}</span>
             <button className="btn btn-outline" onClick={handleSignOut}>Sign out</button>
           </div>
-          <div className="vol-row">
-            <span>Vol</span>
-            <input
-              type="range"
-              min={0} max={1} step={0.05}
-              value={volume}
-              onChange={e => handleVolume(parseFloat(e.target.value))}
-            />
-          </div>
         </div>
       </div>
 
-      {/* Pad grid — row 5 is stop bar */}
+      {/* Pad grid */}
       <div className="numpad">
         {pads.map((pad, i) => (
           <Pad
@@ -418,10 +378,12 @@ export default function Soundboard({ user }: Props) {
             ref={el => { padRefs.current[i] = el }}
             pad={pad}
             selected={selPad === i}
-            onClick={() => editing ? pickPad(i) : fire(i)}
+            onClick={() => { getAC(); editing ? pickPad(i) : fire(i) }}
           />
         ))}
-        <div ref={stopBarRef} className="pad-stop" onClick={stopAll}>
+
+        {/* Stop bar */}
+        <div className="pad-stop" onClick={stopAll}>
           <span className="pad-stop-icon">⏹</span>
           <span className="pad-stop-label">Stop</span>
           <span className="pad-stop-key">Space</span>
@@ -430,22 +392,31 @@ export default function Soundboard({ user }: Props) {
 
       {/* Status bar */}
       <div className="status-bar">
-        <span className={`status-pill${statusState !== 'idle' ? ` ${statusState}` : ''}`}>{statusMsg}</span>
+        <span className={`status-pill${statusState !== 'idle' ? ` ${statusState}` : ''}`}>
+          {statusMsg}
+        </span>
       </div>
 
       <div className="divider" />
 
-      {/* Controls */}
+      {/* Controls bar: vol + sound overlap */}
       <div className="controls-bar">
+        <div className="vol-row">
+          <span>Vol</span>
+          <input
+            type="range" min={0} max={1} step={0.05} value={volume}
+            onChange={e => handleVolume(parseFloat(e.target.value))}
+          />
+        </div>
+        <div className="vsep" />
         <div className="toggle-group">
           <span className="toggle-label">Sound overlap</span>
           <label className="toggle">
             <input
-              type="checkbox"
-              checked={overlapMode}
+              type="checkbox" checked={overlapMode}
               onChange={e => {
                 setOverlapMode(e.target.checked)
-                setStatusMsg(e.target.checked ? 'Sound overlap on' : 'Sound overlap off')
+                setStatus(e.target.checked ? 'Sound overlap on' : 'Sound overlap off')
               }}
             />
             <span className="toggle-track" />
@@ -458,31 +429,31 @@ export default function Soundboard({ user }: Props) {
 
       {/* Edit mode toggle */}
       <div className="controls-bar">
-        <button className={`btn btn-outline${editing ? ' on' : ''}`} onClick={toggleEditing}>
+        <button
+          className={`btn btn-outline${editing ? ' on' : ''}`}
+          onClick={() => {
+            if (editing) { setEditing(false); setSelPad(null); setStatus('Ready') }
+            else { setEditing(true); setStatus('Tap a pad to configure it') }
+          }}
+        >
           {editing ? 'Done' : 'Edit mode'}
         </button>
         {editing && <span className="edit-hint">Tap a pad to configure it</span>}
       </div>
 
-      {/* Unified edit panel */}
-      {editing && editedPad && (
+      {/* Unified config panel */}
+      {editing && selectedPad && (
         <div className="edit-panel">
           <div className="panel-header">
-            <span className="panel-title">Pad [{editedPad.keyLabel}] — {editedPad.label}</span>
+            <span className="panel-title">Pad [{selectedPad.keyLabel}] — {selectedPad.label}</span>
           </div>
 
           {/* Source toggle */}
           <div className="panel-group source-toggle-group">
             <span className="panel-label">Source</span>
             <div className="source-toggle">
-              <button
-                className={`src-btn${!useCustomSource ? ' active' : ''}`}
-                onClick={() => setUseCustomSource(false)}
-              >Built-in</button>
-              <button
-                className={`src-btn${useCustomSource ? ' active' : ''}`}
-                onClick={() => setUseCustomSource(true)}
-              >Custom</button>
+              <button className={`src-btn${!useCustomSource ? ' active' : ''}`} onClick={() => setUseCustomSource(false)}>Built-in</button>
+              <button className={`src-btn${useCustomSource ? ' active' : ''}`} onClick={() => setUseCustomSource(true)}>Custom</button>
             </div>
           </div>
 
@@ -491,53 +462,61 @@ export default function Soundboard({ user }: Props) {
             <div className="panel-group">
               <span className="panel-label">Sound</span>
               <select value={editSound} onChange={e => {
-                const s = e.target.value
-                setEditSound(s)
+                setEditSound(e.target.value)
                 if (!editLabel || Object.values(SOUND_LABELS).includes(editLabel))
-                  setEditLabel(SOUND_LABELS[s] || '')
+                  setEditLabel(SOUND_LABELS[e.target.value] || '')
               }}>
-                {SOUNDS.map(s => (
-                  <option key={s} value={s}>{SOUND_ICONS[s]} {SOUND_LABELS[s]}</option>
-                ))}
+                <option value="kick">🥁 Kick</option>
+                <option value="snare">🪘 Snare</option>
+                <option value="hihat">🎵 Hi-Hat</option>
+                <option value="clap">👏 Clap</option>
+                <option value="rimshot">🎯 Rimshot</option>
+                <option value="bass">🎸 808 Bass</option>
+                <option value="synth">🎹 Synth</option>
+                <option value="riser">⬆️ Riser</option>
+                <option value="scratch">💿 Scratch</option>
+                <option value="airhorn">📯 Air Horn</option>
+                <option value="laugh">😂 Laugh</option>
+                <option value="noti">🔔 Notif</option>
+                <option value="siren">🚨 Siren</option>
+                <option value="swoosh">💨 Swoosh</option>
               </select>
             </div>
           )}
 
-          {/* Custom fields */}
+          {/* Custom upload fields */}
           {useCustomSource && (
             <div className="custom-fields">
               <div className="panel-group">
                 <span className="panel-label">Audio</span>
                 <div
-                  className={`drop-zone${dzDragOver ? ' over' : ''}`}
-                  onDragOver={e => { e.preventDefault(); setDzDragOver(true) }}
-                  onDragLeave={() => setDzDragOver(false)}
-                  onDrop={e => { e.preventDefault(); setDzDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleFileSelect(f) }}
+                  className="drop-zone"
+                  ref={dzRef}
+                  onDragOver={e => { e.preventDefault(); dzRef.current?.classList.add('over') }}
+                  onDragLeave={() => dzRef.current?.classList.remove('over')}
+                  onDrop={e => {
+                    e.preventDefault()
+                    dzRef.current?.classList.remove('over')
+                    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0])
+                  }}
                 >
                   <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="audio/*"
-                    onChange={e => { const f = e.target.files?.[0]; if (f) handleFileSelect(f); e.target.value = '' }}
+                    type="file" accept="audio/*"
+                    onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); (e.target as HTMLInputElement).value = '' }}
                   />
                   <div className="dz-text">
-                    {pendingFile ? (
-                      <><strong>{pendingFile.name}</strong><small>{(pendingFile.size / 1024).toFixed(0)} KB · Ready to assign</small></>
-                    ) : (
-                      <><strong>Drop file here</strong> or click to browse<small>MP3 · WAV · OGG · M4A</small></>
-                    )}
+                    {pendingFileName
+                      ? <><strong>{pendingFileName}</strong><small>Ready to assign</small></>
+                      : <><strong>Drop file here</strong> or click to browse<small>MP3 · WAV · OGG · M4A</small></>
+                    }
                   </div>
                 </div>
               </div>
-              <div className="panel-group" style={{ marginTop: 8 }}>
+              <div className="panel-group" style={{ marginTop: 12 }}>
                 <span className="panel-label">Emoji</span>
                 <input
-                  type="text"
-                  className="emoji-input"
-                  value={editEmoji}
-                  onChange={e => setEditEmoji(e.target.value)}
-                  placeholder="🎵"
-                  maxLength={2}
+                  type="text" className="emoji-input" placeholder="🎵" maxLength={2}
+                  value={editEmoji} onChange={e => setEditEmoji(e.target.value)}
                 />
               </div>
             </div>
@@ -547,11 +526,8 @@ export default function Soundboard({ user }: Props) {
           <div className="panel-group">
             <span className="panel-label">Label</span>
             <input
-              type="text"
-              value={editLabel}
-              onChange={e => setEditLabel(e.target.value)}
-              placeholder="Pad label…"
-              maxLength={14}
+              type="text" placeholder="Pad label..." maxLength={14}
+              value={editLabel} onChange={e => setEditLabel(e.target.value)}
             />
           </div>
           <div className="panel-group">
@@ -562,9 +538,6 @@ export default function Soundboard({ user }: Props) {
                   key={c}
                   className={`cdot d-${c}${selColor === c ? ' sel' : ''}`}
                   onClick={() => setSelColor(c)}
-                  role="radio"
-                  aria-checked={selColor === c}
-                  aria-label={c}
                 />
               ))}
             </div>
@@ -574,14 +547,12 @@ export default function Soundboard({ user }: Props) {
           <div className="panel-actions">
             <button
               className="btn btn-danger-outline"
-              disabled={!editedPad.customBuf}
+              disabled={!selectedPad.customBuf}
               onClick={handleResetPad}
-            >Reset pad</button>
-            <button
-              className="btn btn-solid"
-              disabled={useCustomSource && !pendingFile && !editedPad.customBuf}
-              onClick={handleSave}
-            >Save</button>
+            >
+              Reset pad
+            </button>
+            <button className="btn btn-solid" onClick={handleSave}>Save</button>
           </div>
         </div>
       )}
@@ -595,13 +566,15 @@ export default function Soundboard({ user }: Props) {
             Reset all to defaults
           </button>
         ) : (
-          <>
-            <span className="reset-confirm-msg">This will clear all custom sounds, labels, and colors. Are you sure?</span>
+          <div>
+            <span className="reset-confirm-msg">
+              This will clear all custom sounds, labels, and colors. Are you sure?
+            </span>
             <div className="reset-confirm-actions">
               <button className="btn btn-outline" onClick={() => setShowResetConfirm(false)}>Cancel</button>
               <button className="btn btn-danger" onClick={handleResetAll}>Yes, reset everything</button>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>
