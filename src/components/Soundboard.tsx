@@ -128,7 +128,8 @@ export default function Soundboard({ user }: Props) {
       const raw = p.customRawBuf
       const master = masterRef.current
       const capturedIndex = index
-      a.decodeAudioData(raw.slice(0)).then(buf => {
+      // Resume synchronously before going async — required by iOS Safari
+      a.resume().then(() => a.decodeAudioData(raw.slice(0))).then(buf => {
         // Cache so subsequent fires skip decoding
         setPads(prev => prev.map((pd, i) => i === capturedIndex ? { ...pd, customBuf: buf } : pd))
         const s = a.createBufferSource()
@@ -141,7 +142,7 @@ export default function Soundboard({ user }: Props) {
           activeSourcesRef.current.delete(s)
           if (activeSourcesRef.current.size === 0) { setStatusMsg('Ready'); setStatusState('idle') }
         }
-      }).catch(() => { setStatusMsg('Could not decode audio'); setStatusState('idle') })
+      }).catch(err => { console.error('decodeAudioData failed:', err); setStatusMsg('Could not decode audio'); setStatusState('idle') })
       setStatus(`${p.icon} ${p.label}`, 'active')
       return
     } else if (masterRef.current) {
@@ -541,7 +542,7 @@ export default function Soundboard({ user }: Props) {
                   }}
                 >
                   <input
-                    type="file" accept="audio/*"
+                    type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.mp4,.aiff,.flac"
                     onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); (e.target as HTMLInputElement).value = '' }}
                   />
                   <div className="dz-text">
