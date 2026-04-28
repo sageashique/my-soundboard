@@ -123,28 +123,6 @@ export default function Soundboard({ user }: Props) {
       s.connect(masterRef.current)
       s.start()
       src = s
-    } else if (p.customRawBuf && masterRef.current) {
-      // First tap after load — decode using the live AudioContext (requires user gesture)
-      const raw = p.customRawBuf
-      const master = masterRef.current
-      const capturedIndex = index
-      // Resume synchronously before going async — required by iOS Safari
-      a.resume().then(() => a.decodeAudioData(raw.slice(0))).then(buf => {
-        // Cache so subsequent fires skip decoding
-        setPads(prev => prev.map((pd, i) => i === capturedIndex ? { ...pd, customBuf: buf } : pd))
-        const s = a.createBufferSource()
-        s.buffer = buf
-        s.connect(master)
-        s.start()
-        activeSourcesRef.current.add(s)
-        if (!overlapMode) currentSourceRef.current = s
-        s.onended = () => {
-          activeSourcesRef.current.delete(s)
-          if (activeSourcesRef.current.size === 0) { setStatusMsg('Ready'); setStatusState('idle') }
-        }
-      }).catch(err => { console.error('decodeAudioData failed:', err); setStatusMsg('Could not decode audio'); setStatusState('idle') })
-      setStatus(`${p.icon} ${p.label}`, 'active')
-      return
     } else if (masterRef.current) {
       src = playSound(p.sound, a, masterRef.current)
     }
@@ -167,7 +145,7 @@ export default function Soundboard({ user }: Props) {
     const p = pads[index]
     setSelPad(index)
     setSelColor(p.color)
-    setUseCustomSource(!!(p.customBuf || p.customRawBuf))
+    setUseCustomSource(!!p.customBuf)
     setEditSound(p.sound || 'kick')
     setEditLabel(p.label)
     setEditEmoji(p.customBuf ? p.icon : '')
@@ -197,7 +175,7 @@ export default function Soundboard({ user }: Props) {
           if (upErr) throw upErr
 
           setPads(prev => prev.map((pd, i) => i === selPad
-            ? { ...pd, label, icon: emoji, customBuf: pendingBuf!, customRawBuf: pendingRawRef.current, customTrackPath: storagePath, customTrackName: pendingFileName!, color: selColor }
+            ? { ...pd, label, icon: emoji, customBuf: pendingBuf!, customRawBuf: pendingRawRef.current!.slice(0), customTrackPath: storagePath, customTrackName: pendingFileName!, color: selColor }
             : pd
           ))
           await supabase.from('pad_configs').upsert({
@@ -229,7 +207,7 @@ export default function Soundboard({ user }: Props) {
       const label = editLabel || SOUND_LABELS[editSound]
       const icon = SOUND_ICONS[editSound] || '🔊'
       setPads(prev => prev.map((pd, i) => i === selPad
-        ? { ...pd, sound: editSound, label, icon, color: selColor, customBuf: null, customRawBuf: null, customTrackPath: null, customTrackName: null }
+        ? { ...pd, sound: editSound, label, icon, color: selColor, customBuf: null, customTrackPath: null, customTrackName: null }
         : pd
       ))
       await supabase.from('pad_configs').upsert({
@@ -259,7 +237,7 @@ export default function Soundboard({ user }: Props) {
             await supabase.storage.from(STORAGE_BUCKET).remove([p.customTrackPath])
           }
           setPads(prev => prev.map((pd, i) => i === selPad
-            ? { ...pd, sound: def.sound, label: def.defaultLabel, icon: def.icon, color: def.color, customBuf: null, customRawBuf: null, customTrackPath: null, customTrackName: null }
+            ? { ...pd, sound: def.sound, label: def.defaultLabel, icon: def.icon, color: def.color, customBuf: null, customTrackPath: null, customTrackName: null }
             : pd
           ))
           await supabase.from('pad_configs').upsert({
@@ -350,8 +328,10 @@ export default function Soundboard({ user }: Props) {
       const { data, error } = await supabase.storage.from(STORAGE_BUCKET).download(storagePath)
       if (error || !data) return
       const raw = await data.arrayBuffer()
-      // Store raw bytes only — decode happens on first fire after a user gesture
-      setPads(prev => prev.map((p, i) => i === padIndex ? { ...p, customRawBuf: raw.slice(0) } : p))
+      const tempCtx = new AudioContext()
+      const buf = await tempCtx.decodeAudioData(raw)
+      await tempCtx.close()
+      setPads(prev => prev.map((p, i) => i === padIndex ? { ...p, customBuf: buf } : p))
     } catch (err) {
       console.warn(`Could not load audio for pad ${padIndex}:`, err)
     }
@@ -542,7 +522,7 @@ export default function Soundboard({ user }: Props) {
                   }}
                 >
                   <input
-                    type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.mp4,.aiff,.flac"
+                    type="file" accept="audio/*"
                     onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); (e.target as HTMLInputElement).value = '' }}
                   />
                   <div className="dz-text">
@@ -607,7 +587,7 @@ export default function Soundboard({ user }: Props) {
           <div className="panel-actions">
             <button
               className="btn btn-danger-outline"
-              disabled={!selectedPad.customBuf && !selectedPad.customRawBuf}
+              disabled={!selectedPad.customBuf}
               onClick={handleResetPad}
             >
               Reset pad
