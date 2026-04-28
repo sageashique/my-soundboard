@@ -85,6 +85,8 @@ Kick, Snare, Hi-Hat, Clap, Rimshot, 808 Bass, Synth, Riser, Scratch, Air Horn, L
 - Decoded lazily on first tap using existing post-gesture `AudioContext`
 - Decoded buffer cached in state for instant subsequent playback
 - `ArrayBuffer.slice(0)` used before every `decodeAudioData` call to prevent detached buffer errors
+- File input `accept` attribute explicitly lists MIME types for iOS Safari compatibility: `audio/*,.mp3,.wav,.ogg,.m4a,.aac,.mp4,.aiff,.flac`
+- Desktop uploads store `customRawBuf` alongside `customBuf` so mobile can decode lazily on first tap
 
 ---
 
@@ -221,9 +223,14 @@ PRIMARY KEY: user_id
 
 | Breakpoint | Changes |
 |------------|---------|
-| ≤600px | Pad cell 100px, icon 22px, reduced page padding |
-| ≤430px | Pad cell 82px, controls stack vertically, vol slider full width, vsep hidden |
-| ≤360px | Pad cell 72px, labels hidden, minimal padding |
+| ≤600px | Pad cell 92px, gap 8px, icon 22px, reduced page padding |
+| ≤430px | Pad cell 76px, gap 6px, header stacks vertically, controls stack, vol slider full width, vsep hidden, stop bar row 48px |
+| ≤380px | Pad cell 68px, gap 5px, labels hidden, minimal padding |
+
+- Header stacks at 430px — board name on top row, email + sign out on bottom row full width
+- Vol slider expands full width on mobile
+- Sound overlap toggle expands full width on mobile
+- Edit panel fields wrap on small screens
 
 ---
 
