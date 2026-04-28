@@ -44,6 +44,7 @@ export default function Soundboard({ user }: Props) {
 
   // Reset all confirm
   const [showResetConfirm, setShowResetConfirm] = useState(false)
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
 
   // Emoji picker
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
@@ -684,14 +685,14 @@ export default function Soundboard({ user }: Props) {
 
       {/* Bottom bar — reset all + sign out */}
       <div className="reset-all-section">
-        {!showResetConfirm ? (
+        {!showResetConfirm && !showSignOutConfirm ? (
           <div className="bottom-bar">
             <button className="btn btn-danger-outline" onClick={() => setShowResetConfirm(true)}>
               Reset all to defaults
             </button>
-            <button className="btn btn-outline" onClick={handleSignOut}>Sign out</button>
+            <button className="btn btn-outline" onClick={() => setShowSignOutConfirm(true)}>Sign out</button>
           </div>
-        ) : (
+        ) : showResetConfirm ? (
           <div>
             <span className="reset-confirm-msg">
               This will clear all custom sounds, labels, and colors. Are you sure?
@@ -699,6 +700,16 @@ export default function Soundboard({ user }: Props) {
             <div className="reset-confirm-actions">
               <button className="btn btn-outline" onClick={() => setShowResetConfirm(false)}>Cancel</button>
               <button className="btn btn-danger" onClick={handleResetAll}>Yes, reset everything</button>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <span className="reset-confirm-msg">
+              You'll be signed out of your soundboard. Are you sure?
+            </span>
+            <div className="reset-confirm-actions">
+              <button className="btn btn-outline" onClick={() => setShowSignOutConfirm(false)}>Cancel</button>
+              <button className="btn btn-danger" onClick={handleSignOut}>Yes, sign out</button>
             </div>
           </div>
         )}
