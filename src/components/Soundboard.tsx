@@ -350,7 +350,7 @@ export default function Soundboard({ user }: Props) {
       if (error || !data) return
       const raw = await data.arrayBuffer()
       // Store raw bytes only — decode happens on first fire after a user gesture
-      setPads(prev => prev.map((p, i) => i === padIndex ? { ...p, customRawBuf: raw } : p))
+      setPads(prev => prev.map((p, i) => i === padIndex ? { ...p, customRawBuf: raw.slice(0) } : p))
     } catch (err) {
       console.warn(`Could not load audio for pad ${padIndex}:`, err)
     }
