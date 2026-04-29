@@ -153,19 +153,26 @@ export default function Soundboard({ user }: Props) {
     const a = getAC()
     const p = pads[index]
 
-    if (!overlapMode && currentSourceRef.current) {
-      try { currentSourceRef.current.stop() } catch { /* already stopped */ }
+    // When overlap is OFF, stop every currently-playing node (not just
+    // currentSourceRef — multi-node sounds like Clap/AirHorn/Laugh register
+    // several nodes, and stopping only one leaves the rest audible).
+    if (!overlapMode) {
+      activeSourcesRef.current.forEach(s => { try { s.stop() } catch { /* already ended */ } })
+      activeSourcesRef.current.clear()
       currentSourceRef.current = null
     }
-
-    let src: AudioBufferSourceNode | OscillatorNode | null = null
 
     if (p.customBuf && masterRef.current) {
       const s = a.createBufferSource()
       s.buffer = p.customBuf
       s.connect(masterRef.current)
       s.start()
-      src = s
+      activeSourcesRef.current.add(s)
+      s.onended = () => {
+        activeSourcesRef.current.delete(s)
+        if (activeSourcesRef.current.size === 0) setStatus('Ready', 'idle')
+      }
+      if (!overlapMode) currentSourceRef.current = s
     } else if ((p as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf && masterRef.current) {
       // Lazy decode for mobile — decode on first tap after user gesture
       const raw = (p as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf!
@@ -177,8 +184,10 @@ export default function Soundboard({ user }: Props) {
         s.connect(masterRef.current)
         s.start()
         activeSourcesRef.current.add(s)
+        if (!overlapMode) currentSourceRef.current = s
         s.onended = () => {
           activeSourcesRef.current.delete(s)
+          if (currentSourceRef.current === s) currentSourceRef.current = null
           if (activeSourcesRef.current.size === 0) setStatus('Ready', 'idle')
         }
       }).catch(() => {
@@ -202,21 +211,19 @@ export default function Soundboard({ user }: Props) {
           setStatus('Could not play audio', 'stopped')
         }
       })
-      setStatus(`${p.icon} ${p.label}`, 'active')
-      return
     } else if (masterRef.current) {
-      src = playSound(p.sound, a, masterRef.current)
-    }
-
-    if (src) {
-      activeSourcesRef.current.add(src)
-      src.onended = () => {
-        activeSourcesRef.current.delete(src!)
-        if (activeSourcesRef.current.size === 0) setStatus('Ready', 'idle')
+      // playSound registers every node it creates into activeSourcesRef directly
+      const src = playSound(p.sound, a, masterRef.current, activeSourcesRef.current)
+      if (src) {
+        src.onended = () => {
+          activeSourcesRef.current.delete(src)
+          if (currentSourceRef.current === src) currentSourceRef.current = null
+          if (activeSourcesRef.current.size === 0) setStatus('Ready', 'idle')
+        }
+        if (!overlapMode) currentSourceRef.current = src
       }
     }
 
-    if (!overlapMode) currentSourceRef.current = src
     setStatus(`${p.icon} ${p.label}`, 'active')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pads, overlapMode])
@@ -598,7 +605,7 @@ export default function Soundboard({ user }: Props) {
           <Pad
             key={i}
             ref={el => { padRefs.current[i] = el }}
-            pad={pad}
+            pad={editing && selPad === i ? { ...pad, color: selColor } : pad}
             selected={selPad === i}
             onClick={() => { getAC(); editing ? pickPad(i) : fire(i) }}
           />
