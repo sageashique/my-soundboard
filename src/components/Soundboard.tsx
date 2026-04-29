@@ -48,6 +48,14 @@ export default function Soundboard({ user }: Props) {
 
   // Help overlay
   const [showHelp, setShowHelp] = useState(false)
+  useEffect(() => {
+    if (showHelp) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.removeProperty('overflow')
+    }
+    return () => { document.body.style.removeProperty('overflow') }
+  }, [showHelp])
 
   // Emoji picker
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
