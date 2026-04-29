@@ -27,6 +27,12 @@ export default function Soundboard({ user }: Props) {
   const [statusMsg, setStatusMsg] = useState('Ready')
   const [statusState, setStatusState] = useState<'idle' | 'active' | 'stopped'>('idle')
 
+  // Theme
+  const [theme, setTheme] = useState<'light' | 'dark'>('light')
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+  }, [theme])
+
   // Board name
   const emailPrefix = user.email?.split('@')[0] ?? 'my'
   const defaultBoardName = `${emailPrefix.toUpperCase()}'S SOUNDBOARD`
@@ -209,6 +215,17 @@ export default function Soundboard({ user }: Props) {
     setEditingName(false)
     setNameInput(boardName)
   }
+  async function handleThemeToggle(newTheme: 'light' | 'dark') {
+    setTheme(newTheme)
+    try {
+      await supabase.from('user_settings').upsert(
+        { user_id: user.id, theme: newTheme, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' }
+      )
+    } catch (err) {
+      console.error('Failed to save theme:', err)
+    }
+  }
 
   // ── Pick pad in edit mode ───────────────────────────────────────
   function pickPad(index: number) {
@@ -361,12 +378,15 @@ export default function Soundboard({ user }: Props) {
   useEffect(() => {
     async function load() {
       try {
-        // Load board name
+        // Load user settings
         const { data: settings } = await supabase
-          .from('user_settings').select('board_name').eq('user_id', user.id).single()
+          .from('user_settings').select('board_name, theme').eq('user_id', user.id).single()
         if (settings?.board_name) {
           setBoardName(settings.board_name)
           setNameInput(settings.board_name)
+        }
+        if (settings?.theme === 'light' || settings?.theme === 'dark') {
+          setTheme(settings.theme)
         }
 
         // Load pad configs
@@ -571,6 +591,19 @@ export default function Soundboard({ user }: Props) {
             type="range" min={0} max={1} step={0.05} value={volume}
             onChange={e => handleVolume(parseFloat(e.target.value))}
           />
+        </div>
+        <div className="vsep" />
+        <div className="toggle-group">
+          <span className="toggle-label">Dark mode</span>
+          <label className="toggle">
+            <input
+              type="checkbox"
+              checked={theme === 'dark'}
+              onChange={e => handleThemeToggle(e.target.checked ? 'dark' : 'light')}
+            />
+            <span className="toggle-track" />
+            <span className="toggle-thumb" />
+          </label>
         </div>
         <div className="vsep" />
         <div className="toggle-group">

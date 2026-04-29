@@ -727,6 +727,54 @@ input[type='text'] { width: 130px; }
 }
 .help-section p strong { color: var(--text); font-weight: 600; }
 
+/* ── DARK THEME ─────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg: #111111;
+  --surface: #1c1c1c;
+  --surface2: #262626;
+  --border: #333333;
+  --border2: #484848;
+  --text: #f0f0f0;
+  --text2: #ababab;
+  --text3: #606060;
+  --red: #e55a48;
+  --green: #40b872;
+  --blue: #4a82d4;
+  --yellow: #daa020;
+  --purple: #8a60cc;
+  --pink: #d45e95;
+}
+
+/* Dark pad colors — solid fills */
+[data-theme="dark"] .pad.c-red    { border-color: #a82828; background: #6e1c1c; }
+[data-theme="dark"] .pad.c-green  { border-color: #22874a; background: #145a32; }
+[data-theme="dark"] .pad.c-blue   { border-color: #235e9c; background: #0e3a6e; }
+[data-theme="dark"] .pad.c-yellow { border-color: #9c7810; background: #5a4208; }
+[data-theme="dark"] .pad.c-purple { border-color: #7230a0; background: #3e1866; }
+[data-theme="dark"] .pad.c-pink   { border-color: #9c3464; background: #601830; }
+[data-theme="dark"] .pad.c-red:hover    { background: #8a2424; }
+[data-theme="dark"] .pad.c-green:hover  { background: #1a7240; }
+[data-theme="dark"] .pad.c-blue:hover   { background: #124a8c; }
+[data-theme="dark"] .pad.c-yellow:hover { background: #725408; }
+[data-theme="dark"] .pad.c-purple:hover { background: #501e7e; }
+[data-theme="dark"] .pad.c-pink:hover   { background: #7a1e3c; }
+
+/* Dark pad text — light on coloured backgrounds */
+[data-theme="dark"] .pad .pad-key   { color: rgba(255,255,255,0.45); }
+[data-theme="dark"] .pad .pad-label { color: rgba(255,255,255,0.82); }
+[data-theme="dark"] .pad.sel {
+  border-color: rgba(255,255,255,0.85);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.85);
+}
+[data-theme="dark"] .custom-dot { background: #4cd97a; }
+
+/* Dark misc overrides */
+[data-theme="dark"] .btn-solid  { color: var(--bg); }
+[data-theme="dark"] .auth-tab.active { color: var(--bg); }
+[data-theme="dark"] .src-btn.active { box-shadow: 0 1px 4px rgba(0,0,0,0.5); }
+[data-theme="dark"] .modal-wrap  { background: rgba(0,0,0,0.65); }
+[data-theme="dark"] .help-overlay { background: rgba(0,0,0,0.65); }
+
 /* LOADING */
 .loading-screen {
   min-height: 100vh;
