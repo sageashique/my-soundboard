@@ -262,6 +262,7 @@ input[type='range']::-webkit-slider-thumb {
   grid-template-rows: repeat(4, var(--cell)) 56px;
   gap: var(--gap);
   margin-bottom: 20px;
+  touch-action: none;
 }
 
 /* Apple numpad grid placement */

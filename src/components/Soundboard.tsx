@@ -63,16 +63,6 @@ export default function Soundboard({ user }: Props) {
     return () => { document.body.style.removeProperty('overflow') }
   }, [showHelp])
 
-  // Prevent page scroll when dragging across numpad (iOS/iPad)
-  const numpadRef = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const el = numpadRef.current
-    if (!el) return
-    const prevent = (e: TouchEvent) => e.preventDefault()
-    el.addEventListener('touchmove', prevent, { passive: false })
-    return () => el.removeEventListener('touchmove', prevent)
-  }, [])
-
   // Emoji picker
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const emojiPickerRef = useRef<HTMLDivElement>(null)
@@ -555,7 +545,7 @@ export default function Soundboard({ user }: Props) {
       )}
 
       {/* Pad grid */}
-      <div className="numpad" ref={numpadRef}>
+      <div className="numpad">
         {pads.map((pad, i) => (
           <Pad
             key={i}
