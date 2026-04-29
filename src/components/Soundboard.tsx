@@ -179,6 +179,12 @@ export default function Soundboard({ user }: Props) {
       a.decodeAudioData(raw.slice(0)).then(buf => {
         setPads(prev => prev.map((pd, i) => i === index ? { ...pd, customBuf: buf } : pd))
         if (!masterRef.current) return
+        // Stop any sounds that started while we were decoding (overlap=off)
+        if (!overlapMode) {
+          activeSourcesRef.current.forEach(s => { try { s.stop() } catch { /* already ended */ } })
+          activeSourcesRef.current.clear()
+          currentSourceRef.current = null
+        }
         const s = a.createBufferSource()
         s.buffer = buf
         s.connect(masterRef.current)
@@ -212,16 +218,22 @@ export default function Soundboard({ user }: Props) {
         }
       })
     } else if (masterRef.current) {
-      // playSound registers every node it creates into activeSourcesRef directly
+      // Snapshot existing nodes so we can detect exactly what playSound adds
+      const prevNodes = new Set(activeSourcesRef.current)
       const src = playSound(p.sound, a, masterRef.current, activeSourcesRef.current)
-      if (src) {
-        src.onended = () => {
-          activeSourcesRef.current.delete(src)
-          if (currentSourceRef.current === src) currentSourceRef.current = null
-          if (activeSourcesRef.current.size === 0) setStatus('Ready', 'idle')
+      // Attach onended to EVERY new node (multi-node sounds like Clap/AirHorn/Laugh
+      // add several nodes; only tracking the last one leaves orphans in the set and
+      // the status pill stuck on "active" indefinitely).
+      activeSourcesRef.current.forEach(node => {
+        if (!prevNodes.has(node)) {
+          node.onended = () => {
+            activeSourcesRef.current.delete(node)
+            if (currentSourceRef.current === node) currentSourceRef.current = null
+            if (activeSourcesRef.current.size === 0) setStatus('Ready', 'idle')
+          }
         }
-        if (!overlapMode) currentSourceRef.current = src
-      }
+      })
+      if (src && !overlapMode) currentSourceRef.current = src
     }
 
     setStatus(`${p.icon} ${p.label}`, 'active')
@@ -329,8 +341,12 @@ export default function Soundboard({ user }: Props) {
     } else {
       const label = editLabel || SOUND_LABELS[editSound]
       const icon = SOUND_ICONS[editSound] || '🔊'
+      // Remove old custom audio file from storage if switching away from custom
+      if (p.customTrackPath) {
+        try { await supabase.storage.from(STORAGE_BUCKET).remove([p.customTrackPath]) } catch { /* ignore */ }
+      }
       setPads(prev => prev.map((pd, i) => i === selPad
-        ? { ...pd, sound: editSound, label, icon, color: selColor, customBuf: null, customTrackPath: null, customTrackName: null }
+        ? { ...pd, sound: editSound, label, icon, color: selColor, customBuf: null, customRawBuf: null, customTrackPath: null, customTrackName: null }
         : pd
       ))
       await supabase.from('pad_configs').upsert({
@@ -360,7 +376,7 @@ export default function Soundboard({ user }: Props) {
             await supabase.storage.from(STORAGE_BUCKET).remove([p.customTrackPath])
           }
           setPads(prev => prev.map((pd, i) => i === selPad
-            ? { ...pd, sound: def.sound, label: def.defaultLabel, icon: def.icon, color: def.color, customBuf: null, customTrackPath: null, customTrackName: null }
+            ? { ...pd, sound: def.sound, label: def.defaultLabel, icon: def.icon, color: def.color, customBuf: null, customRawBuf: null, customTrackPath: null, customTrackName: null }
             : pd
           ))
           await supabase.from('pad_configs').upsert({
@@ -383,12 +399,24 @@ export default function Soundboard({ user }: Props) {
   }
 
   // ── Reset all ─────────────────────────────────────────────────
-  function handleResetAll() {
+  async function handleResetAll() {
     stopAll()
-    setPads(defaultPads)
+    setShowResetConfirm(false)
+    setStatus('Resetting…')
+    try {
+      // Remove all custom audio files from storage
+      const storagePaths = pads.filter(p => p.customTrackPath).map(p => p.customTrackPath!)
+      if (storagePaths.length > 0) {
+        await supabase.storage.from(STORAGE_BUCKET).remove(storagePaths)
+      }
+      // Delete all pad configs from DB so they don't reload on refresh
+      await supabase.from('pad_configs').delete().eq('user_id', user.id)
+    } catch (err) {
+      console.error('Failed to clear data from Supabase:', err)
+    }
+    setPads(defaultPads())
     setSelPad(null)
     setEditing(false)
-    setShowResetConfirm(false)
     setStatus('All pads reset to defaults')
   }
 
