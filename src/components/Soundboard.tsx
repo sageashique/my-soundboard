@@ -13,6 +13,23 @@ const EmojiPicker = dynamic(() => import('@emoji-mart/react'), { ssr: false })
 
 const STORAGE_BUCKET = 'custom-tracks'
 
+// Detect audio MIME type from raw bytes (magic numbers)
+function detectAudioMime(buf: ArrayBuffer): string {
+  const b = new Uint8Array(buf.slice(0, 12))
+  // MP3: ID3 header or sync word
+  if (b[0] === 0x49 && b[1] === 0x44 && b[2] === 0x33) return 'audio/mpeg'
+  if (b[0] === 0xFF && (b[1] & 0xE0) === 0xE0) return 'audio/mpeg'
+  // M4A / MP4 audio: ftyp box at offset 4
+  if (b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70) return 'audio/mp4'
+  // OGG
+  if (b[0] === 0x4F && b[1] === 0x67 && b[2] === 0x67) return 'audio/ogg'
+  // WAV
+  if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46) return 'audio/wav'
+  // FLAC
+  if (b[0] === 0x66 && b[1] === 0x4C && b[2] === 0x61 && b[3] === 0x43) return 'audio/flac'
+  return 'audio/mpeg'
+}
+
 interface Props { user: User }
 
 export default function Soundboard({ user }: Props) {
@@ -82,8 +99,9 @@ export default function Soundboard({ user }: Props) {
   // Keyboard held keys
   const heldRef = useRef(new Set<string>())
 
-  // Raw audio buffer for upload
+  // Raw audio buffer + detected MIME type for upload
   const pendingRawRef = useRef<ArrayBuffer | null>(null)
+  const pendingFileTypeRef = useRef<string>('audio/mpeg')
 
   // Drop zone ref
   const dzRef = useRef<HTMLDivElement>(null)
@@ -163,7 +181,27 @@ export default function Soundboard({ user }: Props) {
           activeSourcesRef.current.delete(s)
           if (activeSourcesRef.current.size === 0) setStatus('Ready', 'idle')
         }
-      }).catch(() => setStatus('Could not decode audio', 'stopped'))
+      }).catch(() => {
+        // decodeAudioData failed (e.g. AAC/M4A on Android Chrome)
+        // Fall back to HTMLAudioElement connected through the Web Audio graph
+        try {
+          const mime = detectAudioMime(raw)
+          const blob = new Blob([raw], { type: mime })
+          const url = URL.createObjectURL(blob)
+          const htmlAudio = new Audio(url)
+          const mediaSrc = a.createMediaElementSource(htmlAudio)
+          if (masterRef.current) mediaSrc.connect(masterRef.current)
+          htmlAudio.play()
+            .then(() => setStatus(`${p.icon} ${p.label}`, 'active'))
+            .catch(() => setStatus('Could not play audio', 'stopped'))
+          htmlAudio.onended = () => {
+            URL.revokeObjectURL(url)
+            if (activeSourcesRef.current.size === 0) setStatus('Ready', 'idle')
+          }
+        } catch {
+          setStatus('Could not play audio', 'stopped')
+        }
+      })
       setStatus(`${p.icon} ${p.label}`, 'active')
       return
     } else if (masterRef.current) {
@@ -238,22 +276,22 @@ export default function Soundboard({ user }: Props) {
     const p = pads[selPad]
 
     if (useCustomSource) {
-      if (!pendingBuf && !p.customBuf) { setStatus('Drop an audio file first'); return }
+      if (!pendingRawRef.current && !p.customBuf) { setStatus('Drop an audio file first'); return }
       const label = editLabel || pendingFileName || 'Custom'
       const emoji = editEmoji.trim() || '🎵'
 
-      if (pendingBuf && pendingFileName && pendingRawRef.current) {
+      if (pendingFileName && pendingRawRef.current) {
         try {
           setStatus('Uploading…')
           const storagePath = `${user.id}/pad-${selPad}`
           const { error: upErr } = await supabase.storage
             .from(STORAGE_BUCKET)
-            .upload(storagePath, pendingRawRef.current, { contentType: 'audio/mpeg', upsert: true })
+            .upload(storagePath, pendingRawRef.current, { contentType: pendingFileTypeRef.current, upsert: true })
           if (upErr) throw upErr
 
           const rawCopy = pendingRawRef.current.slice(0)
           setPads(prev => prev.map((pd, i) => i === selPad
-            ? { ...pd, label, icon: emoji, customBuf: pendingBuf!, customRawBuf: rawCopy, customTrackPath: storagePath, customTrackName: pendingFileName!, color: selColor } as PadState
+            ? { ...pd, label, icon: emoji, customBuf: pendingBuf ?? null, customRawBuf: rawCopy, customTrackPath: storagePath, customTrackName: pendingFileName!, color: selColor } as PadState
             : pd
           ))
           await supabase.from('pad_configs').upsert({
@@ -352,15 +390,24 @@ export default function Soundboard({ user }: Props) {
     if (!file.type.startsWith('audio/')) { setStatus('Not an audio file'); return }
     try {
       const raw = await file.arrayBuffer()
-      const a = getAC()
-      const buf = await a.decodeAudioData(raw.slice(0))
+      const mime = file.type || detectAudioMime(raw)
+      pendingFileTypeRef.current = mime
       pendingRawRef.current = raw
-      setPendingBuf(buf)
       const name = file.name.replace(/\.[^.]+$/, '')
       setPendingFileName(name)
       if (!editLabel) setEditLabel(name.slice(0, 20))
+      // Try to decode for immediate playback preview; not all formats decode on all
+      // browsers (e.g. M4A on Android Chrome). We still allow upload either way.
+      try {
+        const a = getAC()
+        const buf = await a.decodeAudioData(raw.slice(0))
+        setPendingBuf(buf)
+      } catch {
+        setPendingBuf(null)
+        setStatus(`Staged "${name}" — will play via native audio`)
+      }
     } catch {
-      setStatus('Could not decode audio file')
+      setStatus('Could not read audio file')
     }
   }
 
@@ -545,7 +592,8 @@ export default function Soundboard({ user }: Props) {
       )}
 
       {/* Pad grid */}
-      <div className="numpad">
+      {/* onTouchStart handler required for iOS Safari to fire :active on child divs */}
+      <div className="numpad" onTouchStart={() => {}}>
         {pads.map((pad, i) => (
           <Pad
             key={i}
