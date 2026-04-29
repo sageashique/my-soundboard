@@ -26,6 +26,7 @@ body {
   color: var(--text);
   font-family: 'Inter', sans-serif;
   min-height: 100vh;
+  overscroll-behavior: none;
 }
 
 /* ── AUTH PAGE ── */
@@ -261,6 +262,7 @@ input[type='range']::-webkit-slider-thumb {
   grid-template-rows: repeat(4, var(--cell)) 56px;
   gap: var(--gap);
   margin-bottom: 20px;
+  touch-action: none;
 }
 
 /* Apple numpad grid placement */
@@ -293,7 +295,7 @@ input[type='range']::-webkit-slider-thumb {
   cursor: pointer;
   transition: background 0.15s, transform 0.07s;
   user-select: none;
-  touch-action: manipulation;
+  touch-action: none;
   -webkit-tap-highlight-color: transparent;
 }
 .pad-stop:hover { background: rgba(217,79,61,0.10); }
@@ -316,7 +318,7 @@ input[type='range']::-webkit-slider-thumb {
   position: relative;
   transition: background 0.15s, border-color 0.1s, transform 0.07s;
   user-select: none;
-  touch-action: manipulation;
+  touch-action: none;
   -webkit-tap-highlight-color: transparent;
   min-height: 0;
 }
