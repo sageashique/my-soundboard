@@ -64,14 +64,31 @@ The stop bar (`pad-stop`) spans all 4 columns and sits in row 5 (the 5th grid ro
 .pad-stop  { grid-column: 1 / span 4; grid-row: 5; }
 ```
 
-### Pad sizes by breakpoint
+### Pad sizing — always square, always responsive
 
-| Breakpoint | `--cell` | `--gap` |
-|---|---|---|
-| Default (desktop) | `140px` | `10px` |
-| `≤ 600px` | `92px` | `8px` |
-| `≤ 430px` | `76px` | `6px` |
-| `≤ 380px` | `68px` | `5px` |
+Every regular pad must be a **perfect square** at every screen size, exactly matching the Apple numpad aesthetic. The `pad-0` (double-width) and `pad-enter` (double-height) cells derive their dimensions from the same base cell size — they are never independently sized.
+
+`--cell` must always equal the actual column width of the grid, derived from the numpad's width and gap:
+
+```
+--cell = (numpad_width - 3 × gap) / 4
+```
+
+**Never use a fixed pixel value for `--cell` on mobile.** A fixed value will not match the computed `1fr` column width, making pads non-square.
+
+| Breakpoint | Numpad width | `--gap` | `--cell` formula |
+|---|---|---|---|
+| Desktop (`> 600px`) | `600px` (max) | `10px` | `142px` ≈ `(600 - 30) / 4` |
+| `≤ 600px` | `calc(100vw - 24px)` | `8px` | `calc((100vw - 48px) / 4)` |
+| `≤ 430px` | `calc(100vw - 16px)` | `6px` | `calc((100vw - 34px) / 4)` |
+| `≤ 380px` | `calc(100vw - 16px)` | `5px` | `calc((100vw - 31px) / 4)` |
+
+The numpad horizontal padding drives the formula:
+- `≤ 600px`: `.sb-page` has `12px` padding each side → numpad loses `24px` total → formula subtracts `24px + 3×8px = 48px`
+- `≤ 430px`: `.sb-page` has `8px` padding each side → numpad loses `16px` total → formula subtracts `16px + 3×6px = 34px`
+- `≤ 380px`: same `8px` padding, gap drops to `5px` → subtracts `16px + 3×5px = 31px`
+
+If padding values ever change, `--cell` formulas must be updated to match.
 
 ---
 
@@ -331,6 +348,7 @@ Inline confirm flow. Calls `supabase.auth.signOut()`.
 ## Things That Must Never Change Without Review
 
 1. **Pad grid placement CSS** — any change breaks the numpad layout.
+1a. **`--cell` formula** — must always equal `(numpad_width - 3×gap) / 4` at each breakpoint. Changing padding or gap without updating `--cell` makes pads non-square. Never use a fixed pixel `--cell` on mobile.
 2. **`.numpad` `max-width: 600px`** — must not use `100vw` (causes 4th column clip on iPhone).
 3. **`.sb-page` `overflow-x: hidden`** — must not use `clip` (breaks iOS Safari clipping).
 4. **`.numpad` explicit width in both mobile breakpoints** — `≤600px` must use `calc(100vw - 24px)` (12px×2 padding); `≤430px` must use `calc(100vw - 16px)` (8px×2 padding). Never use `width: 100%` on mobile — iOS Safari resolves it to the outer container width, clipping the 4th column.
