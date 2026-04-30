@@ -92,6 +92,10 @@ export default function Soundboard({ user }: Props) {
   const masterRef = useRef<GainNode | null>(null)
   const currentSourceRef = useRef<AudioBufferSourceNode | OscillatorNode | null>(null)
   const activeSourcesRef = useRef<Set<AudioBufferSourceNode | OscillatorNode>>(new Set())
+  // Tracks HTMLAudioElement instances used by the M4A/AAC fallback path.
+  // These are not AudioNodes so they live in a separate set; both sets must be
+  // consulted for stop-all and overlap-off logic.
+  const activeHtmlAudiosRef = useRef<Set<HTMLAudioElement>>(new Set())
 
   // Pad refs for flash animation
   const padRefs = useRef<(PadHandle | null)[]>([])
@@ -144,6 +148,8 @@ export default function Soundboard({ user }: Props) {
     }
     activeSourcesRef.current.forEach(s => { try { s.stop() } catch { /* already stopped */ } })
     activeSourcesRef.current.clear()
+    activeHtmlAudiosRef.current.forEach(a => { try { a.pause(); a.currentTime = 0 } catch { /* already ended */ } })
+    activeHtmlAudiosRef.current.clear()
     currentSourceRef.current = null
     setStatus('⏹ Stopped', 'stopped')
   }, [volume])
@@ -159,6 +165,8 @@ export default function Soundboard({ user }: Props) {
     if (!overlapMode) {
       activeSourcesRef.current.forEach(s => { try { s.stop() } catch { /* already ended */ } })
       activeSourcesRef.current.clear()
+      activeHtmlAudiosRef.current.forEach(a => { try { a.pause(); a.currentTime = 0 } catch { /* already ended */ } })
+      activeHtmlAudiosRef.current.clear()
       currentSourceRef.current = null
     }
 
@@ -170,7 +178,7 @@ export default function Soundboard({ user }: Props) {
       activeSourcesRef.current.add(s)
       s.onended = () => {
         activeSourcesRef.current.delete(s)
-        if (activeSourcesRef.current.size === 0) setStatus('Ready', 'idle')
+        if (activeSourcesRef.current.size === 0 && activeHtmlAudiosRef.current.size === 0) setStatus('Ready', 'idle')
       }
       if (!overlapMode) currentSourceRef.current = s
     } else if ((p as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf && masterRef.current) {
@@ -183,6 +191,8 @@ export default function Soundboard({ user }: Props) {
         if (!overlapMode) {
           activeSourcesRef.current.forEach(s => { try { s.stop() } catch { /* already ended */ } })
           activeSourcesRef.current.clear()
+          activeHtmlAudiosRef.current.forEach(a => { try { a.pause(); a.currentTime = 0 } catch { /* already ended */ } })
+          activeHtmlAudiosRef.current.clear()
           currentSourceRef.current = null
         }
         const s = a.createBufferSource()
@@ -194,24 +204,35 @@ export default function Soundboard({ user }: Props) {
         s.onended = () => {
           activeSourcesRef.current.delete(s)
           if (currentSourceRef.current === s) currentSourceRef.current = null
-          if (activeSourcesRef.current.size === 0) setStatus('Ready', 'idle')
+          if (activeSourcesRef.current.size === 0 && activeHtmlAudiosRef.current.size === 0) setStatus('Ready', 'idle')
         }
       }).catch(() => {
-        // decodeAudioData failed (e.g. AAC/M4A on Android Chrome)
-        // Fall back to HTMLAudioElement connected through the Web Audio graph
+        // decodeAudioData failed (e.g. AAC/M4A on Android Chrome).
+        // Fall back to HTMLAudioElement connected through the Web Audio graph.
+        // Must re-check overlap here because decoding is async — other sounds
+        // may have started between the outer pre-play stop and this callback.
         try {
+          if (!overlapMode) {
+            activeSourcesRef.current.forEach(s => { try { s.stop() } catch { /* already ended */ } })
+            activeSourcesRef.current.clear()
+            activeHtmlAudiosRef.current.forEach(a => { try { a.pause(); a.currentTime = 0 } catch { /* already ended */ } })
+            activeHtmlAudiosRef.current.clear()
+            currentSourceRef.current = null
+          }
           const mime = detectAudioMime(raw)
           const blob = new Blob([raw], { type: mime })
           const url = URL.createObjectURL(blob)
           const htmlAudio = new Audio(url)
           const mediaSrc = a.createMediaElementSource(htmlAudio)
           if (masterRef.current) mediaSrc.connect(masterRef.current)
+          activeHtmlAudiosRef.current.add(htmlAudio)
           htmlAudio.play()
             .then(() => setStatus(`${p.icon} ${p.label}`, 'active'))
             .catch(() => setStatus('Could not play audio', 'stopped'))
           htmlAudio.onended = () => {
             URL.revokeObjectURL(url)
-            if (activeSourcesRef.current.size === 0) setStatus('Ready', 'idle')
+            activeHtmlAudiosRef.current.delete(htmlAudio)
+            if (activeSourcesRef.current.size === 0 && activeHtmlAudiosRef.current.size === 0) setStatus('Ready', 'idle')
           }
         } catch {
           setStatus('Could not play audio', 'stopped')
@@ -229,7 +250,7 @@ export default function Soundboard({ user }: Props) {
           node.onended = () => {
             activeSourcesRef.current.delete(node)
             if (currentSourceRef.current === node) currentSourceRef.current = null
-            if (activeSourcesRef.current.size === 0) setStatus('Ready', 'idle')
+            if (activeSourcesRef.current.size === 0 && activeHtmlAudiosRef.current.size === 0) setStatus('Ready', 'idle')
           }
         }
       })
