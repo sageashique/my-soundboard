@@ -15,8 +15,6 @@
   --yellow: #c9870a;
   --purple: #7047b0;
   --pink: #c44d87;
-  /* Desktop: numpad max-width 600px, 4 cols, 3 gaps of 10px → (600-30)/4 ≈ 142px */
-  --cell: 142px;
   --gap: 10px;
 }
 
@@ -260,11 +258,17 @@ input[type='range']::-webkit-slider-thumb {
 
 /* PAD GRID */
 .numpad {
-  width: 100%;
-  max-width: 600px;
+  /* align-self: stretch fills the flex column's cross-axis (horizontal) using the
+     parent's content width — bypasses the iOS Safari quirk where align-items:center
+     + width:100% resolves to the outer container width instead of content width */
+  align-self: stretch;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(4, var(--cell)) 56px;
+  /* minmax(0,1fr) forces columns to share space equally and never overflow.
+     Plain 1fr can overflow if column content has an implicit minimum size. */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* auto rows size to .pad's aspect-ratio:1, making every pad a perfect square.
+     Row 5 is the fixed-height stop bar. */
+  grid-template-rows: repeat(4, auto) 56px;
   gap: var(--gap);
   margin-bottom: 20px;
   touch-action: none;
@@ -327,6 +331,9 @@ input[type='range']::-webkit-slider-thumb {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   min-height: 0;
+  /* Forces every single-cell pad to be a perfect square.
+     Multi-span cells (pad-0, pad-enter) fill their grid area naturally. */
+  aspect-ratio: 1;
 }
 .pad:hover { background: var(--surface2); }
 .pad:active { transform: scale(0.96); }
@@ -795,18 +802,9 @@ input[type='text'] { width: 130px; }
 
 /* RESPONSIVE */
 @media (max-width: 600px) {
-  :root {
-    --gap: 8px;
-    /* numpad = calc(100vw - 24px) [12px padding × 2], 3 gaps of 8px = 24px
-       --cell must equal column width so pads are square: (numpad - 3×gap) / 4 */
-    --cell: calc((100vw - 48px) / 4);
-  }
+  :root { --gap: 8px; }
   .pad-icon { font-size: 22px; }
   .sb-page { padding: 20px 12px 48px; }
-  /* 12px padding × 2 sides = 24px. Explicit calc avoids the iOS Safari flexbox
-     quirk where width:100% on a flex child resolves to the outer container width
-     rather than the content area, causing the 4th column to clip. */
-  .numpad { width: calc(100vw - 24px); max-width: calc(100vw - 24px); }
   .controls-bar { gap: 8px; }
   .toggle-group { padding: 6px 10px; }
   input[type='text'] { width: 110px; }
@@ -814,12 +812,7 @@ input[type='text'] { width: 130px; }
   .panel-group { flex-wrap: wrap; }
 }
 @media (max-width: 430px) {
-  :root {
-    --gap: 6px;
-    /* numpad = calc(100vw - 16px) [8px padding × 2], 3 gaps of 6px = 18px
-       --cell = (numpad - 3×gap) / 4 = (100vw - 16px - 18px) / 4 */
-    --cell: calc((100vw - 34px) / 4);
-  }
+  :root { --gap: 6px; }
   .pad-icon { font-size: 18px; }
   .pad-label { font-size: 8px; }
   .sb-page { padding: 16px 8px 48px; }
@@ -837,17 +830,12 @@ input[type='text'] { width: 130px; }
   input[type='text'] { width: 100%; }
   .panel-actions { flex-wrap: wrap; }
   .panel-actions .btn { flex: 1; text-align: center; justify-content: center; }
-  .numpad { grid-template-rows: repeat(4, var(--cell)) 48px; width: calc(100vw - 16px); max-width: calc(100vw - 16px); }
+  .numpad { grid-template-rows: repeat(4, auto) 48px; }
   .wordmark { font-size: 11px; letter-spacing: 0.12em; }
   .user-email { max-width: 140px; font-size: 10px; }
 }
 @media (max-width: 380px) {
-  :root {
-    --gap: 5px;
-    /* numpad = calc(100vw - 16px) [8px padding × 2], 3 gaps of 5px = 15px
-       --cell = (100vw - 16px - 15px) / 4 */
-    --cell: calc((100vw - 31px) / 4);
-  }
+  :root { --gap: 5px; }
   .pad-icon { font-size: 16px; }
   .pad-label { display: none; }
   .sb-page { padding: 14px 8px 40px; }
