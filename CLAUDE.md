@@ -81,8 +81,8 @@ The stop bar (`pad-stop`) spans all 4 columns and sits in row 5 (the 5th grid ro
 
 - `.sb-page` must use `overflow-x: hidden` (not `clip`). Using `clip` skips BFC creation and can fail to clip overflowing children on iOS Safari.
 - `.numpad` `max-width` must be `600px` — never `min(600px, 100vw)`. The `100vw` form equals the full viewport width (e.g. 390px on iPhone), which is wider than the content area (viewport minus horizontal padding) and causes the 4th column to clip.
-- In the `≤ 430px` breakpoint, `.numpad` must use `width: calc(100vw - 16px)` and `max-width: calc(100vw - 16px)`. This bypasses an iOS Safari flexbox quirk where `width: 100%` on a flex child resolves to the outer container width (ignoring padding) instead of the content area.
-  - The `16px` = 8px left padding + 8px right padding on `.sb-page` at that breakpoint.
+- In the `≤ 600px` breakpoint, `.numpad` must use `width: calc(100vw - 24px)` and `max-width: calc(100vw - 24px)`. This bypasses an iOS Safari flexbox quirk where `width: 100%` on a flex child resolves to the outer container width (ignoring padding) instead of the content area. The `24px` = 12px left + 12px right padding on `.sb-page` at that breakpoint. This covers iPhone Plus/Pro Max models (430pt CSS width) which fall in the 430–600px range.
+- In the `≤ 430px` breakpoint, `.numpad` must use `width: calc(100vw - 16px)` and `max-width: calc(100vw - 16px)`. The `16px` = 8px left padding + 8px right padding on `.sb-page` at that breakpoint.
 - `html, body` must have `overflow-x: hidden` and `max-width: 100vw` to prevent body-level scroll.
 - `onTouchStart={() => {}}` must remain on the `.numpad` div. iOS Safari will not fire CSS `:active` on `<div>` elements unless a `touchstart` handler exists on the element or an ancestor.
 
@@ -333,7 +333,7 @@ Inline confirm flow. Calls `supabase.auth.signOut()`.
 1. **Pad grid placement CSS** — any change breaks the numpad layout.
 2. **`.numpad` `max-width: 600px`** — must not use `100vw` (causes 4th column clip on iPhone).
 3. **`.sb-page` `overflow-x: hidden`** — must not use `clip` (breaks iOS Safari clipping).
-4. **`@media (max-width: 430px)` `.numpad` width** — must use `calc(100vw - 16px)`, not `100%`.
+4. **`.numpad` explicit width in both mobile breakpoints** — `≤600px` must use `calc(100vw - 24px)` (12px×2 padding); `≤430px` must use `calc(100vw - 16px)` (8px×2 padding). Never use `width: 100%` on mobile — iOS Safari resolves it to the outer container width, clipping the 4th column.
 5. **`onTouchStart={() => {}}` on `.numpad`** — required for iOS `:active` states to fire.
 6. **`activeSourcesRef` + `activeHtmlAudiosRef` tracking** — both sets must be consulted for every stop-all and overlap-OFF operation. `activeSourcesRef` holds Web Audio nodes; `activeHtmlAudiosRef` holds HTMLAudioElement instances from the M4A/AAC fallback. Touching only one set breaks overlap when mixing file types.
 7. **`pendingFileTypeRef` / `detectAudioMime()`** — required for M4A/AAC playback on Android Chrome.

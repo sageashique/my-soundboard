@@ -797,6 +797,10 @@ input[type='text'] { width: 130px; }
   :root { --cell: 92px; --gap: 8px; }
   .pad-icon { font-size: 22px; }
   .sb-page { padding: 20px 12px 48px; }
+  /* 12px padding × 2 sides = 24px. Explicit calc avoids the iOS Safari flexbox
+     quirk where width:100% on a flex child resolves to the outer container width
+     rather than the content area, causing the 4th column to clip. */
+  .numpad { width: calc(100vw - 24px); max-width: calc(100vw - 24px); }
   .controls-bar { gap: 8px; }
   .toggle-group { padding: 6px 10px; }
   input[type='text'] { width: 110px; }
