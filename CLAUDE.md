@@ -78,7 +78,14 @@ These rules are absolute. Do not change them without a deliberate architectural 
 
 ### How the square sizing works
 
-`.pad { aspect-ratio: 1 }` gives every single-cell pad a square intrinsic size. CSS Grid auto-sizes each row to the tallest non-spanning item in that row — since all single-cell pads are square (height = column width), all rows end up the same height as the column width. `pad-0` (spans 2 cols) and `pad-enter` (spans 2 rows) fill their grid areas naturally without any `aspect-ratio` override needed.
+`.pad { aspect-ratio: 1 }` gives every single-cell pad a square intrinsic size. CSS Grid auto-sizes each row to the tallest non-spanning item in that row — since all single-cell pads are square (height = column width), all rows end up the same height as the column width.
+
+**Multi-span cells require explicit aspect-ratio overrides:**
+
+- **`pad-0`** spans 2 columns. `aspect-ratio: 1` inherited from `.pad` would make its height = its full width (2 column-widths) — twice as tall as it should be. Override with `aspect-ratio: 2 / 1` so height = width / 2 = 1 column-width. ✓
+- **`pad-enter`** spans 2 rows. Override with `aspect-ratio: auto` so it fills both rows without the `aspect-ratio: 1` constraint fighting the grid stretch. ✓
+
+Never remove these overrides — they are load-bearing.
 
 ### Gap values by breakpoint
 
