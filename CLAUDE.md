@@ -19,30 +19,19 @@
 
 ---
 
-## Pad Grid Layout — Apple Numpad Style
+## Numpad Grid — HARD RULES — DO NOT CHANGE
 
-### Critical rules — never break these
-
-The pad grid mirrors an **Apple numeric keypad**. Every pad must be the **same fixed size** (`var(--cell)` × `var(--cell)`) with two exceptions:
-
-| Pad | Key | Rule |
-|---|---|---|
-| `pad-0` | `0` | **Double width** — spans columns 1–2, row 4 |
-| `pad-enter` | `Enter` | **Double height** — spans rows 3–4, column 4 |
-| All others | `7 8 9 − 4 5 6 + 1 2 3 .` | Single cell, uniform width and height |
-
-The stop bar (`pad-stop`) spans all 4 columns and sits in row 5 (the 5th grid row).
-
-### Grid definition
-
-```css
-.numpad {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(4, var(--cell)) 56px; /* row 5 = stop bar */
-  gap: var(--gap);
-}
-```
+- `grid-template-columns` must always be `repeat(4, minmax(0, 1fr))`
+- `pad-0`: `grid-column: 1 / span 2`, `grid-row: 4` (double width)
+- `pad-enter`: `grid-column: 4`, `grid-row: 3 / span 2` (double height)
+- `pad-stop`: `grid-column: 1 / span 4`, `grid-row: 5` (full width)
+- All pads must have: `overflow: hidden`, `min-height: 0`, `min-width: 0`
+- Text must never affect pad sizing — label always ellipsis, never wraps
+- Never use `aspect-ratio` on `.numpad` or any `.pad`
+- Never use `--cell` variable for sizing
+- Never use `align-self: stretch` on `.numpad` — use `width: 100%` + `max-width` instead
+- Never revert `overflow-x: hidden` on `.sb-page` or `html/body`
+- `onTouchStart={() => {}}` must remain on the `.numpad` div (required for iOS `:active`)
 
 ### Grid placement — do not change
 
@@ -58,56 +47,31 @@ The stop bar (`pad-stop`) spans all 4 columns and sits in row 5 (the 5th grid ro
 .pad-1     { grid-column: 1;          grid-row: 3; }
 .pad-2     { grid-column: 2;          grid-row: 3; }
 .pad-3     { grid-column: 3;          grid-row: 3; }
-.pad-enter { grid-column: 4;          grid-row: 3 / span 2; } /* double height */
-.pad-0     { grid-column: 1 / span 2; grid-row: 4; }          /* double width */
+.pad-enter { grid-column: 4;          grid-row: 3 / span 2; }
+.pad-0     { grid-column: 1 / span 2; grid-row: 4; }
 .pad-dot   { grid-column: 3;          grid-row: 4; }
 .pad-stop  { grid-column: 1 / span 4; grid-row: 5; }
 ```
 
-## Numpad Grid — Hard Rules
-
-These rules are absolute. Do not change them without a deliberate architectural reason.
-
-- `grid-template-columns` must always be `repeat(4, minmax(0, 1fr))`. Plain `1fr` can overflow if column content has an implicit minimum size. `minmax(0, 1fr)` forces columns to share the available space equally and never overflow the grid.
-- `grid-template-rows` must never use fixed pixel cell sizes. Use `repeat(4, auto)` for the pad rows and a fixed height only for the stop bar row (`56px` desktop, `48px` mobile). `auto` rows with `aspect-ratio: 1` on `.pad` produce perfect squares at any screen width.
-- `.numpad` must use `align-self: stretch` — no `width` or `max-width` on the grid itself. `align-self: stretch` fills the flex column container's content area (after padding), bypassing the iOS Safari bug where `align-items: center` + `width: 100%` resolves to the container's outer width and causes the 4th column to clip.
-- All 4 columns must be fully visible on a 375px screen with no horizontal scroll.
-- `pad-0` = double width (`grid-column: 1 / span 2`), `pad-enter` = double height (`grid-row: 3 / span 2`), all others = 1×1 cells.
-- Never add `overflow-x: clip` to `.sb-page` or `html/body` — use `hidden` only.
-- `--cell` is removed. Do not reintroduce it. Pad sizes come from `aspect-ratio: 1` on `.pad` plus the auto row sizing.
-
-### How the square sizing works
-
-`.pad { aspect-ratio: 1 }` gives every single-cell pad a square intrinsic size. CSS Grid auto-sizes each row to the tallest non-spanning item in that row — since all single-cell pads are square (height = column width), all rows end up the same height as the column width.
-
-**Multi-span cells require explicit aspect-ratio overrides:**
-
-- **`pad-0`** spans 2 columns. `aspect-ratio: 1` inherited from `.pad` would make its height = its full width (2 column-widths) — twice as tall as it should be. Override with `aspect-ratio: 2 / 1` so height = width / 2 = 1 column-width. ✓
-- **`pad-enter`** spans 2 rows. Override with `aspect-ratio: auto` so it fills both rows without the `aspect-ratio: 1` constraint fighting the grid stretch. ✓
-
-Never remove these overrides — they are load-bearing.
-
-### Gap values by breakpoint
-
-| Breakpoint | `--gap` | Stop bar row |
-|---|---|---|
-| Desktop | `10px` | `56px` |
-| `≤ 600px` | `8px` | `56px` |
-| `≤ 430px` | `6px` | `48px` |
-| `≤ 380px` | `5px` | `48px` |
-
 ---
 
-## Mobile Layout Rules
+## Responsive Breakpoints — HARD RULES — DO NOT CHANGE
 
-### Critical — never regress these
+- **Desktop default (1025px+):** numpad `max-width: 420px`, rows `96px` fixed
+- **Tablet landscape (769–1024px):** `max-width: 460px`, rows `100px` fixed
+- **Tablet portrait (600–768px):** `max-width: 100%`, rows `calc((100vw - 64px) / 4)`
+- **Mobile landscape (`height < 500px`):** `max-width: 340px`, rows `54px` fixed
+- **Mobile portrait (≤ 599px):** `max-width: 100%`, rows `calc((100dvw - 32px) / 4)`
+- **Small mobile (≤ 390px):** rows `calc((100dvw - 26px) / 4)`
+- All page content containers (`.top`, `.status-bar`, `.controls-bar`, `.divider`, `.edit-panel`, `.reset-all-section`) must match numpad `max-width` at every breakpoint
+- Mobile landscape must always be handled via `orientation: landscape` + `max-height: 500px`
+- Never collapse all mobile sizes into a single breakpoint
 
-- `.sb-page` must use `overflow-x: hidden` (not `clip`). Using `clip` skips BFC creation and can fail to clip overflowing children on iOS Safari.
-- `.numpad` `max-width` must be `600px` — never `min(600px, 100vw)`. The `100vw` form equals the full viewport width (e.g. 390px on iPhone), which is wider than the content area (viewport minus horizontal padding) and causes the 4th column to clip.
-- In the `≤ 600px` breakpoint, `.numpad` must use `width: calc(100vw - 24px)` and `max-width: calc(100vw - 24px)`. This bypasses an iOS Safari flexbox quirk where `width: 100%` on a flex child resolves to the outer container width (ignoring padding) instead of the content area. The `24px` = 12px left + 12px right padding on `.sb-page` at that breakpoint. This covers iPhone Plus/Pro Max models (430pt CSS width) which fall in the 430–600px range.
-- In the `≤ 430px` breakpoint, `.numpad` must use `width: calc(100vw - 16px)` and `max-width: calc(100vw - 16px)`. The `16px` = 8px left padding + 8px right padding on `.sb-page` at that breakpoint.
-- `html, body` must have `overflow-x: hidden` and `max-width: 100vw` to prevent body-level scroll.
-- `onTouchStart={() => {}}` must remain on the `.numpad` div. iOS Safari will not fire CSS `:active` on `<div>` elements unless a `touchstart` handler exists on the element or an ancestor.
+## Before Every Commit
+
+- Verify layout renders correctly at: 375px, 430px, 768px portrait, 1024px landscape, 1440px
+- If any pad overflows its cell, stop and fix before committing
+- Do not touch `.tsx` files for layout issues — CSS only
 
 ---
 
@@ -327,7 +291,7 @@ Inline confirm flow. Calls `supabase.auth.signOut()`.
 ## CSS Architecture
 
 - All styles live in `src/app/globals.css`. No component-level CSS files.
-- CSS custom properties (`--bg`, `--surface`, `--surface2`, `--border`, `--border2`, `--text`, `--text2`, `--text3`, `--red`, `--green`, `--blue`, `--yellow`, `--purple`, `--pink`, `--cell`, `--gap`) defined on `:root`.
+- CSS custom properties (`--bg`, `--surface`, `--surface2`, `--border`, `--border2`, `--text`, `--text2`, `--text3`, `--red`, `--green`, `--blue`, `--yellow`, `--purple`, `--pink`, `--gap`, `--pad-radius`) defined on `:root`.
 - Dark theme overrides set under `[data-theme="dark"]`.
 - `* { box-sizing: border-box; margin: 0; padding: 0; }` is global.
 - Pad color classes: `.c-red`, `.c-green`, `.c-blue`, `.c-yellow`, `.c-purple`, `.c-pink`.
@@ -353,12 +317,9 @@ Inline confirm flow. Calls `supabase.auth.signOut()`.
 
 ## Things That Must Never Change Without Review
 
-1. **Pad grid placement CSS** — any change breaks the numpad layout.
-1a. **`grid-template-columns: repeat(4, minmax(0, 1fr))`** — never change to plain `1fr` or fixed widths. **`grid-template-rows: repeat(4, auto) 56px`** — never use fixed pixel row heights. **`aspect-ratio: 1` on `.pad`** — drives square sizing; do not remove. **`align-self: stretch` on `.numpad`** — do not replace with `width`/`max-width` or remove.
-2. **`.numpad` `max-width: 600px`** — must not use `100vw` (causes 4th column clip on iPhone).
-3. **`.sb-page` `overflow-x: hidden`** — must not use `clip` (breaks iOS Safari clipping).
-4. **`.numpad` sizing comes from `align-self: stretch` only** — no `width`, `max-width`, or `calc(100vw - Npx)` on `.numpad`. The grid fills `.sb-page`'s content area via `align-self: stretch`. Adding any explicit width reintroduces the iOS Safari overflow bug.
-5. **`onTouchStart={() => {}}` on `.numpad`** — required for iOS `:active` states to fire.
+1. **Pad grid placement CSS** — any change breaks the numpad layout. See "Numpad Grid — HARD RULES" section above.
+2. **`.sb-page` `overflow-x: hidden`** — must not use `clip` (breaks iOS Safari clipping).
+3. **`onTouchStart={() => {}}` on `.numpad`** — required for iOS `:active` states to fire.
 6. **`activeSourcesRef` + `activeHtmlAudiosRef` tracking** — both sets must be consulted for every stop-all and overlap-OFF operation. `activeSourcesRef` holds Web Audio nodes; `activeHtmlAudiosRef` holds HTMLAudioElement instances from the M4A/AAC fallback. Touching only one set breaks overlap when mixing file types.
 7. **`pendingFileTypeRef` / `detectAudioMime()`** — required for M4A/AAC playback on Android Chrome.
 8. **Upsert pattern on `pad_configs` and `user_settings`** — always upsert, never plain insert.
