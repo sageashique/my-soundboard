@@ -664,13 +664,15 @@ export default function Soundboard({ user }: Props) {
           </a>
         </div>
 
-        {/* Row 1: Board name (editable) | About the App */}
+        {/* Hairline divider under title */}
+        <div className="sb-title-divider" />
+
+        {/* Row 1: Board name (editable) | empty */}
         {!editingName ? (
           <div className="top-meta-row">
             <span className="wordmark" onClick={startEditName} title="Click to rename">
               {boardName}
             </span>
-            <a href="/about" className="sb-about-link">About the App</a>
           </div>
         ) : (
           <div className="wordmark-edit">
@@ -687,7 +689,7 @@ export default function Soundboard({ user }: Props) {
           </div>
         )}
 
-        {/* Row 2: empty (left) | Help ? (right) */}
+        {/* Row 2: empty (left) | Help ? (right) — left reserved for future */}
         <div className="top-meta-row">
           <span />
           <button className="help-btn" onClick={() => setShowHelp(true)}>
@@ -1032,12 +1034,12 @@ export default function Soundboard({ user }: Props) {
 
       {/* Page footer */}
       <footer className="sb-footer">
-        <a href="/about" className="sb-footer-link">About this project</a>
+        <a href="/about" className="sb-footer-link sb-footer-link--brand">About the App</a>
         <a
           href="https://www.linkedin.com/in/sageashique"
           target="_blank"
           rel="noopener noreferrer"
-          className="sb-footer-link"
+          className="sb-footer-link sb-footer-link--brand"
         >
           Built by Sage Ashique
         </a>

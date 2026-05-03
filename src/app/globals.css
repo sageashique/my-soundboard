@@ -1066,30 +1066,21 @@ input[type='text'] { width: 130px; }
 }
 /* App brand name — preserves [sage]SOUNDS casing (no text-transform) */
 .sb-appname {
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
   color: var(--text);
 }
+/* Hairline divider — weight visually echoes the title */
+.sb-title-divider {
+  width: 100%;
+  height: 2px;
+  background: var(--text);
+  border-radius: 1px;
+  margin: 2px 0 4px;
+}
 
-/* ── SOUNDBOARD NAV LINKS (About + Built by) ── */
-.sb-nav-links {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.sb-about-link {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text3);
-  text-decoration: none;
-  padding: 4px 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  transition: color 0.15s, border-color 0.15s;
-  white-space: nowrap;
-}
-.sb-about-link:hover { color: var(--text); border-color: var(--border2); }
+/* Built by link in header (stays small/muted) */
 .sb-built-by {
   font-size: 11px;
   color: var(--text3);
@@ -1118,6 +1109,12 @@ input[type='text'] { width: 130px; }
   transition: color 0.15s;
 }
 .sb-footer-link:hover { color: var(--text2); }
+/* Brand-coloured footer links — matches logo indigo */
+.sb-footer-link--brand {
+  color: #4f46e5;
+  font-weight: 500;
+}
+.sb-footer-link--brand:hover { color: #3730a3; }
 
 /* LOADING */
 .loading-screen {
