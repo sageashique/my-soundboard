@@ -185,7 +185,7 @@ body {
   margin: 0 auto 28px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 0;
 }
 .top-meta-row {
   display: flex;
@@ -194,7 +194,7 @@ body {
   gap: 8px;
 }
 .wordmark {
-  font-size: 15px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
   cursor: pointer; display: inline-block;
   border-bottom: 1px dashed transparent;
   transition: border-color 0.15s, color 0.15s;
@@ -794,8 +794,9 @@ input[type='range']::-webkit-slider-thumb {
 /* RESET ALL */
 .reset-all-section { width: 100%; max-width: 420px; margin-left: auto; margin-right: auto; padding: 4px 0 8px; }
 .bottom-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; }
-.bottom-bar-right { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.bottom-bar-right .user-email { max-width: 140px; }
+/* Reset All row — only rendered when editing, sits under theme/edit controls */
+.controls-reset-row { justify-content: flex-start; padding: 2px 0; }
+.btn-reset-all { font-size: 12px; }
 .reset-confirm-msg { font-size: 13px; color: var(--text2); }
 .reset-confirm-actions { display: flex; gap: 10px; margin-top: 12px; }
 .panel-group { display: flex; align-items: center; gap: 8px; }
@@ -1063,6 +1064,7 @@ input[type='text'] { width: 130px; }
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  padding-bottom: 10px;
 }
 /* App brand name — preserves [sage]SOUNDS casing (no text-transform) */
 .sb-appname {
@@ -1077,7 +1079,7 @@ input[type='text'] { width: 130px; }
   height: 2px;
   background: var(--text);
   border-radius: 1px;
-  margin: 2px 0 4px;
+  margin-bottom: 14px;
 }
 
 /* Built by link in header (stays small/muted) */
@@ -1100,6 +1102,7 @@ input[type='text'] { width: 130px; }
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 12px;
 }
 .sb-footer-link {
   font-size: 12px;
@@ -1114,12 +1117,11 @@ input[type='text'] { width: 130px; }
   font-weight: 500;
 }
 .sb-footer-link--brand:hover { color: #3730a3; }
-/* Pipe separator between footer brand links */
-.sb-footer-link--brand + .sb-footer-link--brand::before {
-  content: '|';
-  margin-right: 20px;
-  color: var(--border2);
-  font-weight: 400;
+/* Pipe separator */
+.sb-footer-sep {
+  color: var(--text3);
+  font-size: 11px;
+  user-select: none;
 }
 
 /* LOADING */

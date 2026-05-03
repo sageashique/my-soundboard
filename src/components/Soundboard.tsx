@@ -149,8 +149,6 @@ export default function Soundboard({ user }: Props) {
   const [editEmoji, setEditEmoji] = useState('')
   const [editSound, setEditSound] = useState('kick')
 
-  // Reset all confirm
-  const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
 
   // Help overlay
@@ -464,7 +462,6 @@ export default function Soundboard({ user }: Props) {
   // ── Reset all ─────────────────────────────────────────────────
   async function handleResetAll() {
     stopAll()
-    setShowResetConfirm(false)
     setStatus('Resetting…')
     try {
       // Remove all custom audio files from storage
@@ -667,12 +664,16 @@ export default function Soundboard({ user }: Props) {
         {/* Hairline divider under title */}
         <div className="sb-title-divider" />
 
-        {/* Row 1: Board name (editable) | empty */}
+        {/* Meta row: Board name (left) | Help (right) */}
         {!editingName ? (
           <div className="top-meta-row">
             <span className="wordmark" onClick={startEditName} title="Click to rename">
               {boardName}
             </span>
+            <button className="help-btn" onClick={() => setShowHelp(true)}>
+              <span className="help-btn-badge">?</span>
+              Help
+            </button>
           </div>
         ) : (
           <div className="wordmark-edit">
@@ -688,15 +689,6 @@ export default function Soundboard({ user }: Props) {
             <button className="btn btn-outline btn-sm" onClick={cancelEditName}>Cancel</button>
           </div>
         )}
-
-        {/* Row 2: empty (left) | Help ? (right) — left reserved for future */}
-        <div className="top-meta-row">
-          <span />
-          <button className="help-btn" onClick={() => setShowHelp(true)}>
-            <span className="help-btn-badge">?</span>
-            Help
-          </button>
-        </div>
       </div>
 
       {/* Help overlay */}
@@ -826,6 +818,24 @@ export default function Soundboard({ user }: Props) {
           Edit Pads
         </button>
       </div>
+
+      {/* Reset All — only visible in edit mode, lives under theme/edit controls */}
+      {editing && (
+        <div className="controls-bar controls-reset-row">
+          <button
+            className="btn btn-danger-outline btn-reset-all"
+            onClick={() => setModal({
+              title: 'Reset All Pads to Default',
+              body: 'This will clear all custom sounds, labels, colors, and icons for every pad and restore the original defaults. This cannot be undone.',
+              okLabel: 'Yes, reset all pads',
+              style: 'danger',
+              cb: handleResetAll,
+            })}
+          >
+            Reset All Pads to Default
+          </button>
+        </div>
+      )}
 
       {/* Edit Pad Modal */}
       {editing && selectedPad && (
@@ -997,27 +1007,12 @@ export default function Soundboard({ user }: Props) {
 
       <div className="divider" />
 
-      {/* Bottom bar — reset all + sign out */}
+      {/* Bottom bar — email + sign out */}
       <div className="reset-all-section">
-        {!showResetConfirm && !showSignOutConfirm ? (
+        {!showSignOutConfirm ? (
           <div className="bottom-bar">
-            <button className="btn btn-danger-outline" onClick={() => setShowResetConfirm(true)}>
-              Reset all to defaults
-            </button>
-            <div className="bottom-bar-right">
-              <span className="user-email">{user.email}</span>
-              <button className="btn btn-outline" onClick={() => setShowSignOutConfirm(true)}>Sign out</button>
-            </div>
-          </div>
-        ) : showResetConfirm ? (
-          <div>
-            <span className="reset-confirm-msg">
-              This will clear all custom sounds, labels, and colors. Are you sure?
-            </span>
-            <div className="reset-confirm-actions">
-              <button className="btn btn-outline" onClick={() => setShowResetConfirm(false)}>Cancel</button>
-              <button className="btn btn-danger" onClick={handleResetAll}>Yes, reset everything</button>
-            </div>
+            <span className="user-email">{user.email}</span>
+            <button className="btn btn-outline" onClick={() => setShowSignOutConfirm(true)}>Sign out</button>
           </div>
         ) : (
           <div>
@@ -1035,6 +1030,7 @@ export default function Soundboard({ user }: Props) {
       {/* Page footer */}
       <footer className="sb-footer">
         <a href="/about" className="sb-footer-link sb-footer-link--brand">About the App</a>
+        <span className="sb-footer-sep">|</span>
         <a
           href="https://www.linkedin.com/in/sageashique"
           target="_blank"
