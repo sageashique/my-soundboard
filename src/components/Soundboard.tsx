@@ -167,64 +167,30 @@ export default function Soundboard({ user }: Props) {
       currentSourceRef.current = null
     }
 
-    if (p.customBuf && masterRef.current) {
-      const s = a.createBufferSource()
-      s.buffer = p.customBuf
-      s.connect(masterRef.current)
-      s.start()
-      activeSourcesRef.current.add(s)
-      s.onended = () => {
-        activeSourcesRef.current.delete(s)
-        if (activeSourcesRef.current.size === 0 && activeHtmlAudiosRef.current.size === 0) setStatus('Ready', 'idle')
-      }
-      if (!overlapMode) currentSourceRef.current = s
-    } else if (p.customRawBuf && masterRef.current) {
-      // First tap — raw bytes downloaded but not yet decoded into an AudioBuffer.
-      //
-      // Strategy: play via HTMLAudioElement for THIS tap (reliable on all mobile
-      // browsers including iOS Safari), while decoding in parallel so that every
-      // subsequent tap uses the fast synchronous Web Audio path (customBuf →
-      // createBufferSource). Using s.start() inside a .then() callback fails
-      // silently on iOS: the AudioContext re-suspends during the async decode window
-      // and AudioContext.resume() has no effect outside a direct user gesture.
-      // HTMLAudioElement.play() does not have this restriction.
-      const raw = p.customRawBuf
-
-      const playThisTap = () => {
-        try {
-          // Re-check overlap — other sounds may have started during the async gap
-          if (!overlapMode) {
-            activeSourcesRef.current.forEach(s => { try { s.stop() } catch { /* already ended */ } })
-            activeSourcesRef.current.clear()
-            activeHtmlAudiosRef.current.forEach(a => { try { a.pause(); a.currentTime = 0 } catch { /* already ended */ } })
-            activeHtmlAudiosRef.current.clear()
-            currentSourceRef.current = null
-          }
-          const mime = detectAudioMime(raw)
-          const blob = new Blob([raw], { type: mime })
-          const url = URL.createObjectURL(blob)
-          const htmlAudio = new Audio(url)
-          activeHtmlAudiosRef.current.add(htmlAudio)
-          htmlAudio.play()
-            .then(() => setStatus(`${p.icon} ${p.label}`, 'active'))
-            .catch(() => setStatus('Could not play audio', 'stopped'))
-          htmlAudio.onended = () => {
-            URL.revokeObjectURL(url)
-            activeHtmlAudiosRef.current.delete(htmlAudio)
-            if (activeSourcesRef.current.size === 0 && activeHtmlAudiosRef.current.size === 0) setStatus('Ready', 'idle')
-          }
-        } catch {
-          setStatus('Could not play audio', 'stopped')
+    if (p.customRawBuf) {
+      // Custom audio — always play via HTMLAudioElement, called synchronously within
+      // the user gesture handler so iOS Safari allows it every tap. Web Audio
+      // (AudioBufferSourceNode) fails silently on iOS when the AudioContext
+      // re-suspends between interactions, even with resume() guards. Volume is
+      // applied directly to the element; stop-all still works via activeHtmlAudiosRef.
+      try {
+        const mime = detectAudioMime(p.customRawBuf)
+        const blob = new Blob([p.customRawBuf], { type: mime })
+        const url = URL.createObjectURL(blob)
+        const htmlAudio = new Audio(url)
+        htmlAudio.volume = volume
+        activeHtmlAudiosRef.current.add(htmlAudio)
+        htmlAudio.play()
+          .then(() => setStatus(`${p.icon} ${p.label}`, 'active'))
+          .catch(() => setStatus('Could not play audio', 'stopped'))
+        htmlAudio.onended = () => {
+          URL.revokeObjectURL(url)
+          activeHtmlAudiosRef.current.delete(htmlAudio)
+          if (activeSourcesRef.current.size === 0 && activeHtmlAudiosRef.current.size === 0) setStatus('Ready', 'idle')
         }
+      } catch {
+        setStatus('Could not play audio', 'stopped')
       }
-
-      a.decodeAudioData(raw.slice(0))
-        .then(buf => {
-          // Cache decoded buffer — future taps go through the synchronous customBuf path
-          setPads(prev => prev.map((pd, i) => i === index ? { ...pd, customBuf: buf } : pd))
-          if (masterRef.current) playThisTap()
-        })
-        .catch(() => playThisTap())
     } else if (masterRef.current) {
       // Snapshot existing nodes so we can detect exactly what playSound adds
       const prevNodes = new Set(activeSourcesRef.current)
@@ -246,7 +212,7 @@ export default function Soundboard({ user }: Props) {
 
     setStatus(`${p.icon} ${p.label}`, 'active')
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pads, overlapMode])
+  }, [pads, overlapMode, volume])
 
   // ── Board name ─────────────────────────────────────────────────
   function startEditName() {
