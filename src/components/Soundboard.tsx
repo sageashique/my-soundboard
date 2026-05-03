@@ -27,13 +27,28 @@ function detectAudioMime(buf: ArrayBuffer): string {
   return 'audio/mpeg'
 }
 
-// Peak-normalize a raw audio buffer so every custom file plays at a consistent
-// perceived level. Uses OfflineAudioContext which works without a user gesture.
-// Returns a gain multiplier (≥1, capped at 4× to avoid over-boosting near-silent clips).
-async function computeNormGain(raw: ArrayBuffer, targetPeak = 0.9): Promise<number> {
+// K-weighted LUFS normalization (ITU-R BS.1770) — the broadcast/streaming standard
+// used by YouTube, Spotify, and Apple Music. Each clip is independently normalized
+// to a fixed target of -14 LUFS integrated, so no single clip can affect others.
+//
+// Why K-weighting instead of raw RMS:
+//   - Applies a high-shelf pre-filter (+4 dB at 1682 Hz) and a high-pass filter
+//     (100 Hz) that model the frequency sensitivity of human hearing.
+//   - A bass-heavy kick and a bright vocal can have equal RMS but very different
+//     perceived loudness. K-weighting accounts for this.
+//   - A loud clip is attenuated to -14 LUFS; a quiet clip is boosted to -14 LUFS.
+//     Neither affects the other — all clips land at the same perceptual level.
+//
+// Clipping guard: true peak of the ORIGINAL signal is measured and the gain is
+// capped so the output never exceeds -1 dBFS (≈ 0.891), leaving headroom for
+// the HTMLAudioElement's own volume scaling.
+async function computeNormGain(raw: ArrayBuffer, targetLufs = -14): Promise<number> {
   try {
-    const ctx = new OfflineAudioContext(1, 1, 44100)
-    const buf = await ctx.decodeAudioData(raw.slice(0))
+    // Step 1: decode audio (dummy 1-frame context is fine for decoding)
+    const decCtx = new OfflineAudioContext(1, 1, 44100)
+    const buf = await decCtx.decodeAudioData(raw.slice(0))
+
+    // Step 2: measure true peak of original signal (for clipping guard)
     let peak = 0
     for (let ch = 0; ch < buf.numberOfChannels; ch++) {
       const data = buf.getChannelData(ch)
@@ -43,7 +58,56 @@ async function computeNormGain(raw: ArrayBuffer, targetPeak = 0.9): Promise<numb
       }
     }
     if (peak === 0) return 1
-    return Math.min(targetPeak / peak, 4)
+
+    // Step 3: render through K-weighting filters for perceptual loudness measurement
+    const kCtx = new OfflineAudioContext(buf.numberOfChannels, buf.length, buf.sampleRate)
+    const src = kCtx.createBufferSource()
+    src.buffer = buf
+
+    // ITU-R BS.1770 stage 1: high-shelf pre-filter +4 dB at 1682 Hz
+    const shelf = kCtx.createBiquadFilter()
+    shelf.type = 'highshelf'
+    shelf.frequency.value = 1681.97
+    shelf.gain.value = 4.0
+
+    // ITU-R BS.1770 stage 2: high-pass at 100 Hz (removes sub-bass that human
+    // hearing is largely insensitive to)
+    const hp = kCtx.createBiquadFilter()
+    hp.type = 'highpass'
+    hp.frequency.value = 100
+    hp.Q.value = 0.707
+
+    src.connect(shelf)
+    shelf.connect(hp)
+    hp.connect(kCtx.destination)
+    src.start(0)
+
+    const rendered = await kCtx.startRendering()
+
+    // Step 4: compute mean square of K-weighted signal across all channels
+    let sumSq = 0
+    let count = 0
+    for (let ch = 0; ch < rendered.numberOfChannels; ch++) {
+      const data = rendered.getChannelData(ch)
+      for (let i = 0; i < data.length; i++) {
+        sumSq += data[i] * data[i]
+        count++
+      }
+    }
+    if (count === 0) return 1
+    const meanSq = sumSq / count
+    if (meanSq === 0) return 1
+
+    // LUFS ≈ −0.691 + 10·log₁₀(meanSq)  →  targetMs = 10^((targetLufs + 0.691) / 10)
+    const targetMs = Math.pow(10, (targetLufs + 0.691) / 10)
+    const gain = Math.sqrt(targetMs / meanSq)
+
+    // Clipping guard: keep true peak below -1 dBFS (0.891) after scaling
+    const ceiling = 0.891
+    const safeGain = peak * gain > ceiling ? ceiling / peak : gain
+
+    // Cap boost at 8× to prevent amplifying near-silent noise floors
+    return Math.min(safeGain, 8)
   } catch {
     return 1   // decode failed (unsupported format) — play at unity gain
   }
