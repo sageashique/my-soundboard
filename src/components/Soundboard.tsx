@@ -178,42 +178,21 @@ export default function Soundboard({ user }: Props) {
         if (activeSourcesRef.current.size === 0 && activeHtmlAudiosRef.current.size === 0) setStatus('Ready', 'idle')
       }
       if (!overlapMode) currentSourceRef.current = s
-    } else if ((p as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf && masterRef.current) {
-      // Lazy decode for mobile — decode on first tap after user gesture
-      const raw = (p as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf!
-      a.decodeAudioData(raw.slice(0)).then(async buf => {
-        setPads(prev => prev.map((pd, i) => i === index ? { ...pd, customBuf: buf } : pd))
-        if (!masterRef.current) return
-        // iOS Safari can suspend the AudioContext between the user gesture and this
-        // async callback — explicitly resume before starting playback.
-        if (a.state === 'suspended') {
-          try { await a.resume() } catch { /* ignore */ }
-        }
-        // Stop any sounds that started while we were decoding (overlap=off)
-        if (!overlapMode) {
-          activeSourcesRef.current.forEach(s => { try { s.stop() } catch { /* already ended */ } })
-          activeSourcesRef.current.clear()
-          activeHtmlAudiosRef.current.forEach(a => { try { a.pause(); a.currentTime = 0 } catch { /* already ended */ } })
-          activeHtmlAudiosRef.current.clear()
-          currentSourceRef.current = null
-        }
-        const s = a.createBufferSource()
-        s.buffer = buf
-        s.connect(masterRef.current)
-        s.start()
-        activeSourcesRef.current.add(s)
-        if (!overlapMode) currentSourceRef.current = s
-        s.onended = () => {
-          activeSourcesRef.current.delete(s)
-          if (currentSourceRef.current === s) currentSourceRef.current = null
-          if (activeSourcesRef.current.size === 0 && activeHtmlAudiosRef.current.size === 0) setStatus('Ready', 'idle')
-        }
-      }).catch(() => {
-        // decodeAudioData failed (e.g. AAC/M4A on Android Chrome, or unusual MP3 encoding).
-        // Fall back to native HTMLAudioElement playback. Does not route through the Web Audio
-        // graph (master volume won't apply) but plays reliably on all mobile browsers including
-        // iOS Safari where createMediaElementSource + async .play() can silently fail.
+    } else if (p.customRawBuf && masterRef.current) {
+      // First tap — raw bytes downloaded but not yet decoded into an AudioBuffer.
+      //
+      // Strategy: play via HTMLAudioElement for THIS tap (reliable on all mobile
+      // browsers including iOS Safari), while decoding in parallel so that every
+      // subsequent tap uses the fast synchronous Web Audio path (customBuf →
+      // createBufferSource). Using s.start() inside a .then() callback fails
+      // silently on iOS: the AudioContext re-suspends during the async decode window
+      // and AudioContext.resume() has no effect outside a direct user gesture.
+      // HTMLAudioElement.play() does not have this restriction.
+      const raw = p.customRawBuf
+
+      const playThisTap = () => {
         try {
+          // Re-check overlap — other sounds may have started during the async gap
           if (!overlapMode) {
             activeSourcesRef.current.forEach(s => { try { s.stop() } catch { /* already ended */ } })
             activeSourcesRef.current.clear()
@@ -237,7 +216,15 @@ export default function Soundboard({ user }: Props) {
         } catch {
           setStatus('Could not play audio', 'stopped')
         }
-      })
+      }
+
+      a.decodeAudioData(raw.slice(0))
+        .then(buf => {
+          // Cache decoded buffer — future taps go through the synchronous customBuf path
+          setPads(prev => prev.map((pd, i) => i === index ? { ...pd, customBuf: buf } : pd))
+          if (masterRef.current) playThisTap()
+        })
+        .catch(() => playThisTap())
     } else if (masterRef.current) {
       // Snapshot existing nodes so we can detect exactly what playSound adds
       const prevNodes = new Set(activeSourcesRef.current)
