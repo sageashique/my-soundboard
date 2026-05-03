@@ -181,9 +181,14 @@ export default function Soundboard({ user }: Props) {
     } else if ((p as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf && masterRef.current) {
       // Lazy decode for mobile — decode on first tap after user gesture
       const raw = (p as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf!
-      a.decodeAudioData(raw.slice(0)).then(buf => {
+      a.decodeAudioData(raw.slice(0)).then(async buf => {
         setPads(prev => prev.map((pd, i) => i === index ? { ...pd, customBuf: buf } : pd))
         if (!masterRef.current) return
+        // iOS Safari can suspend the AudioContext between the user gesture and this
+        // async callback — explicitly resume before starting playback.
+        if (a.state === 'suspended') {
+          try { await a.resume() } catch { /* ignore */ }
+        }
         // Stop any sounds that started while we were decoding (overlap=off)
         if (!overlapMode) {
           activeSourcesRef.current.forEach(s => { try { s.stop() } catch { /* already ended */ } })
@@ -204,10 +209,10 @@ export default function Soundboard({ user }: Props) {
           if (activeSourcesRef.current.size === 0 && activeHtmlAudiosRef.current.size === 0) setStatus('Ready', 'idle')
         }
       }).catch(() => {
-        // decodeAudioData failed (e.g. AAC/M4A on Android Chrome).
-        // Fall back to HTMLAudioElement connected through the Web Audio graph.
-        // Must re-check overlap here because decoding is async — other sounds
-        // may have started between the outer pre-play stop and this callback.
+        // decodeAudioData failed (e.g. AAC/M4A on Android Chrome, or unusual MP3 encoding).
+        // Fall back to native HTMLAudioElement playback. Does not route through the Web Audio
+        // graph (master volume won't apply) but plays reliably on all mobile browsers including
+        // iOS Safari where createMediaElementSource + async .play() can silently fail.
         try {
           if (!overlapMode) {
             activeSourcesRef.current.forEach(s => { try { s.stop() } catch { /* already ended */ } })
@@ -220,8 +225,6 @@ export default function Soundboard({ user }: Props) {
           const blob = new Blob([raw], { type: mime })
           const url = URL.createObjectURL(blob)
           const htmlAudio = new Audio(url)
-          const mediaSrc = a.createMediaElementSource(htmlAudio)
-          if (masterRef.current) mediaSrc.connect(masterRef.current)
           activeHtmlAudiosRef.current.add(htmlAudio)
           htmlAudio.play()
             .then(() => setStatus(`${p.icon} ${p.label}`, 'active'))
