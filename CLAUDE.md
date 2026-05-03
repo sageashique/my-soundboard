@@ -85,11 +85,13 @@
 
 ### Playing sounds
 
-Three paths through `fire(index)`:
+Two paths through `fire(index)`:
 
-1. **`customBuf`** — pre-decoded `AudioBuffer`. Created via `AudioBufferSourceNode`, connected to master.
-2. **`customRawBuf`** — raw `ArrayBuffer` not yet decoded. Decoded lazily on first tap (required for mobile where `decodeAudioData` must run inside a user-gesture). Falls back to `HTMLAudioElement + createMediaElementSource` if `decodeAudioData` fails (e.g. M4A/AAC on Android Chrome).
-3. **Built-in sounds** — synthesized via `playSound()` in `src/lib/sounds.ts`. Uses oscillators and buffer sources.
+1. **`customRawBuf`** — raw `ArrayBuffer` downloaded from Supabase Storage. Always played via `HTMLAudioElement` (every tap, not just the first). `htmlAudio.volume` is set at play time so the master volume slider applies. This path is used for ALL custom audio (MP3, WAV, M4A) on all platforms.
+2. **Built-in sounds** — synthesized via `playSound()` in `src/lib/sounds.ts`. Uses oscillators and buffer sources routed through the Web Audio master gain node.
+
+> **Why HTMLAudioElement for custom audio (do not revert):**
+> iOS Safari re-suspends the AudioContext between user interactions. `AudioBufferSourceNode.start()` called after any async operation (including `decodeAudioData().then()`) fails silently — no error, no audio. `AudioContext.resume()` has no effect outside a direct user gesture. `HTMLAudioElement.play()` called synchronously within the click handler works on every tap on all mobile browsers. The `customBuf` (decoded AudioBuffer) field still exists in `PadState` but is no longer used for playback.
 
 ### Overlap mode
 
@@ -105,11 +107,11 @@ Three paths through `fire(index)`:
 
 ### Node tracking — two separate sets
 
-`activeSourcesRef` (`Set<AudioBufferSourceNode | OscillatorNode>`) — all Web Audio nodes.
+`activeSourcesRef` (`Set<AudioBufferSourceNode | OscillatorNode>`) — Web Audio nodes from built-in synthesized sounds.
 
-`activeHtmlAudiosRef` (`Set<HTMLAudioElement>`) — instances created by the M4A/AAC fallback path. These cannot go into `activeSourcesRef` because they are not Web Audio nodes.
+`activeHtmlAudiosRef` (`Set<HTMLAudioElement>`) — instances used for all custom audio (MP3, WAV, M4A). These cannot go into `activeSourcesRef` because they are not Web Audio nodes.
 
-**Every stop-all and overlap-OFF operation must touch both sets.** Touching only `activeSourcesRef` will leave HTMLAudioElement fallback sounds playing, causing incorrect overlap behaviour when mixing M4A pads with MP3/WAV/built-in pads.
+**Every stop-all and overlap-OFF operation must touch both sets.** Touching only `activeSourcesRef` will leave custom audio playing, causing incorrect overlap behaviour when mixing custom pads with built-in pads.
 
 The "Ready" status is only set when **both** sets are empty.
 
