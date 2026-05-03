@@ -484,12 +484,15 @@ export default function Soundboard({ user }: Props) {
           }
         }
         setPads(loaded)
-        setDbLoading(false)
 
-        for (const row of data) {
-          if (!row.custom_track_path) continue
-          loadCustomAudio(row.pad_index, row.custom_track_path)
-        }
+        // Download all custom audio and compute normalization gain before
+        // revealing the board — user sees a ready, fully-normalized board.
+        await Promise.all(
+          data
+            .filter(row => row.custom_track_path)
+            .map(row => loadCustomAudio(row.pad_index, row.custom_track_path))
+        )
+        setDbLoading(false)
       } catch (err) {
         console.error('Failed to load data:', err)
         setDbLoading(false)
@@ -504,20 +507,11 @@ export default function Soundboard({ user }: Props) {
       const { data, error } = await supabase.storage.from(STORAGE_BUCKET).download(storagePath)
       if (error || !data) return
       const raw = await data.arrayBuffer()
-      // Make the pad playable immediately after download — don't block on gain computation.
-      // customGain defaults to 1 so the first tap plays at unity volume.
+      const gain = await computeNormGain(raw)
       setPads(prev => prev.map((p, i) => i === padIndex
-        ? { ...p, customRawBuf: raw.slice(0) } as PadState
+        ? { ...p, customRawBuf: raw.slice(0), customGain: gain } as PadState
         : p
       ))
-      // Compute normalization gain in the background and apply when ready.
-      // Uses OfflineAudioContext — no user gesture required.
-      computeNormGain(raw).then(gain => {
-        setPads(prev => prev.map((p, i) => i === padIndex
-          ? { ...p, customGain: gain } as PadState
-          : p
-        ))
-      })
     } catch (err) {
       console.warn(`Could not load audio for pad ${padIndex}:`, err)
     }
@@ -579,7 +573,7 @@ export default function Soundboard({ user }: Props) {
   function dismissModal() { setModal(null) }
   function confirmModal() { const cb = modal?.cb; setModal(null); cb?.() }
 
-  if (dbLoading) return <div className="loading-screen">Loading your board…</div>
+  if (dbLoading) return <div className="loading-screen">Getting your sounds ready…</div>
 
   const selectedPad = selPad !== null ? pads[selPad] : null
 
