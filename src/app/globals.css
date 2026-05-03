@@ -1100,7 +1100,6 @@ input[type='text'] { width: 130px; }
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
 }
 .sb-footer-link {
   font-size: 12px;
@@ -1115,6 +1114,13 @@ input[type='text'] { width: 130px; }
   font-weight: 500;
 }
 .sb-footer-link--brand:hover { color: #3730a3; }
+/* Pipe separator between footer brand links */
+.sb-footer-link--brand + .sb-footer-link--brand::before {
+  content: '|';
+  margin-right: 20px;
+  color: var(--border2);
+  font-weight: 400;
+}
 
 /* LOADING */
 .loading-screen {
