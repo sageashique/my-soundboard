@@ -1084,6 +1084,9 @@ input[type='text'] { width: 130px; }
 
 /* Built by link in header (stays small/muted) */
 .sb-built-by {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 11px;
   color: var(--text3);
   text-decoration: none;
@@ -1113,6 +1116,9 @@ input[type='text'] { width: 130px; }
 .sb-footer-link:hover { color: var(--text2); }
 /* Brand-coloured footer links — matches logo indigo */
 .sb-footer-link--brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: #4f46e5;
   font-weight: 500;
 }
