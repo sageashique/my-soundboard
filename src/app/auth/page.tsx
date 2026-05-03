@@ -41,7 +41,7 @@ export default function AuthPage() {
           <img src="/logo.svg" alt="" className="auth-logo-icon" />
           SageSound
         </div>
-        <p className="auth-tagline">Your personal soundboard — in any browser, on any device.</p>
+        <p className="auth-tagline">Your personal soundboard — in any browser, on any device.<br />Sign in to save your sounds, labels, and colors across all your devices.</p>
         <div className="auth-tabs">
           <button
             className={`auth-tab${tab === 'login' ? ' active' : ''}`}

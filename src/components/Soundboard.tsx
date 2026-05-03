@@ -576,21 +576,20 @@ export default function Soundboard({ user }: Props) {
 
       {/* Header */}
       <div className="top">
-        <div className="wordmark-wrap">
+
+        {/* Row 1: board name + About / help */}
+        <div className="top-main-row">
           {!editingName ? (
-            <div className="wordmark-name-wrap">
-              <div className="sb-wordmark-row">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo.svg" alt="" className="sb-logo" />
-                <span
-                  className="wordmark"
-                  onClick={startEditName}
-                  title="Click to rename"
-                >
-                  {boardName}
-                </span>
-              </div>
-              <span className="wordmark-hint">click to rename</span>
+            <div className="sb-wordmark-row">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.svg" alt="" className="sb-logo" />
+              <span
+                className="wordmark"
+                onClick={startEditName}
+                title="Click to rename"
+              >
+                {boardName}
+              </span>
             </div>
           ) : (
             <div className="wordmark-edit">
@@ -606,22 +605,28 @@ export default function Soundboard({ user }: Props) {
               <button className="btn btn-outline btn-sm" onClick={cancelEditName}>Cancel</button>
             </div>
           )}
-        </div>
-        <div className="top-right">
-            <div className="sb-nav-links">
-              <a
-                href="https://www.linkedin.com/in/sageashique"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="sb-built-by"
-              >
-                Built by Sage Ashique
-              </a>
-              <a href="/about" className="sb-about-link">About</a>
-            </div>
-            <span className="user-email">{user.email}</span>
+          <div className="top-actions">
+            <a href="/about" className="sb-about-link">About</a>
             <button className="help-btn" onClick={() => setShowHelp(true)} aria-label="Help">?</button>
+          </div>
         </div>
+
+        {/* Row 2: hint + email | Built by */}
+        <div className="top-sub-row">
+          <div className="top-sub-left">
+            {!editingName && <span className="wordmark-hint-inline">click to rename ·</span>}
+            <span className="user-email">{user.email}</span>
+          </div>
+          <a
+            href="https://www.linkedin.com/in/sageashique"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sb-built-by"
+          >
+            Built by Sage Ashique
+          </a>
+        </div>
+
       </div>
 
       {/* Help overlay */}
