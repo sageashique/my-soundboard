@@ -14,6 +14,7 @@ export interface PadState extends PadConfig {
   keyTrigger: string
   customBuf: AudioBuffer | null
   customRawBuf: ArrayBuffer | null
+  customGain: number   // peak-normalization multiplier; 1.0 = no adjustment
 }
 
 export interface ModalState {

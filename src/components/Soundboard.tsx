@@ -27,6 +27,28 @@ function detectAudioMime(buf: ArrayBuffer): string {
   return 'audio/mpeg'
 }
 
+// Peak-normalize a raw audio buffer so every custom file plays at a consistent
+// perceived level. Uses OfflineAudioContext which works without a user gesture.
+// Returns a gain multiplier (≥1, capped at 4× to avoid over-boosting near-silent clips).
+async function computeNormGain(raw: ArrayBuffer, targetPeak = 0.9): Promise<number> {
+  try {
+    const ctx = new OfflineAudioContext(1, 1, 44100)
+    const buf = await ctx.decodeAudioData(raw.slice(0))
+    let peak = 0
+    for (let ch = 0; ch < buf.numberOfChannels; ch++) {
+      const data = buf.getChannelData(ch)
+      for (let i = 0; i < data.length; i++) {
+        const abs = Math.abs(data[i])
+        if (abs > peak) peak = abs
+      }
+    }
+    if (peak === 0) return 1
+    return Math.min(targetPeak / peak, 4)
+  } catch {
+    return 1   // decode failed (unsupported format) — play at unity gain
+  }
+}
+
 interface Props { user: User }
 
 export default function Soundboard({ user }: Props) {
@@ -58,6 +80,7 @@ export default function Soundboard({ user }: Props) {
   const [useCustomSource, setUseCustomSource] = useState(false)
   const [pendingBuf, setPendingBuf] = useState<AudioBuffer | null>(null)
   const [pendingFileName, setPendingFileName] = useState<string | null>(null)
+  const [pendingGain, setPendingGain] = useState(1)
   const [editLabel, setEditLabel] = useState('')
   const [editEmoji, setEditEmoji] = useState('')
   const [editSound, setEditSound] = useState('kick')
@@ -178,7 +201,7 @@ export default function Soundboard({ user }: Props) {
         const blob = new Blob([p.customRawBuf], { type: mime })
         const url = URL.createObjectURL(blob)
         const htmlAudio = new Audio(url)
-        htmlAudio.volume = volume
+        htmlAudio.volume = Math.min(volume * (p.customGain ?? 1), 1)
         activeHtmlAudiosRef.current.add(htmlAudio)
         htmlAudio.play()
           .then(() => setStatus(`${p.icon} ${p.label}`, 'active'))
@@ -284,7 +307,7 @@ export default function Soundboard({ user }: Props) {
 
           const rawCopy = pendingRawRef.current.slice(0)
           setPads(prev => prev.map((pd, i) => i === selPad
-            ? { ...pd, label, icon: emoji, customBuf: pendingBuf ?? null, customRawBuf: rawCopy, customTrackPath: storagePath, customTrackName: pendingFileName!, color: selColor } as PadState
+            ? { ...pd, label, icon: emoji, customBuf: pendingBuf ?? null, customRawBuf: rawCopy, customTrackPath: storagePath, customTrackName: pendingFileName!, color: selColor, customGain: pendingGain } as PadState
             : pd
           ))
           await supabase.from('pad_configs').upsert({
@@ -320,7 +343,7 @@ export default function Soundboard({ user }: Props) {
         try { await supabase.storage.from(STORAGE_BUCKET).remove([p.customTrackPath]) } catch { /* ignore */ }
       }
       setPads(prev => prev.map((pd, i) => i === selPad
-        ? { ...pd, sound: editSound, label, icon, color: selColor, customBuf: null, customRawBuf: null, customTrackPath: null, customTrackName: null }
+        ? { ...pd, sound: editSound, label, icon, color: selColor, customBuf: null, customRawBuf: null, customTrackPath: null, customTrackName: null, customGain: 1 }
         : pd
       ))
       await supabase.from('pad_configs').upsert({
@@ -351,7 +374,7 @@ export default function Soundboard({ user }: Props) {
             await supabase.storage.from(STORAGE_BUCKET).remove([p.customTrackPath])
           }
           setPads(prev => prev.map((pd, i) => i === selPad
-            ? { ...pd, sound: def.sound, label: def.defaultLabel, icon: def.icon, color: def.color, customBuf: null, customRawBuf: null, customTrackPath: null, customTrackName: null }
+            ? { ...pd, sound: def.sound, label: def.defaultLabel, icon: def.icon, color: def.color, customBuf: null, customRawBuf: null, customTrackPath: null, customTrackName: null, customGain: 1 }
             : pd
           ))
           await supabase.from('pad_configs').upsert({
@@ -410,6 +433,8 @@ export default function Soundboard({ user }: Props) {
       const name = file.name.replace(/\.[^.]+$/, '')
       setPendingFileName(name)
       if (!editLabel) setEditLabel(name.slice(0, 20))
+      // Compute normalization gain in the background
+      computeNormGain(raw).then(g => setPendingGain(g))
       // Try to decode for immediate playback preview; not all formats decode on all
       // browsers (e.g. M4A on Android Chrome). We still allow upload either way.
       try {
@@ -479,9 +504,10 @@ export default function Soundboard({ user }: Props) {
       const { data, error } = await supabase.storage.from(STORAGE_BUCKET).download(storagePath)
       if (error || !data) return
       const raw = await data.arrayBuffer()
-      // Store raw buffer — decoded lazily on first tap (mobile AudioContext fix)
+      // Compute normalization gain via OfflineAudioContext (no user gesture needed)
+      const gain = await computeNormGain(raw)
       setPads(prev => prev.map((p, i) => i === padIndex
-        ? { ...p, customRawBuf: raw.slice(0) } as PadState
+        ? { ...p, customRawBuf: raw.slice(0), customGain: gain } as PadState
         : p
       ))
     } catch (err) {
@@ -526,6 +552,7 @@ export default function Soundboard({ user }: Props) {
     setPendingFileName(null)
     pendingRawRef.current = null
     pendingFileTypeRef.current = 'audio/mpeg'
+    setPendingGain(1)
     setShowEmojiPicker(false)
     setSelPad(null)
   }

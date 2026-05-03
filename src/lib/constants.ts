@@ -61,6 +61,7 @@ export function defaultPads(): PadState[] {
     customTrackName: null,
     customBuf: null,
     customRawBuf: null,
+    customGain: 1,
   }))
 }
 
