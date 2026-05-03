@@ -723,16 +723,8 @@ export default function Soundboard({ user }: Props) {
 
       <div className="divider" />
 
-      {/* Controls row 1: Volume + Sound Overlap */}
-      <div className="controls-bar">
-        <div className="vol-row">
-          <span>Vol</span>
-          <input
-            type="range" min={0} max={1} step={0.05} value={volume}
-            onChange={e => handleVolume(parseFloat(e.target.value))}
-          />
-        </div>
-        <div className="vsep" />
+      {/* Controls row 1: Sound Overlap (left) + Volume (right) */}
+      <div className="controls-bar controls-bar-split">
         <div className="toggle-group">
           <span className="toggle-label">Sound Overlap</span>
           <label className="toggle">
@@ -746,6 +738,13 @@ export default function Soundboard({ user }: Props) {
             <span className="toggle-track" />
             <span className="toggle-thumb" />
           </label>
+        </div>
+        <div className="vol-pill">
+          <span className="vol-label">Vol</span>
+          <input
+            type="range" min={0} max={1} step={0.05} value={volume}
+            onChange={e => handleVolume(parseFloat(e.target.value))}
+          />
         </div>
       </div>
 
