@@ -39,7 +39,7 @@ export default function AuthPage() {
         <div className="auth-wordmark">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" alt="" className="auth-logo-icon" />
-          SageSound
+          [sage]SOUNDS
         </div>
         <p className="auth-tagline">Your personal soundboard — in any browser, on any device.<br />Sign in to save your sounds, labels, and colors across all your devices.</p>
         <div className="auth-tabs">

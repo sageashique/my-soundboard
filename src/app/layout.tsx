@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'SageSound',
+  title: '[sage]SOUNDS',
   description: 'A browser-based soundboard for live meetings, streams, and content creation.',
 }
 

@@ -2,8 +2,8 @@ import Link from 'next/link'
 import './about.css'
 
 export const metadata = {
-  title: 'About — SageSound',
-  description: 'SageSound: a browser-based soundboard built with AI as a co-builder. Learn about the project, the stack, and who made it.',
+  title: 'About — [sage]SOUNDS',
+  description: '[sage]SOUNDS: a browser-based soundboard built with AI as a co-builder. Learn about the project, the stack, and who made it.',
 }
 
 const steps = [
@@ -65,7 +65,7 @@ export default function AboutPage() {
         <Link href="/" className="ap-nav-logo">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" alt="" className="ap-nav-logo-icon" />
-          SageSound
+          [sage]SOUNDS
         </Link>
         <Link href="/auth" className="ap-nav-cta">Open the app →</Link>
       </nav>
@@ -74,7 +74,7 @@ export default function AboutPage() {
       <section className="ap-hero">
         <div className="ap-hero-inner">
           <span className="ap-badge">Personal Project</span>
-          <h1 className="ap-hero-title">SageSound</h1>
+          <h1 className="ap-hero-title">[sage]SOUNDS</h1>
           <p className="ap-hero-desc">
             A browser-based soundboard for live meetings, streams, and content creation.
             Map your own audio to keyboard shortcuts and trigger them instantly —
@@ -88,7 +88,7 @@ export default function AboutPage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/sagesound-app.png"
-              alt="SageSound soundboard interface"
+              alt="[sage]SOUNDS soundboard interface"
               className="ap-screenshot-img"
             />
           </div>
@@ -104,7 +104,7 @@ export default function AboutPage() {
             <p className="ap-body">
               Running a live meeting or stream and want to drop a sound effect at exactly the right moment?
               Most people end up fumbling between apps, playing audio from their phone, or just going without.
-              SageSound puts every sound on a single keyboard-mapped grid — available the moment you need it,
+              [sage]SOUNDS puts every sound on a single keyboard-mapped grid — available the moment you need it,
               from any browser.
             </p>
             <p className="ap-body">
@@ -193,7 +193,7 @@ export default function AboutPage() {
               No months of runway. Just a PM with an idea and a surprisingly capable AI.
             </p>
             <p className="ap-body">
-              SageSound is proof that the gap between &quot;I have an idea for an app&quot; and &quot;that app is
+              [sage]SOUNDS is proof that the gap between &quot;I have an idea for an app&quot; and &quot;that app is
               live on the internet&quot; is smaller than most people think. Practical, everyday tools can be
               reimagined and shipped quickly — and anyone can do it.
             </p>
@@ -231,7 +231,7 @@ export default function AboutPage() {
 
       {/* ── Footer ── */}
       <footer className="ap-footer">
-        <span className="ap-footer-copy">© {new Date().getFullYear()} SageSound</span>
+        <span className="ap-footer-copy">© {new Date().getFullYear()} [sage]SOUNDS</span>
         <div className="ap-footer-links">
           <Link href="/auth" className="ap-footer-link">Open the app</Link>
           <a
