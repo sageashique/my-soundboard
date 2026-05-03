@@ -178,12 +178,16 @@ export default function AboutPage() {
           <h2 className="ap-title">Honestly? I just wanted a soundboard.</h2>
           <div className="ap-card ap-body-card">
             <p className="ap-body">
-              I was sitting in one too many awkward meetings, someone would say something completely wild,
-              and I&apos;d think: <em>there should be a sad trombone button for this.</em> So I built one.
-              That&apos;s really the whole origin story.
+              My nephew has a toy soundboard — one of those chunky plastic ones with big buttons that each
+              play a different sound. He loves it. Watching him mash those buttons got me thinking: a digital
+              version of this is totally doable, and I could actually make it <em>better</em>. Upload your own
+              audio, map it to a keyboard, use it in a real meeting or stream. Same idea, a few extra features.
             </p>
             <p className="ap-body">
-              What started as a fun experiment turned into a genuine exploration of how fast you can go
+              So I built one.
+            </p>
+            <p className="ap-body">
+              What started as a fun weekend project turned into a genuine exploration of how fast you can go
               from idea to deployed product when you use AI as a co-builder. I used Claude Code throughout —
               describing what I wanted, reviewing what it built, iterating quickly. No engineering team.
               No months of runway. Just a PM with an idea and a surprisingly capable AI.
