@@ -647,14 +647,30 @@ export default function Soundboard({ user }: Props) {
 
       {/* Header */}
       <div className="top">
-        {/* Row 1: Logo + Board Name */}
-        {!editingName ? (
+        {/* Title row: app brand (left) | Built by (right) */}
+        <div className="sb-title-row">
           <div className="sb-wordmark-row">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.svg" alt="" className="sb-logo" />
+            <span className="sb-appname">[sage]SOUNDS</span>
+          </div>
+          <a
+            href="https://www.linkedin.com/in/sageashique"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sb-built-by"
+          >
+            Built by Sage Ashique
+          </a>
+        </div>
+
+        {/* Row 1: Board name (editable) | About the App */}
+        {!editingName ? (
+          <div className="top-meta-row">
             <span className="wordmark" onClick={startEditName} title="Click to rename">
               {boardName}
             </span>
+            <a href="/about" className="sb-about-link">About the App</a>
           </div>
         ) : (
           <div className="wordmark-edit">
@@ -671,26 +687,13 @@ export default function Soundboard({ user }: Props) {
           </div>
         )}
 
-        {/* Row 2: Email | About */}
+        {/* Row 2: empty (left) | Help ? (right) */}
         <div className="top-meta-row">
-          <span className="user-email">{user.email}</span>
-          <a href="/about" className="sb-about-link">About</a>
-        </div>
-
-        {/* Row 3: Help | Built by */}
-        <div className="top-meta-row">
+          <span />
           <button className="help-btn" onClick={() => setShowHelp(true)}>
             <span className="help-btn-badge">?</span>
             Help
           </button>
-          <a
-            href="https://www.linkedin.com/in/sageashique"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="sb-built-by"
-          >
-            Built by Sage Ashique
-          </a>
         </div>
       </div>
 
@@ -999,7 +1002,10 @@ export default function Soundboard({ user }: Props) {
             <button className="btn btn-danger-outline" onClick={() => setShowResetConfirm(true)}>
               Reset all to defaults
             </button>
-            <button className="btn btn-outline" onClick={() => setShowSignOutConfirm(true)}>Sign out</button>
+            <div className="bottom-bar-right">
+              <span className="user-email">{user.email}</span>
+              <button className="btn btn-outline" onClick={() => setShowSignOutConfirm(true)}>Sign out</button>
+            </div>
           </div>
         ) : showResetConfirm ? (
           <div>

@@ -794,6 +794,8 @@ input[type='range']::-webkit-slider-thumb {
 /* RESET ALL */
 .reset-all-section { width: 100%; max-width: 420px; margin-left: auto; margin-right: auto; padding: 4px 0 8px; }
 .bottom-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+.bottom-bar-right { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.bottom-bar-right .user-email { max-width: 140px; }
 .reset-confirm-msg { font-size: 13px; color: var(--text2); }
 .reset-confirm-actions { display: flex; gap: 10px; margin-top: 12px; }
 .panel-group { display: flex; align-items: center; gap: 8px; }
@@ -1054,6 +1056,20 @@ input[type='text'] { width: 130px; }
   display: flex;
   align-items: center;
   gap: 8px;
+}
+/* Title row: brand name left, Built by right */
+.sb-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+/* App brand name — preserves [sage]SOUNDS casing (no text-transform) */
+.sb-appname {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text);
 }
 
 /* ── SOUNDBOARD NAV LINKS (About + Built by) ── */
