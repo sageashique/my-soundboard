@@ -14,19 +14,16 @@ const EmojiPicker = dynamic(() => import('@emoji-mart/react'), { ssr: false })
 const STORAGE_BUCKET = 'custom-tracks'
 
 // Detect audio MIME type from raw bytes (magic numbers)
+// Supported formats: MP3, WAV, M4A
 function detectAudioMime(buf: ArrayBuffer): string {
   const b = new Uint8Array(buf.slice(0, 12))
   // MP3: ID3 header or sync word
   if (b[0] === 0x49 && b[1] === 0x44 && b[2] === 0x33) return 'audio/mpeg'
   if (b[0] === 0xFF && (b[1] & 0xE0) === 0xE0) return 'audio/mpeg'
-  // M4A / MP4 audio: ftyp box at offset 4
-  if (b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70) return 'audio/mp4'
-  // OGG
-  if (b[0] === 0x4F && b[1] === 0x67 && b[2] === 0x67) return 'audio/ogg'
-  // WAV
+  // WAV: RIFF header
   if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46) return 'audio/wav'
-  // FLAC
-  if (b[0] === 0x66 && b[1] === 0x4C && b[2] === 0x61 && b[3] === 0x43) return 'audio/flac'
+  // M4A: ftyp box at offset 4
+  if (b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70) return 'audio/mp4'
   return 'audio/mpeg'
 }
 
@@ -442,8 +439,11 @@ export default function Soundboard({ user }: Props) {
   }
 
   // ── File upload ────────────────────────────────────────────────
+  const MAX_FILE_MB = 10
   async function handleFile(file: File) {
-    if (!file.type.startsWith('audio/')) { setStatus('Not an audio file'); return }
+    const isAudio = file.type.startsWith('audio/') || file.type === 'video/mp4'
+    if (!isAudio) { setStatus('Unsupported file — use MP3, WAV, or M4A'); return }
+    if (file.size > MAX_FILE_MB * 1024 * 1024) { setStatus(`File too large — max ${MAX_FILE_MB} MB`); return }
     try {
       const raw = await file.arrayBuffer()
       const mime = file.type || detectAudioMime(raw)
@@ -652,7 +652,7 @@ export default function Soundboard({ user }: Props) {
               </div>
               <div className="help-section">
                 <div className="help-section-title">Editing a pad</div>
-                <p>Press <strong>Edit mode</strong>, then tap any pad to configure it. Switch to <strong>Custom</strong> to upload your own audio file (MP3, WAV, M4A, and more; max 2 MB, 60 sec) — great for dropping in samples, drops, or any sound you want at your fingertips. On <strong>Built-in</strong>, choose from 14 synthesized sounds. Either way, you can set a custom label, color, and emoji.</p>
+                <p>Press <strong>Edit mode</strong>, then tap any pad to configure it. Switch to <strong>Custom</strong> to upload your own audio file (MP3, WAV, or M4A; max 10 MB) — great for dropping in samples, drops, or any sound you want at your fingertips. On <strong>Built-in</strong>, choose from 14 synthesized sounds. Either way, you can set a custom label, color, and emoji.</p>
               </div>
               <div className="help-section">
                 <div className="help-section-title">Board name</div>
@@ -813,13 +813,13 @@ export default function Soundboard({ user }: Props) {
                 >
                   <input
                     type="file"
-                    accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.mp4,.aiff,.flac"
+                    accept=".mp3,.wav,.m4a,audio/mpeg,audio/wav,audio/mp4,audio/x-m4a,video/mp4"
                     onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); (e.target as HTMLInputElement).value = '' }}
                   />
                   <div className="dz-text">
                     {pendingFileName
                       ? <><strong>{pendingFileName}</strong><small>Ready to assign</small></>
-                      : <><strong>Drop file here</strong> or click to browse<small>MP3 · WAV · OGG · M4A</small></>
+                      : <><strong>Drop file here</strong> or click to browse<small>MP3 · WAV · M4A &nbsp;·&nbsp; max 10 MB</small></>
                     }
                   </div>
                 </div>
