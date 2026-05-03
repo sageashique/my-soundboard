@@ -31,51 +31,63 @@ body {
   overscroll-behavior: none;
 }
 
-/* ── AUTH PAGE ── */
+/* ── AUTH PAGE — dim/dusk theme (always dark, independent of app theme) ── */
 .auth-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
+  background: #0f172a;
 }
 .auth-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 36px 32px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 20px;
+  padding: 40px 36px 32px;
   width: 100%;
   max-width: 380px;
 }
 .auth-wordmark {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #f8fafc;
+  margin-bottom: 6px;
+}
+.auth-tagline {
   font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  color: #64748b;
+  line-height: 1.5;
   margin-bottom: 28px;
 }
 .auth-tabs {
   display: flex;
   gap: 0;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
   overflow: hidden;
   margin-bottom: 24px;
+  padding: 3px;
+  gap: 3px;
 }
 .auth-tab {
   flex: 1;
-  padding: 9px 16px;
+  padding: 8px 16px;
   font-family: 'Inter', sans-serif;
   font-size: 13px;
   font-weight: 500;
   background: transparent;
   border: none;
+  border-radius: 8px;
   cursor: pointer;
-  color: var(--text2);
+  color: #64748b;
   transition: background 0.15s, color 0.15s;
 }
+.auth-tab:hover { color: #94a3b8; }
 .auth-tab.active {
-  background: var(--text);
+  background: #4f46e5;
   color: #fff;
 }
 .auth-field {
@@ -86,46 +98,63 @@ body {
 }
 .auth-field label {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text3);
+  color: #475569;
 }
 .auth-field input {
   padding: 10px 12px;
-  border: 1px solid var(--border);
+  border: 1px solid #334155;
   border-radius: 8px;
   font-family: 'Inter', sans-serif;
   font-size: 14px;
-  background: var(--bg);
-  color: var(--text);
+  background: #0f172a;
+  color: #f1f5f9;
   outline: none;
   transition: border-color 0.15s;
   width: 100%;
 }
-.auth-field input:focus { border-color: var(--border2); }
+.auth-field input::placeholder { color: #475569; }
+.auth-field input:focus { border-color: #6366f1; }
 .auth-error {
   font-size: 12px;
-  color: var(--red);
+  color: #f87171;
   margin-bottom: 12px;
   min-height: 18px;
 }
+.auth-success { color: #4ade80; }
 .auth-submit {
   width: 100%;
   padding: 11px;
-  background: var(--text);
+  background: #4f46e5;
   color: #fff;
   border: none;
   border-radius: 8px;
   font-family: 'Inter', sans-serif;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   margin-top: 4px;
-  transition: opacity 0.15s;
+  transition: background 0.15s;
 }
-.auth-submit:hover { opacity: 0.85; }
+.auth-submit:hover { background: #4338ca; }
 .auth-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+.auth-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+.auth-footer-sep { color: #334155; font-size: 12px; }
+.auth-footer-link {
+  font-size: 12px;
+  color: #475569;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.auth-footer-link:hover { color: #818cf8; }
 
 /* ── SOUNDBOARD PAGE ── */
 .sb-page {
@@ -796,6 +825,53 @@ input[type='text'] { width: 130px; }
 [data-theme="dark"] .src-btn.active { box-shadow: 0 1px 4px rgba(0,0,0,0.5); }
 [data-theme="dark"] .modal-wrap  { background: rgba(0,0,0,0.65); }
 [data-theme="dark"] .help-overlay { background: rgba(0,0,0,0.65); }
+
+/* ── SOUNDBOARD NAV LINKS (About + Built by) ── */
+.sb-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sb-about-link {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text3);
+  text-decoration: none;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.sb-about-link:hover { color: var(--text); border-color: var(--border2); }
+.sb-built-by {
+  font-size: 11px;
+  color: var(--text3);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+.sb-built-by:hover { color: var(--text2); }
+
+/* ── SOUNDBOARD FOOTER ── */
+.sb-footer {
+  width: 100%;
+  max-width: 420px;
+  margin: 16px auto 0;
+  padding: 16px 0 8px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.sb-footer-link {
+  font-size: 12px;
+  color: var(--text3);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.sb-footer-link:hover { color: var(--text2); }
 
 /* LOADING */
 .loading-screen {

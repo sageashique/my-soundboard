@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link'
 import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
@@ -35,7 +36,8 @@ export default function AuthPage() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-wordmark">Soundboard</div>
+        <div className="auth-wordmark">SageSound</div>
+        <p className="auth-tagline">Your personal soundboard — in any browser, on any device.</p>
         <div className="auth-tabs">
           <button
             className={`auth-tab${tab === 'login' ? ' active' : ''}`}
@@ -74,12 +76,24 @@ export default function AuthPage() {
             />
           </div>
           <div className="auth-error">
-            {error || (success && <span style={{ color: 'var(--green)' }}>{success}</span>)}
+            {error || (success && <span className="auth-success">{success}</span>)}
           </div>
           <button className="auth-submit" type="submit" disabled={loading}>
             {loading ? 'Please wait…' : tab === 'login' ? 'Log in' : 'Create account'}
           </button>
         </form>
+        <div className="auth-footer">
+          <Link href="/about" className="auth-footer-link">About this project</Link>
+          <span className="auth-footer-sep">·</span>
+          <a
+            href="https://www.linkedin.com/in/sageashique"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="auth-footer-link"
+          >
+            Built by Sage Ashique
+          </a>
+        </div>
       </div>
     </div>
   )

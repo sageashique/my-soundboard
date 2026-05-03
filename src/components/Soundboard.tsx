@@ -604,6 +604,17 @@ export default function Soundboard({ user }: Props) {
           )}
         </div>
         <div className="top-right">
+            <div className="sb-nav-links">
+              <a
+                href="https://www.linkedin.com/in/sageashique"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="sb-built-by"
+              >
+                Built by Sage Ashique
+              </a>
+              <a href="/about" className="sb-about-link">About</a>
+            </div>
             <span className="user-email">{user.email}</span>
             <button className="help-btn" onClick={() => setShowHelp(true)} aria-label="Help">?</button>
         </div>
@@ -901,6 +912,19 @@ export default function Soundboard({ user }: Props) {
           </div>
         )}
       </div>
+
+      {/* Page footer */}
+      <footer className="sb-footer">
+        <a href="/about" className="sb-footer-link">About this project</a>
+        <a
+          href="https://www.linkedin.com/in/sageashique"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="sb-footer-link"
+        >
+          Built by Sage Ashique
+        </a>
+      </footer>
     </div>
   )
 }
