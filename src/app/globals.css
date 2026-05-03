@@ -889,7 +889,7 @@ input[type='text'] { width: 130px; }
   position: fixed;
   inset: 0;
   background: rgba(28,26,24,0.5);
-  z-index: 100;
+  z-index: 300;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -909,6 +909,9 @@ input[type='text'] { width: 130px; }
 
 /* HELP */
 .help-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 11px;
   font-weight: 500;
   color: var(--text3);
@@ -920,6 +923,19 @@ input[type='text'] { width: 130px; }
   transition: color 0.15s;
 }
 .help-btn:hover { color: var(--text2); }
+.help-btn-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
 
 .help-overlay {
   position: fixed; inset: 0;

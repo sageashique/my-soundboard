@@ -384,7 +384,7 @@ export default function Soundboard({ user }: Props) {
     const p = pads[selPad]
     setModal({
       title: 'Reset pad?',
-      body: `Remove custom track from [${p.keyLabel}] and restore its default sound?`,
+      body: `Reset this pad to its default sound? Your custom audio will be removed.`,
       okLabel: 'Reset',
       style: 'danger',
       cb: async () => {
@@ -630,7 +630,10 @@ export default function Soundboard({ user }: Props) {
 
         {/* Row 3: Help | Built by */}
         <div className="top-meta-row">
-          <button className="help-btn" onClick={() => setShowHelp(true)}>Help</button>
+          <button className="help-btn" onClick={() => setShowHelp(true)}>
+            <span className="help-btn-badge">?</span>
+            Help
+          </button>
           <a
             href="https://www.linkedin.com/in/sageashique"
             target="_blank"
