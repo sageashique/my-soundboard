@@ -9,10 +9,11 @@ export interface PadHandle {
 interface Props {
   pad: PadState
   selected: boolean
+  editMode: boolean
   onClick: () => void
 }
 
-const Pad = forwardRef<PadHandle, Props>(function Pad({ pad, selected, onClick }, ref) {
+const Pad = forwardRef<PadHandle, Props>(function Pad({ pad, selected, editMode, onClick }, ref) {
   const elRef = useRef<HTMLDivElement>(null)
 
   useImperativeHandle(ref, () => ({
@@ -29,7 +30,7 @@ const Pad = forwardRef<PadHandle, Props>(function Pad({ pad, selected, onClick }
   return (
     <div
       ref={elRef}
-      className={`pad ${pad.gridClass} c-${pad.color}${selected ? ' sel' : ''}`}
+      className={`pad ${pad.gridClass} c-${pad.color}${selected ? ' sel' : ''}${editMode ? ' edit-mode' : ''}`}
       onClick={onClick}
       role="button"
       aria-label={`${pad.keyLabel} – ${pad.label}`}

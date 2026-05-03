@@ -63,7 +63,7 @@
 - **Mobile landscape (`height < 500px`):** `max-width: 340px`, rows `54px` fixed
 - **Mobile portrait (≤ 599px):** `max-width: 100%`, rows `calc((100dvw - 32px) / 4)`
 - **Small mobile (≤ 390px):** rows `calc((100dvw - 26px) / 4)`
-- All page content containers (`.top`, `.status-bar`, `.controls-bar`, `.divider`, `.edit-panel`, `.reset-all-section`) must match numpad `max-width` at every breakpoint
+- All page content containers (`.top`, `.status-bar`, `.controls-bar`, `.divider`, `.reset-all-section`) must match numpad `max-width` at every breakpoint
 - Mobile landscape must always be handled via `orientation: landscape` + `max-height: 500px`
 - Never collapse all mobile sizes into a single breakpoint
 
@@ -160,7 +160,7 @@ All Web Audio nodes — including every node in multi-node sounds (Clap, AirHorn
 
 ### How to enter edit mode
 
-Click **Edit mode** in the controls bar. All keyboard keys now select pads instead of firing them. Click **Done** to exit.
+Click **Edit Pads** in the controls bar. The button turns indigo and pads show a dashed ring as a visual signal. All keyboard keys now select pads instead of firing them. Click **Exit Edit Mode** (red button in status bar) or **Edit Pads** again to exit.
 
 ### Edit panel fields
 
@@ -169,7 +169,7 @@ Click **Edit mode** in the controls bar. All keyboard keys now select pads inste
 | Source | Built-in (14 synthesized sounds) or Custom (uploaded audio file) |
 | Sound | Dropdown of 14 built-in sounds (built-in mode only) |
 | Audio | Drag-and-drop or click-to-browse file upload (custom mode only) |
-| Emoji | Emoji picker via `@emoji-mart/react` (custom mode only) |
+| Emoji | Emoji picker via `@emoji-mart/react` (always available) |
 | Label | Text input, max 20 characters |
 | Color | 6 swatches: red, green, blue, yellow, purple, pink |
 
@@ -269,6 +269,7 @@ A pill below the pad grid showing the current state:
 - **Idle:** "Ready" (neutral style)
 - **Active:** Pad name + emoji (green tint)
 - **Stopped:** "⏹ Stopped" (red tint)
+- **Edit mode:** Full-width red 'Exit Edit Mode' button replaces the status pill while edit mode is active.
 
 ### Volume
 
@@ -280,7 +281,7 @@ Off by default. When off, firing a new pad stops all currently playing sounds fi
 
 ### Help overlay
 
-Triggered by the `?` button in the top-right. Full-screen overlay with usage instructions. Locks body scroll while open.
+Triggered by the **Help** link in the header. Full-screen overlay with usage instructions. Locks body scroll while open.
 
 ### Sign out
 

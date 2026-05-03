@@ -20,7 +20,7 @@ const steps = [
   {
     n: '3',
     title: 'Customize your board',
-    body: 'Enter Edit Mode to upload your own audio, pick an emoji, write a label, and choose a color for any pad.',
+    body: 'Press Edit Pads to enter edit mode, then tap any pad — upload your own audio, pick an emoji, write a label, and choose a color.',
   },
   {
     n: '4',

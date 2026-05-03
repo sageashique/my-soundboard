@@ -598,36 +598,39 @@ export default function Soundboard({ user }: Props) {
 
       {/* Header */}
       <div className="top">
-        <div className="top-left-col">
-          {!editingName ? (
-            <div className="sb-wordmark-row">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.svg" alt="" className="sb-logo" />
-              <span className="wordmark" onClick={startEditName} title="Click to rename">
-                {boardName}
-              </span>
-            </div>
-          ) : (
-            <div className="wordmark-edit">
-              <input
-                className="wordmark-input"
-                value={nameInput}
-                maxLength={30}
-                onChange={e => setNameInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') saveNameHandler(); if (e.key === 'Escape') cancelEditName() }}
-                autoFocus
-              />
-              <button className="btn btn-solid btn-sm" onClick={saveNameHandler}>Save</button>
-              <button className="btn btn-outline btn-sm" onClick={cancelEditName}>Cancel</button>
-            </div>
-          )}
-          <span className="user-email">{user.email}</span>
-        </div>
-        <div className="top-right-col">
-          <div className="top-actions">
-            <a href="/about" className="sb-about-link">About</a>
-            <button className="help-btn" onClick={() => setShowHelp(true)} aria-label="Help">?</button>
+        {/* Row 1: Logo + Board Name */}
+        {!editingName ? (
+          <div className="sb-wordmark-row">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.svg" alt="" className="sb-logo" />
+            <span className="wordmark" onClick={startEditName} title="Click to rename">
+              {boardName}
+            </span>
           </div>
+        ) : (
+          <div className="wordmark-edit">
+            <input
+              className="wordmark-input"
+              value={nameInput}
+              maxLength={30}
+              onChange={e => setNameInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') saveNameHandler(); if (e.key === 'Escape') cancelEditName() }}
+              autoFocus
+            />
+            <button className="btn btn-solid btn-sm" onClick={saveNameHandler}>Save</button>
+            <button className="btn btn-outline btn-sm" onClick={cancelEditName}>Cancel</button>
+          </div>
+        )}
+
+        {/* Row 2: Email | About */}
+        <div className="top-meta-row">
+          <span className="user-email">{user.email}</span>
+          <a href="/about" className="sb-about-link">About</a>
+        </div>
+
+        {/* Row 3: Help | Built by */}
+        <div className="top-meta-row">
+          <button className="help-btn" onClick={() => setShowHelp(true)}>Help</button>
           <a
             href="https://www.linkedin.com/in/sageashique"
             target="_blank"
@@ -662,7 +665,7 @@ export default function Soundboard({ user }: Props) {
               </div>
               <div className="help-section">
                 <div className="help-section-title">Editing a pad</div>
-                <p>Press <strong>Edit mode</strong>, then tap any pad to configure it. Switch to <strong>Custom</strong> to upload your own audio file (MP3, WAV, or M4A; max 10 MB) — great for dropping in samples, drops, or any sound you want at your fingertips. On <strong>Built-in</strong>, choose from 14 synthesized sounds. Either way, you can set a custom label, color, and emoji.</p>
+                <p>Press <strong>Edit Pads</strong> to enter edit mode, then tap any pad to configure it. Switch to <strong>Custom</strong> to upload your own audio file (MP3, WAV, or M4A; max 10 MB) — great for dropping in samples, drops, or any sound you want at your fingertips. On <strong>Built-in</strong>, choose from 14 synthesized sounds. Either way, you can set a custom label, color, and emoji.</p>
               </div>
               <div className="help-section">
                 <div className="help-section-title">Board name</div>
@@ -686,6 +689,7 @@ export default function Soundboard({ user }: Props) {
             ref={el => { padRefs.current[i] = el }}
             pad={editing && selPad === i ? { ...pad, color: selColor } : pad}
             selected={selPad === i}
+            editMode={editing}
             onClick={() => { getAC(); editing ? pickPad(i) : fire(i) }}
           />
         ))}
@@ -700,14 +704,23 @@ export default function Soundboard({ user }: Props) {
 
       {/* Status bar */}
       <div className="status-bar">
-        <span className={`status-pill${statusState !== 'idle' ? ` ${statusState}` : ''}`}>
-          {statusMsg}
-        </span>
+        {editing ? (
+          <button
+            className="btn exit-edit-btn"
+            onClick={() => { setEditing(false); setSelPad(null); setStatus('Ready') }}
+          >
+            Exit Edit Mode
+          </button>
+        ) : (
+          <span className={`status-pill${statusState !== 'idle' ? ` ${statusState}` : ''}`}>
+            {statusMsg}
+          </span>
+        )}
       </div>
 
       <div className="divider" />
 
-      {/* Controls bar: vol + sound overlap */}
+      {/* Controls row 1: Volume + Sound Overlap */}
       <div className="controls-bar">
         <div className="vol-row">
           <span>Vol</span>
@@ -718,20 +731,7 @@ export default function Soundboard({ user }: Props) {
         </div>
         <div className="vsep" />
         <div className="toggle-group">
-          <span className="toggle-label">Dark mode</span>
-          <label className="toggle">
-            <input
-              type="checkbox"
-              checked={theme === 'dark'}
-              onChange={e => handleThemeToggle(e.target.checked ? 'dark' : 'light')}
-            />
-            <span className="toggle-track" />
-            <span className="toggle-thumb" />
-          </label>
-        </div>
-        <div className="vsep" />
-        <div className="toggle-group">
-          <span className="toggle-label">Sound overlap</span>
+          <span className="toggle-label">Sound Overlap</span>
           <label className="toggle">
             <input
               type="checkbox" checked={overlapMode}
@@ -748,18 +748,27 @@ export default function Soundboard({ user }: Props) {
 
       <div className="divider" />
 
-      {/* Edit mode toggle */}
-      <div className="controls-bar">
+      {/* Controls row 2: Theme toggle + Edit Pads */}
+      <div className="controls-bar controls-bar-split">
+        <div className="ctrl-toggle">
+          <button
+            className={`ctrl-btn${theme === 'light' ? ' active' : ''}`}
+            onClick={() => handleThemeToggle('light')}
+          >Light</button>
+          <button
+            className={`ctrl-btn${theme === 'dark' ? ' active' : ''}`}
+            onClick={() => handleThemeToggle('dark')}
+          >Dark</button>
+        </div>
         <button
-          className={`btn btn-outline${editing ? ' on' : ''}`}
+          className={`btn${editing ? ' btn-edit-active' : ' btn-outline'}`}
           onClick={() => {
             if (editing) { setEditing(false); setSelPad(null); setStatus('Ready') }
-            else { setEditing(true); setStatus('Tap a pad to configure it') }
+            else setEditing(true)
           }}
         >
-          {editing ? 'Done' : 'Edit mode'}
+          Edit Pads
         </button>
-        {editing && <span className="edit-hint">Tap a pad to configure it</span>}
       </div>
 
       {/* Edit Pad Modal */}

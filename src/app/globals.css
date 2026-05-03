@@ -184,31 +184,17 @@ body {
   max-width: 420px;
   margin: 0 auto 28px;
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-.top-left-col {
-  flex: 1;
-  min-width: 0;
-  display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 5px;
 }
-.top-right-col {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  flex-shrink: 0;
-}
-.top-actions {
+.top-meta-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
+  gap: 8px;
 }
 .wordmark {
-  font-size: 13px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
+  font-size: 15px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
   cursor: pointer; display: inline-block;
   border-bottom: 1px dashed transparent;
   transition: border-color 0.15s, color 0.15s;
@@ -311,6 +297,18 @@ input[type='range']::-webkit-slider-thumb {
   border-color: rgba(217,79,61,0.2);
   color: var(--red);
 }
+.exit-edit-btn {
+  width: 100%;
+  background: var(--red);
+  border-color: var(--red);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 10px;
+  text-align: center;
+}
+.exit-edit-btn:hover { opacity: 0.88; }
 
 /* PAD GRID */
 .numpad {
@@ -413,6 +411,14 @@ input[type='range']::-webkit-slider-thumb {
 .pad.c-purple:hover { background: rgba(112,71,176,0.10); }
 .pad.c-pink:hover   { background: rgba(196,77,135,0.10); }
 .pad.fire::before { display: none; }
+.pad.edit-mode:not(.sel) {
+  border-style: dashed;
+  border-color: #4f46e5;
+  opacity: 0.9;
+}
+[data-theme="dark"] .pad.edit-mode:not(.sel) {
+  border-color: #818cf8;
+}
 
 .pad-key {
   position: absolute;
@@ -474,6 +480,35 @@ input[type='range']::-webkit-slider-thumb {
   flex-wrap: wrap;
   margin-bottom: 24px;
 }
+.controls-bar-split {
+  justify-content: space-between;
+}
+.ctrl-toggle {
+  display: flex;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 3px;
+  gap: 3px;
+}
+.ctrl-btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  color: var(--text2);
+  transition: background 0.15s, color 0.15s;
+  font-family: 'Inter', sans-serif;
+}
+.ctrl-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.ctrl-btn:not(.active):hover { background: var(--border); }
 .toggle-group {
   display: flex;
   align-items: center;
@@ -533,6 +568,8 @@ input[type='range']::-webkit-slider-thumb {
 .btn-outline { background: transparent; border-color: var(--border2); color: var(--text2); }
 .btn-outline:hover { border-color: var(--text); color: var(--text); background: var(--surface2); }
 .btn-outline.on { border-color: var(--text); color: var(--text); background: var(--surface2); }
+.btn-edit-active { background: #4f46e5; border-color: #4f46e5; color: #ffffff; }
+.btn-edit-active:hover { opacity: 0.88; }
 .btn-solid { background: var(--text); border-color: var(--text); color: #fff; }
 .btn-solid:hover { opacity: 0.85; }
 .btn-solid:disabled { opacity: 0.35; cursor: not-allowed; }
@@ -872,19 +909,17 @@ input[type='text'] { width: 130px; }
 
 /* HELP */
 .help-btn {
-  width: 24px; height: 24px;
-  border-radius: 50%;
-  border: 1.5px solid var(--border2);
-  background: var(--surface);
-  color: var(--text2);
-  font-size: 12px; font-weight: 600;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text3);
+  background: none;
+  border: none;
   cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  transition: border-color 0.15s, color 0.15s;
-  line-height: 1;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  transition: color 0.15s;
 }
-.help-btn:hover { border-color: var(--text3); color: var(--text); }
+.help-btn:hover { color: var(--text2); }
 
 .help-overlay {
   position: fixed; inset: 0;
@@ -985,6 +1020,7 @@ input[type='text'] { width: 130px; }
 [data-theme="dark"] .btn-solid  { color: var(--bg); }
 [data-theme="dark"] .auth-tab.active { color: var(--bg); }
 [data-theme="dark"] .src-btn.active { box-shadow: 0 1px 4px rgba(0,0,0,0.5); }
+[data-theme="dark"] .ctrl-btn.active { box-shadow: 0 1px 4px rgba(0,0,0,0.5); }
 [data-theme="dark"] .modal-wrap  { background: rgba(0,0,0,0.65); }
 [data-theme="dark"] .help-overlay { background: rgba(0,0,0,0.65); }
 
