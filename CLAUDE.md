@@ -90,8 +90,21 @@ Two paths through `fire(index)`:
 1. **`customRawBuf`** — raw `ArrayBuffer` downloaded from Supabase Storage. Always played via `HTMLAudioElement` (every tap, not just the first). `htmlAudio.volume` is set at play time so the master volume slider applies. This path is used for ALL custom audio (MP3, WAV, M4A) on all platforms.
 2. **Built-in sounds** — synthesized via `playSound()` in `src/lib/sounds.ts`. Uses oscillators and buffer sources routed through the Web Audio master gain node.
 
-> **Why HTMLAudioElement for custom audio (do not revert):**
-> iOS Safari re-suspends the AudioContext between user interactions. `AudioBufferSourceNode.start()` called after any async operation (including `decodeAudioData().then()`) fails silently — no error, no audio. `AudioContext.resume()` has no effect outside a direct user gesture. `HTMLAudioElement.play()` called synchronously within the click handler works on every tap on all mobile browsers. The `customBuf` (decoded AudioBuffer) field still exists in `PadState` but is no longer used for playback.
+> **⚠️ DO NOT change custom audio playback to use Web Audio API — this will break mobile.**
+>
+> This was fully debugged and the HTMLAudioElement approach is the intentional, permanent solution. Here is the complete history so it is never re-introduced:
+>
+> - **What was tried and failed:** `decodeAudioData().then(s => s.start())` — fails silently on iOS Safari. The AudioContext re-suspends between user interactions. `s.start()` on a suspended context produces no audio and no error.
+> - **What was tried and failed:** Adding `await a.resume()` before `s.start()` inside the `.then()` callback — does not work. `AudioContext.resume()` has no effect when called outside a direct user gesture stack (i.e. inside a Promise callback).
+> - **What was tried and failed:** Using `decodeAudioData` on first tap, caching `customBuf`, then using Web Audio on subsequent taps — the second tap was also silent for the same reason (AudioContext had re-suspended).
+> - **What works:** `HTMLAudioElement.play()` called **synchronously** within the click handler. iOS allows this on every tap. Volume is applied via `htmlAudio.volume` at play time.
+>
+> **Rules that must not change:**
+> 1. Custom audio (`customRawBuf`) must always play via `HTMLAudioElement`, on every tap, not just the first.
+> 2. `HTMLAudioElement.play()` must be called synchronously in the `fire()` body — not inside `.then()`, `.catch()`, or any async callback.
+> 3. Do not add back a `customBuf` Web Audio playback path, even as an "optimisation for desktop" or "fast path for repeat taps".
+> 4. Do not use `createMediaElementSource` — it requires routing through the Web Audio graph and fails on iOS in async contexts.
+> 5. The `customBuf` field in `PadState` is vestigial and unused for playback. Do not wire it back into `fire()`.
 
 ### Overlap mode
 
@@ -323,7 +336,8 @@ Inline confirm flow. Calls `supabase.auth.signOut()`.
 1. **Pad grid placement CSS** — any change breaks the numpad layout. See "Numpad Grid — HARD RULES" section above.
 2. **`.sb-page` `overflow-x: hidden`** — must not use `clip` (breaks iOS Safari clipping).
 3. **`onTouchStart={() => {}}` on `.numpad`** — required for iOS `:active` states to fire.
-6. **`activeSourcesRef` + `activeHtmlAudiosRef` tracking** — both sets must be consulted for every stop-all and overlap-OFF operation. `activeSourcesRef` holds Web Audio nodes; `activeHtmlAudiosRef` holds HTMLAudioElement instances from the M4A/AAC fallback. Touching only one set breaks overlap when mixing file types.
-7. **`pendingFileTypeRef` / `detectAudioMime()`** — required for M4A/AAC playback on Android Chrome.
-8. **Upsert pattern on `pad_configs` and `user_settings`** — always upsert, never plain insert.
-9. **`customRawBuf: null` on reset/save** — must be cleared whenever switching away from custom audio, or the old audio continues to play.
+4. **Custom audio always plays via `HTMLAudioElement`** — do not move to Web Audio API. See "Why HTMLAudioElement for custom audio" note in the Audio System section for the full history of what was tried and why it fails on iOS Safari.
+5. **`activeSourcesRef` + `activeHtmlAudiosRef` tracking** — both sets must be consulted for every stop-all and overlap-OFF operation. `activeSourcesRef` holds Web Audio nodes (built-in sounds only); `activeHtmlAudiosRef` holds all custom audio HTMLAudioElement instances. Touching only one set breaks overlap and stop-all.
+6. **`detectAudioMime()`** — used to determine the correct MIME type when creating Blob URLs for HTMLAudioElement playback. Required for correct playback of M4A files.
+7. **Upsert pattern on `pad_configs` and `user_settings`** — always upsert, never plain insert.
+8. **`customRawBuf: null` on reset/save** — must be cleared whenever switching away from custom audio, or the old audio continues to play.
