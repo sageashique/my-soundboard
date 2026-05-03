@@ -300,7 +300,7 @@ export default function Soundboard({ user }: Props) {
     setUseCustomSource(!!p.customBuf || !!(p as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf)
     setEditSound(p.sound || 'kick')
     setEditLabel(p.label)
-    setEditEmoji(p.customBuf ? p.icon : '')
+    setEditEmoji(p.icon)
     setPendingBuf(null)
     setPendingFileName(null)
     pendingRawRef.current = null
@@ -358,7 +358,7 @@ export default function Soundboard({ user }: Props) {
       }
     } else {
       const label = editLabel || SOUND_LABELS[editSound]
-      const icon = SOUND_ICONS[editSound] || '🔊'
+      const icon = editEmoji.trim() || SOUND_ICONS[editSound] || '🔊'
       // Remove old custom audio file from storage if switching away from custom
       if (p.customTrackPath) {
         try { await supabase.storage.from(STORAGE_BUCKET).remove([p.customTrackPath]) } catch { /* ignore */ }
@@ -375,6 +375,7 @@ export default function Soundboard({ user }: Props) {
       }, { onConflict: 'user_id,pad_index' })
       setStatus(`Saved → [${p.keyLabel}] ${label}`, 'active')
     }
+    setSelPad(null)
   }
 
   // ── Reset pad ──────────────────────────────────────────────────
@@ -409,6 +410,7 @@ export default function Soundboard({ user }: Props) {
           setEditEmoji('')
           setSelColor(def.color)
           setStatus(`Pad [${p.keyLabel}] reset to default`)
+          setSelPad(null)
         } catch (err) {
           setStatus(`Reset failed: ${(err as Error).message}`)
         }
@@ -562,6 +564,26 @@ export default function Soundboard({ user }: Props) {
   // ── Sign out ────────────────────────────────────────────────────
   async function handleSignOut() { await supabase.auth.signOut() }
 
+  // ── Cancel edit modal ──────────────────────────────────────────
+  function handleCancelEdit() {
+    setPendingBuf(null)
+    setPendingFileName(null)
+    pendingRawRef.current = null
+    pendingFileTypeRef.current = 'audio/mpeg'
+    setShowEmojiPicker(false)
+    setSelPad(null)
+  }
+
+  // ── Body scroll lock for edit modal ───────────────────────────
+  useEffect(() => {
+    if (editing && selPad !== null) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.removeProperty('overflow')
+    }
+    return () => { document.body.style.removeProperty('overflow') }
+  }, [editing, selPad])
+
   // ── Modal ───────────────────────────────────────────────────────
   function dismissModal() { setModal(null) }
   function confirmModal() { const cb = modal?.cb; setModal(null); cb?.() }
@@ -576,18 +598,12 @@ export default function Soundboard({ user }: Props) {
 
       {/* Header */}
       <div className="top">
-
-        {/* Row 1: board name + About / help */}
-        <div className="top-main-row">
+        <div className="top-left-col">
           {!editingName ? (
             <div className="sb-wordmark-row">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/logo.svg" alt="" className="sb-logo" />
-              <span
-                className="wordmark"
-                onClick={startEditName}
-                title="Click to rename"
-              >
+              <span className="wordmark" onClick={startEditName} title="Click to rename">
                 {boardName}
               </span>
             </div>
@@ -605,17 +621,12 @@ export default function Soundboard({ user }: Props) {
               <button className="btn btn-outline btn-sm" onClick={cancelEditName}>Cancel</button>
             </div>
           )}
+          <span className="user-email">{user.email}</span>
+        </div>
+        <div className="top-right-col">
           <div className="top-actions">
             <a href="/about" className="sb-about-link">About</a>
             <button className="help-btn" onClick={() => setShowHelp(true)} aria-label="Help">?</button>
-          </div>
-        </div>
-
-        {/* Row 2: hint + email | Built by */}
-        <div className="top-sub-row">
-          <div className="top-sub-left">
-            {!editingName && <span className="wordmark-hint-inline">click to rename ·</span>}
-            <span className="user-email">{user.email}</span>
           </div>
           <a
             href="https://www.linkedin.com/in/sageashique"
@@ -626,7 +637,6 @@ export default function Soundboard({ user }: Props) {
             Built by Sage Ashique
           </a>
         </div>
-
       </div>
 
       {/* Help overlay */}
@@ -752,138 +762,170 @@ export default function Soundboard({ user }: Props) {
         {editing && <span className="edit-hint">Tap a pad to configure it</span>}
       </div>
 
-      {/* Unified config panel */}
+      {/* Edit Pad Modal */}
       {editing && selectedPad && (
-        <div className="edit-panel">
-          <div className="panel-header">
-            <span className="panel-title">Pad [{selectedPad.keyLabel}] — {selectedPad.label}</span>
-          </div>
+        <div className="ep-overlay" onClick={handleCancelEdit}>
+          <div className="ep-modal" onClick={e => e.stopPropagation()}>
 
-          {/* Source toggle */}
-          <div className="panel-group source-toggle-group">
-            <span className="panel-label">Source</span>
-            <div className="source-toggle">
-              <button className={`src-btn${!useCustomSource ? ' active' : ''}`} onClick={() => setUseCustomSource(false)}>Built-in</button>
-              <button className={`src-btn${useCustomSource ? ' active' : ''}`} onClick={() => setUseCustomSource(true)}>Custom</button>
+            {/* Header */}
+            <div className="ep-header">
+              <span className="ep-title">
+                Edit Pad <span className="ep-key">[{selectedPad.keyLabel}]</span>
+              </span>
+              <button className="ep-close" onClick={handleCancelEdit} aria-label="Close">✕</button>
             </div>
-          </div>
 
-          {/* Built-in fields */}
-          {!useCustomSource && (
-            <div className="panel-group">
-              <span className="panel-label">Sound</span>
-              <select value={editSound} onChange={e => {
-                setEditSound(e.target.value)
-                if (!editLabel || Object.values(SOUND_LABELS).includes(editLabel))
-                  setEditLabel(SOUND_LABELS[e.target.value] || '')
-              }}>
-                <option value="kick">🥁 Kick</option>
-                <option value="snare">🪘 Snare</option>
-                <option value="hihat">🎵 Hi-Hat</option>
-                <option value="clap">👏 Clap</option>
-                <option value="rimshot">🎯 Rimshot</option>
-                <option value="bass">🎸 808 Bass</option>
-                <option value="synth">🎹 Synth</option>
-                <option value="riser">⬆️ Riser</option>
-                <option value="scratch">💿 Scratch</option>
-                <option value="airhorn">📯 Air Horn</option>
-                <option value="laugh">😂 Laugh</option>
-                <option value="noti">🔔 Notif</option>
-                <option value="siren">🚨 Siren</option>
-                <option value="swoosh">💨 Swoosh</option>
-              </select>
-            </div>
-          )}
+            {/* Body */}
+            <div className="ep-body">
 
-          {/* Custom upload fields */}
-          {useCustomSource && (
-            <div className="custom-fields">
-              <div className="panel-group">
-                <span className="panel-label">Audio</span>
-                <div
-                  className="drop-zone"
-                  ref={dzRef}
-                  onDragOver={e => { e.preventDefault(); dzRef.current?.classList.add('over') }}
-                  onDragLeave={() => dzRef.current?.classList.remove('over')}
-                  onDrop={e => {
-                    e.preventDefault()
-                    dzRef.current?.classList.remove('over')
-                    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0])
-                  }}
-                >
-                  <input
-                    type="file"
-                    accept=".mp3,.wav,.m4a,audio/mpeg,audio/wav,audio/mp4,audio/x-m4a,video/mp4"
-                    onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); (e.target as HTMLInputElement).value = '' }}
-                  />
-                  <div className="dz-text">
-                    {pendingFileName
-                      ? <><strong>{pendingFileName}</strong><small>Ready to assign</small></>
-                      : <><strong>Drop file here</strong> or click to browse<small>MP3 · WAV · M4A &nbsp;·&nbsp; max 10 MB</small></>
-                    }
+              {/* Live preview */}
+              <div className="ep-preview">
+                <div className={`ep-preview-pad c-${selColor}`}>
+                  <span className="ep-preview-key">{selectedPad.keyLabel}</span>
+                  <span className="ep-preview-icon">
+                    {editEmoji || SOUND_ICONS[editSound] || '🎵'}
+                  </span>
+                  <span className="ep-preview-label">{editLabel || selectedPad.label}</span>
+                </div>
+                <p className="ep-preview-hint">Live preview</p>
+              </div>
+
+              {/* Controls */}
+              <div className="ep-controls">
+
+                {/* Source */}
+                <div className="ep-group">
+                  <span className="ep-label">Source</span>
+                  <div className="ep-source-toggle">
+                    <button className={`ep-src-btn${!useCustomSource ? ' active' : ''}`} onClick={() => setUseCustomSource(false)}>Built-in</button>
+                    <button className={`ep-src-btn${useCustomSource ? ' active' : ''}`} onClick={() => setUseCustomSource(true)}>Custom</button>
                   </div>
                 </div>
-              </div>
-              <div className="panel-group" style={{ marginTop: 12 }}>
-                <span className="panel-label">Emoji</span>
-                <div className="emoji-picker-wrap" ref={emojiPickerRef}>
-                  <button
-                    className="emoji-trigger"
-                    onClick={() => setShowEmojiPicker(p => !p)}
-                    title="Pick emoji"
-                  >
-                    {editEmoji || '🎵'}
-                  </button>
-                  {showEmojiPicker && (
-                    <div className="emoji-popover">
-                      <EmojiPicker
-                        data={async () => (await fetch('https://cdn.jsdelivr.net/npm/@emoji-mart/data')).json()}
-                        onEmojiSelect={(e: { native: string }) => {
-                          setEditEmoji(e.native)
-                          setShowEmojiPicker(false)
-                        }}
-                        theme="light"
-                        previewPosition="none"
-                        skinTonePosition="none"
+
+                {/* Built-in sound */}
+                {!useCustomSource && (
+                  <div className="ep-group">
+                    <span className="ep-label">Sound</span>
+                    <select value={editSound} onChange={e => {
+                      const s = e.target.value
+                      setEditSound(s)
+                      if (!editLabel || Object.values(SOUND_LABELS).includes(editLabel))
+                        setEditLabel(SOUND_LABELS[s] || '')
+                      setEditEmoji(SOUND_ICONS[s] || '🎵')
+                    }}>
+                      <option value="kick">🥁 Kick</option>
+                      <option value="snare">🪘 Snare</option>
+                      <option value="hihat">🎵 Hi-Hat</option>
+                      <option value="clap">👏 Clap</option>
+                      <option value="rimshot">🎯 Rimshot</option>
+                      <option value="bass">🎸 808 Bass</option>
+                      <option value="synth">🎹 Synth</option>
+                      <option value="riser">⬆️ Riser</option>
+                      <option value="scratch">💿 Scratch</option>
+                      <option value="airhorn">📯 Air Horn</option>
+                      <option value="laugh">😂 Laugh</option>
+                      <option value="noti">🔔 Notif</option>
+                      <option value="siren">🚨 Siren</option>
+                      <option value="swoosh">💨 Swoosh</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* Custom audio upload */}
+                {useCustomSource && (
+                  <div className="ep-group">
+                    <span className="ep-label">Audio</span>
+                    <div
+                      className="drop-zone"
+                      ref={dzRef}
+                      onDragOver={e => { e.preventDefault(); dzRef.current?.classList.add('over') }}
+                      onDragLeave={() => dzRef.current?.classList.remove('over')}
+                      onDrop={e => {
+                        e.preventDefault()
+                        dzRef.current?.classList.remove('over')
+                        if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0])
+                      }}
+                    >
+                      <input
+                        type="file"
+                        accept=".mp3,.wav,.m4a,audio/mpeg,audio/wav,audio/mp4,audio/x-m4a,video/mp4"
+                        onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); (e.target as HTMLInputElement).value = '' }}
                       />
+                      <div className="dz-text">
+                        {pendingFileName
+                          ? <><strong>{pendingFileName}</strong><small>Ready to assign</small></>
+                          : <><strong>Drop file here</strong> or click to browse<small>MP3 · WAV · M4A &nbsp;·&nbsp; max 10 MB</small></>
+                        }
+                      </div>
                     </div>
-                  )}
+                  </div>
+                )}
+
+                {/* Emoji */}
+                <div className="ep-group">
+                  <span className="ep-label">Emoji</span>
+                  <div className="emoji-picker-wrap" ref={emojiPickerRef}>
+                    <button
+                      className="emoji-trigger"
+                      onClick={() => setShowEmojiPicker(p => !p)}
+                      title="Pick emoji"
+                    >
+                      {editEmoji || SOUND_ICONS[editSound] || '🎵'}
+                    </button>
+                    {showEmojiPicker && (
+                      <div className="emoji-popover">
+                        <EmojiPicker
+                          data={async () => (await fetch('https://cdn.jsdelivr.net/npm/@emoji-mart/data')).json()}
+                          onEmojiSelect={(e: { native: string }) => {
+                            setEditEmoji(e.native)
+                            setShowEmojiPicker(false)
+                          }}
+                          theme="light"
+                          previewPosition="none"
+                          skinTonePosition="none"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                {/* Label */}
+                <div className="ep-group">
+                  <span className="ep-label">Label</span>
+                  <input
+                    type="text" placeholder="Pad label..." maxLength={20}
+                    value={editLabel} onChange={e => setEditLabel(e.target.value)}
+                  />
+                </div>
+
+                {/* Color */}
+                <div className="ep-group">
+                  <span className="ep-label">Color</span>
+                  <div className="color-row">
+                    {COLORS.map(c => (
+                      <div
+                        key={c}
+                        className={`cdot d-${c}${selColor === c ? ' sel' : ''}`}
+                        onClick={() => setSelColor(c)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
               </div>
             </div>
-          )}
 
-          {/* Shared fields */}
-          <div className="panel-group">
-            <span className="panel-label">Label</span>
-            <input
-              type="text" placeholder="Pad label..." maxLength={20}
-              value={editLabel} onChange={e => setEditLabel(e.target.value)}
-            />
-          </div>
-          <div className="panel-group">
-            <span className="panel-label">Color</span>
-            <div className="color-row">
-              {COLORS.map(c => (
-                <div
-                  key={c}
-                  className={`cdot d-${c}${selColor === c ? ' sel' : ''}`}
-                  onClick={() => setSelColor(c)}
-                />
-              ))}
+            {/* Footer */}
+            <div className="ep-footer">
+              <button className="btn btn-danger-outline" onClick={handleResetPad}>
+                Reset Pad
+              </button>
+              <div className="ep-footer-right">
+                <button className="btn btn-outline" onClick={handleCancelEdit}>Cancel</button>
+                <button className="btn btn-solid" onClick={handleSave}>Save</button>
+              </div>
             </div>
-          </div>
 
-          {/* Actions */}
-          <div className="panel-actions">
-            <button
-              className="btn btn-danger-outline"
-              disabled={!selectedPad.customBuf && !(selectedPad as PadState & { customRawBuf?: ArrayBuffer }).customRawBuf}
-              onClick={handleResetPad}
-            >
-              Reset pad
-            </button>
-            <button className="btn btn-solid" onClick={handleSave}>Save</button>
           </div>
         </div>
       )}
