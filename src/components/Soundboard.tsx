@@ -177,7 +177,8 @@ export default function Soundboard({ user }: Props) {
   // Tracks HTMLAudioElement instances used by the M4A/AAC fallback path.
   // These are not AudioNodes so they live in a separate set; both sets must be
   // consulted for stop-all and overlap-off logic.
-  const activeHtmlAudiosRef = useRef<Set<HTMLAudioElement>>(new Set())
+  // Map<element, customGain> so handleVolume can repatch volume on playing elements
+  const activeHtmlAudiosRef = useRef<Map<HTMLAudioElement, number>>(new Map())
 
   // Pad refs for flash animation
   const padRefs = useRef<(PadHandle | null)[]>([])
@@ -215,6 +216,12 @@ export default function Soundboard({ user }: Props) {
   function handleVolume(v: number) {
     setVolume(v)
     if (masterRef.current) masterRef.current.gain.value = v
+    // Repatch volume on every currently-playing HTMLAudioElement so the slider
+    // affects audio that's already in flight (custom uploads use HTMLAudioElement,
+    // not Web Audio, so they aren't covered by the master gain node above).
+    activeHtmlAudiosRef.current.forEach((gain, audio) => {
+      audio.volume = Math.min(v * gain, 1)
+    })
   }
 
   // ── Stop All ───────────────────────────────────────────────────
@@ -230,7 +237,7 @@ export default function Soundboard({ user }: Props) {
     }
     activeSourcesRef.current.forEach(s => { try { s.stop() } catch { /* already stopped */ } })
     activeSourcesRef.current.clear()
-    activeHtmlAudiosRef.current.forEach(a => { try { a.pause(); a.currentTime = 0 } catch { /* already ended */ } })
+    activeHtmlAudiosRef.current.forEach((_, a) => { try { a.pause(); a.currentTime = 0 } catch { /* already ended */ } })
     activeHtmlAudiosRef.current.clear()
     currentSourceRef.current = null
     setStatus('⏹ Stopped', 'stopped')
@@ -247,7 +254,7 @@ export default function Soundboard({ user }: Props) {
     if (!overlapMode) {
       activeSourcesRef.current.forEach(s => { try { s.stop() } catch { /* already ended */ } })
       activeSourcesRef.current.clear()
-      activeHtmlAudiosRef.current.forEach(a => { try { a.pause(); a.currentTime = 0 } catch { /* already ended */ } })
+      activeHtmlAudiosRef.current.forEach((_, a) => { try { a.pause(); a.currentTime = 0 } catch { /* already ended */ } })
       activeHtmlAudiosRef.current.clear()
       currentSourceRef.current = null
     }
@@ -264,7 +271,7 @@ export default function Soundboard({ user }: Props) {
         const url = URL.createObjectURL(blob)
         const htmlAudio = new Audio(url)
         htmlAudio.volume = Math.min(volume * (p.customGain ?? 1), 1)
-        activeHtmlAudiosRef.current.add(htmlAudio)
+        activeHtmlAudiosRef.current.set(htmlAudio, p.customGain ?? 1)
         htmlAudio.play()
           .then(() => setStatus(`${p.icon} ${p.label}`, 'active'))
           .catch(() => setStatus('Could not play audio', 'stopped'))
