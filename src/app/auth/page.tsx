@@ -36,7 +36,11 @@ export default function AuthPage() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-wordmark">SageSound</div>
+        <div className="auth-wordmark">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="" className="auth-logo-icon" />
+          SageSound
+        </div>
         <p className="auth-tagline">Your personal soundboard — in any browser, on any device.</p>
         <div className="auth-tabs">
           <button

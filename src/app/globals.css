@@ -21,7 +21,8 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-html, body { max-width: 100vw; overflow-x: hidden; }
+html { max-width: 100vw; }
+body { max-width: 100vw; overflow-x: hidden; }
 
 body {
   background: var(--bg);
@@ -49,11 +50,20 @@ body {
   max-width: 380px;
 }
 .auth-wordmark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 18px;
   font-weight: 800;
   letter-spacing: -0.01em;
   color: #f8fafc;
   margin-bottom: 6px;
+}
+.auth-logo-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  flex-shrink: 0;
 }
 .auth-tagline {
   font-size: 13px;
@@ -825,6 +835,19 @@ input[type='text'] { width: 130px; }
 [data-theme="dark"] .src-btn.active { box-shadow: 0 1px 4px rgba(0,0,0,0.5); }
 [data-theme="dark"] .modal-wrap  { background: rgba(0,0,0,0.65); }
 [data-theme="dark"] .help-overlay { background: rgba(0,0,0,0.65); }
+
+/* ── SOUNDBOARD LOGO ── */
+.sb-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.sb-wordmark-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
 /* ── SOUNDBOARD NAV LINKS (About + Built by) ── */
 .sb-nav-links {

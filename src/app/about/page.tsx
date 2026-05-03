@@ -62,7 +62,11 @@ export default function AboutPage() {
 
       {/* ── Nav ── */}
       <nav className="ap-nav">
-        <Link href="/" className="ap-nav-logo">SageSound</Link>
+        <Link href="/" className="ap-nav-logo">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="" className="ap-nav-logo-icon" />
+          SageSound
+        </Link>
         <Link href="/auth" className="ap-nav-cta">Open the app →</Link>
       </nav>
 
@@ -77,6 +81,17 @@ export default function AboutPage() {
             no plugins, no latency, no fumbling.
           </p>
           <Link href="/auth" className="ap-hero-cta">Open the app →</Link>
+        </div>
+        {/* App screenshot preview */}
+        <div className="ap-hero-preview">
+          <div className="ap-screenshot-frame">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/sagesound-app.png"
+              alt="SageSound soundboard interface"
+              className="ap-screenshot-img"
+            />
+          </div>
         </div>
       </section>
 
@@ -182,8 +197,51 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ── Builder card ── */}
+      {/* ── More projects ── */}
       <section className="ap-section">
+        <div className="ap-section-inner">
+          <p className="ap-label">More work</p>
+          <h2 className="ap-title">Another app I built</h2>
+          <a
+            href="https://ai-lead-qualifier-orcin.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ap-project-card"
+          >
+            <div className="ap-project-screenshot-wrap">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/sagesignal-app.png"
+                alt="SageSignal AI Lead Qualifier"
+                className="ap-project-screenshot"
+              />
+            </div>
+            <div className="ap-project-info">
+              <div className="ap-project-header">
+                <div>
+                  <div className="ap-project-name">SageSignal</div>
+                  <div className="ap-project-subtitle">AI Lead Qualifier</div>
+                </div>
+                <span className="ap-project-arrow">↗</span>
+              </div>
+              <p className="ap-project-desc">
+                Paste an inbound email and get an instant AI-powered lead score, temperature
+                classification, and suggested response. Built with Next.js, Claude AI, and Vercel —
+                another proof-of-concept showing how AI can compress days of sales triage into seconds.
+              </p>
+              <div className="ap-project-tags">
+                <span className="ap-tag">Next.js</span>
+                <span className="ap-tag">Claude AI</span>
+                <span className="ap-tag">Vercel</span>
+                <span className="ap-tag">TypeScript</span>
+              </div>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      {/* ── Builder card ── */}
+      <section className="ap-section ap-section-alt">
         <div className="ap-section-inner">
           <p className="ap-label">The builder</p>
           <div className="ap-builder-card">

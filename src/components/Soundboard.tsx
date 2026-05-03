@@ -579,13 +579,17 @@ export default function Soundboard({ user }: Props) {
         <div className="wordmark-wrap">
           {!editingName ? (
             <div className="wordmark-name-wrap">
-              <span
-                className="wordmark"
-                onClick={startEditName}
-                title="Click to rename"
-              >
-                {boardName}
-              </span>
+              <div className="sb-wordmark-row">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo.svg" alt="" className="sb-logo" />
+                <span
+                  className="wordmark"
+                  onClick={startEditName}
+                  title="Click to rename"
+                >
+                  {boardName}
+                </span>
+              </div>
               <span className="wordmark-hint">click to rename</span>
             </div>
           ) : (
