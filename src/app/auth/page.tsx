@@ -51,32 +51,50 @@ export default function AuthPage() {
         <div className="auth-split-hero">
           <h1 className="auth-split-headline">
             Your sounds,<br />
-            <span>one tap away.</span>
+            <span>one <kbd className="auth-tap-badge">tap</kbd> away.</span>
           </h1>
           <p className="auth-split-sub">
-            Built for live meetings, streams, and content creation.
+            Built for live meetings, streams, and content creation. Tap a pad or press a key to drop any sound at exactly the right moment.
           </p>
 
           <div className="auth-split-pills">
-            <span className="auth-split-pill">🎵 Upload your own audio</span>
-            <span className="auth-split-pill">🎛️ Up to 5 soundboards</span>
-            <span className="auth-split-pill">☁️ Cross-device sync</span>
-            <span className="auth-split-pill">⌨️ Keyboard shortcuts</span>
+            <div className="auth-split-pills-track">
+              <span className="auth-split-pill">🎵 Upload your own audio</span>
+              <span className="auth-split-pill">🎙️ Works on any device</span>
+              <span className="auth-split-pill">🎛️ Up to 5 soundboards</span>
+              <span className="auth-split-pill">🔒 Free to get started</span>
+              <span className="auth-split-pill">☁️ Cross-device sync</span>
+              <span className="auth-split-pill">⌨️ Keyboard shortcuts</span>
+              <span className="auth-split-pill">🎵 Upload your own audio</span>
+              <span className="auth-split-pill">🎙️ Works on any device</span>
+              <span className="auth-split-pill">🎛️ Up to 5 soundboards</span>
+              <span className="auth-split-pill">🔒 Free to get started</span>
+              <span className="auth-split-pill">☁️ Cross-device sync</span>
+              <span className="auth-split-pill">⌨️ Keyboard shortcuts</span>
+            </div>
           </div>
 
           <div className="auth-split-padgrid">
+            {/* Row 1 */}
             <div className="auth-mini-pad mp-red">🥁<span>Kick</span></div>
             <div className="auth-mini-pad mp-green">🪘<span>Snare</span></div>
             <div className="auth-mini-pad mp-blue">🎵<span>Hi-Hat</span></div>
             <div className="auth-mini-pad mp-yellow">📯<span>Horn</span></div>
+            {/* Row 2 */}
             <div className="auth-mini-pad mp-purple">🎯<span>Rimshot</span></div>
             <div className="auth-mini-pad mp-pink">🎸<span>808</span></div>
-            <div className="auth-mini-pad mp-red">🚨<span>Siren</span></div>
+            <div className="auth-mini-pad mp-red">⬆️<span>Riser</span></div>
             <div className="auth-mini-pad mp-green">👏<span>Clap</span></div>
-            <div className="auth-mini-pad mp-blue">⬆️<span>Riser</span></div>
+            {/* Row 3 */}
+            <div className="auth-mini-pad mp-blue">🚨<span>Siren</span></div>
             <div className="auth-mini-pad mp-yellow">💿<span>Scratch</span></div>
-            <div className="auth-mini-pad mp-purple">😂<span>Laugh</span></div>
-            <div className="auth-mini-pad mp-pink">💨<span>Swoosh</span></div>
+            <div className="auth-mini-pad mp-purple">💨<span>Swoosh</span></div>
+            <div className="auth-mini-pad mp-pink auth-mini-enter">🔔<span>Notif</span></div>
+            {/* Row 4 */}
+            <div className="auth-mini-pad mp-green auth-mini-0">😂<span>Laugh</span></div>
+            <div className="auth-mini-pad mp-blue">🎹<span>Synth</span></div>
+            {/* Stop bar */}
+            <div className="auth-mini-stop">⏹ STOP ALL</div>
           </div>
 
           <Link href="/demo" className="auth-split-demo-cta">
@@ -147,7 +165,7 @@ export default function AuthPage() {
           </div>
 
           <Link href="/demo" className="auth-split-demo-btn">
-            🎛️ Continue without an account
+            🎛️ Try demo without an account
           </Link>
 
           <div className="auth-split-footer">
