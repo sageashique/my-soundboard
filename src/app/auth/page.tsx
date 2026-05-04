@@ -1,11 +1,12 @@
 'use client'
 import Link from 'next/link'
-import { useState, FormEvent } from 'react'
+import { useState, useRef, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 export default function AuthPage() {
   const router = useRouter()
+  const formRef = useRef<HTMLDivElement>(null)
   const [tab, setTab] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -46,6 +47,7 @@ export default function AuthPage() {
             </svg>
           </div>
           <span className="auth-split-brandname">[sage]SOUNDS</span>
+          <button className="auth-mobile-signin" onClick={() => formRef.current?.scrollIntoView({ behavior: 'smooth' })}>Sign in →</button>
         </div>
 
         <div className="auth-split-hero">
@@ -105,7 +107,7 @@ export default function AuthPage() {
       </div>
 
       {/* ── RIGHT PANEL ── */}
-      <div className="auth-split-right">
+      <div className="auth-split-right" ref={formRef}>
         <div className="auth-split-card">
           <div className="auth-split-card-title">
             {tab === 'login' ? 'Welcome back' : 'Create your account'}

@@ -87,6 +87,22 @@ body {
   color: #f8fafc;
   letter-spacing: 0.06em;
 }
+.auth-mobile-signin {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: #a5b4fc;
+  border: 1px solid rgba(129,140,248,0.4);
+  background: rgba(79,70,229,0.12);
+  border-radius: 20px;
+  padding: 5px 13px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.auth-mobile-signin:hover { background: rgba(79,70,229,0.22); }
+@media (min-width: 769px) { .auth-mobile-signin { display: none; } }
 .auth-split-hero {
   position: relative;
   flex: 1;
@@ -329,6 +345,14 @@ body {
   .auth-mini-stop { font-size: 9px; }
   .auth-split-brand { margin-bottom: 16px; }
   .auth-sub-extra { display: none; }
+}
+@media (max-width: 768px) {
+  .auth-split-demo-cta {
+    border-radius: 50px;
+    align-self: stretch;
+    justify-content: center;
+    margin-top: 8px;
+  }
 }
 
 /* ── DEMO CTA BANNER (inline, between stop bar and footer) ── */
