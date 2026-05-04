@@ -85,7 +85,7 @@ body {
   font-size: 17px;
   font-weight: 800;
   color: #f8fafc;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.06em;
 }
 .auth-split-hero {
   position: relative;
@@ -245,7 +245,7 @@ body {
 }
 .auth-split-card-sub {
   font-size: 13px;
-  color: #64748b;
+  color: #94a3b8;
   margin-bottom: 28px;
   line-height: 1.5;
 }
@@ -291,7 +291,7 @@ body {
   justify-content: center;
   gap: 8px;
   padding-top: 16px;
-  border-top: 1px solid #1e2d45;
+  border-top: 1px solid #253b5a;
 }
 .auth-split-footer-link {
   display: inline-flex;

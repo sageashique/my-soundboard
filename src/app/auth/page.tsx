@@ -165,7 +165,7 @@ export default function AuthPage() {
           </div>
 
           <Link href="/demo" className="auth-split-demo-btn">
-            🎛️ Try demo without an account
+            🎛️ Try the demo without an account
           </Link>
 
           <div className="auth-split-footer">
