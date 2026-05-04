@@ -982,7 +982,7 @@ export default function Soundboard({ user }: Props) {
       <div className="divider" />
 
       {/* Controls row: Edit Pads + Settings */}
-      <div className="controls-bar controls-bar-split" style={{ marginBottom: 0 }}>
+      <div className="controls-bar controls-bar-split">
         <button
           className={`btn${editing ? ' btn-edit-active' : ' btn-outline'}`}
           onClick={() => {
