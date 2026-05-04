@@ -357,6 +357,25 @@ Same ⚙️ Settings popover as user mode: Volume (desktop), Sound Overlap, Dark
 
 ---
 
+## Auth Page
+
+Route: `/auth` — served by `src/app/auth/page.tsx`.
+
+Split-panel layout, always dark — independent of the app's light/dark theme toggle.
+
+- **Left panel** (`420px`, dark gradient `#131c33 → #0d1526`): brand mark, hero headline, scrolling marquee pills, 14-pad mini-grid preview, demo CTA link
+- **Right panel** (flex: 1, `#0f172a`): sign-in/sign-up tabs, email/password form, OR divider, demo button, footer links
+
+### Auth page conventions
+
+- `[sage]SOUNDS` brand mark: `font-size: 17px; font-weight: 800; letter-spacing: 0.06em` — matches main app header tracking
+- `auth-tap-badge`: `<kbd>` style for "tap" in headline — indigo border + background, `#a5b4fc` text
+- Marquee pills: `.auth-split-pills` container with `mask-image` edge fade; `.auth-split-pills-track` animates via `@keyframes auth-marquee 28s`. Pause on hover. 6 pills duplicated for seamless loop.
+- Mini-pad grid: `grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 62px) 24px`. Pad-0 uses `.auth-mini-0 { grid-column: span 2 }`, pad-enter uses `.auth-mini-enter { grid-row: span 2 }`. Stop bar spans all 4 columns.
+- Mobile (`max-width: 768px`): panels stack vertically; row heights shrink to `repeat(4, 52px) 20px`.
+
+---
+
 ## CSS Architecture
 
 - All styles live in `src/app/globals.css`. No component-level CSS files.
@@ -374,6 +393,7 @@ Same ⚙️ Settings popover as user mode: Volume (desktop), Sound Overlap, Dark
 |---|---|
 | `src/app/globals.css` | All styles |
 | `src/app/page.tsx` | Root page, auth gate |
+| `src/app/auth/page.tsx` | Auth page — split-panel sign in/sign up |
 | `src/app/demo/page.tsx` | Demo route — renders `DemoSoundboard` |
 | `src/app/about/page.tsx` | About/portfolio page |
 | `src/components/Soundboard.tsx` | User mode — all logic, Supabase persistence |
