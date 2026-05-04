@@ -371,8 +371,8 @@ export default function Soundboard({ user }: Props) {
     try {
       const { data: newBoard } = await supabase
         .from('boards')
-        .insert({ user_id: user.id, name: newName, position: boards.length })
-        .select('id, name, position').single()
+        .insert({ user_id: user.id, name: newName })
+        .select('id, name, created_at').single()
       if (!newBoard) return
       setBoards(prev => [...prev, newBoard])
       setActiveBoardId(newBoard.id)
@@ -644,8 +644,8 @@ export default function Soundboard({ user }: Props) {
 
         // Load boards
         const { data: boardData } = await supabase
-          .from('boards').select('id, name, position')
-          .eq('user_id', user.id).order('position')
+          .from('boards').select('id, name, created_at')
+          .eq('user_id', user.id).order('created_at')
 
         let loadedBoards: Board[] = boardData ?? []
         let resolvedBoardId: string
@@ -657,8 +657,8 @@ export default function Soundboard({ user }: Props) {
             `${(user.email?.split('@')[0] ?? 'my').toUpperCase()}'S SOUNDBOARD`
           const { data: newBoard } = await supabase
             .from('boards')
-            .insert({ user_id: user.id, name: oldName, position: 0 })
-            .select('id, name, position').single()
+            .insert({ user_id: user.id, name: oldName })
+            .select('id, name, created_at').single()
           if (!newBoard) throw new Error('Board creation failed')
           // Link existing pad_configs (those without a board_id) to this board
           await supabase.from('pad_configs')

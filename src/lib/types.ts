@@ -1,7 +1,7 @@
 export interface Board {
   id: string
   name: string
-  position: number
+  created_at: string
 }
 
 export interface PadConfig {
