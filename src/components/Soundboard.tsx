@@ -4,7 +4,7 @@ import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { defaultPads, SOUND_ICONS, SOUND_LABELS, COLORS, KEY_TO_INDEX, getDefaultForIndex } from '@/lib/constants'
 import { playSound } from '@/lib/sounds'
-import type { ModalState, PadState } from '@/lib/types'
+import type { Board, ModalState, PadState } from '@/lib/types'
 import Pad, { type PadHandle } from './Pad'
 import Modal from './Modal'
 import dynamic from 'next/dynamic'
@@ -139,12 +139,12 @@ export default function Soundboard({ user }: Props) {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
 
-  // Board name
-  const emailPrefix = user.email?.split('@')[0] ?? 'my'
-  const defaultBoardName = `${emailPrefix.toUpperCase()}'S SOUNDBOARD`
-  const [boardName, setBoardName] = useState(defaultBoardName)
-  const [editingName, setEditingName] = useState(false)
-  const [nameInput, setNameInput] = useState(defaultBoardName)
+  // Boards
+  const [boards, setBoards] = useState<Board[]>([])
+  const [activeBoardId, setActiveBoardId] = useState<string | null>(null)
+  const [showBoardSwitcher, setShowBoardSwitcher] = useState(false)
+  const [renamingBoardId, setRenamingBoardId] = useState<string | null>(null)
+  const [renameInput, setRenameInput] = useState('')
 
   // Unified edit panel state
   const [useCustomSource, setUseCustomSource] = useState(false)
@@ -171,6 +171,7 @@ export default function Soundboard({ user }: Props) {
   // Emoji picker
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const emojiPickerRef = useRef<HTMLDivElement>(null)
+  const boardSwitcherRef = useRef<HTMLDivElement>(null)
 
   const [modal, setModal] = useState<ModalState | null>(null)
   const [dbLoading, setDbLoading] = useState(true)
@@ -312,27 +313,127 @@ export default function Soundboard({ user }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pads, overlapMode, volume])
 
-  // ── Board name ─────────────────────────────────────────────────
-  function startEditName() {
-    setNameInput(boardName)
-    setEditingName(true)
-  }
-  async function saveNameHandler() {
-    const val = nameInput.trim().toUpperCase() || defaultBoardName
-    setBoardName(val)
-    setEditingName(false)
-    try {
-      await supabase.from('user_settings').upsert(
-        { user_id: user.id, board_name: val, updated_at: new Date().toISOString() },
-        { onConflict: 'user_id' }
+  // ── Board management ────────────────────────────────────────────
+  const activeBoard = boards.find(b => b.id === activeBoardId)
+
+  async function loadPadsForBoard(boardId: string) {
+    const { data, error } = await supabase
+      .from('pad_configs').select('*')
+      .eq('user_id', user.id).eq('board_id', boardId)
+    if (error) throw error
+    const loaded = defaultPads()
+    if (data && data.length > 0) {
+      for (const row of data) {
+        const i: number = row.pad_index
+        if (i < 0 || i >= loaded.length) continue
+        loaded[i] = {
+          ...loaded[i],
+          sound: row.sound, label: row.label, color: row.color, icon: row.icon,
+          customTrackPath: row.custom_track_path ?? null,
+          customTrackName: row.custom_track_name ?? null,
+          customBuf: null, customRawBuf: null, customGain: 1,
+        }
+      }
+    }
+    setPads(loaded)
+    if (data && data.length > 0) {
+      await Promise.all(
+        data.filter(row => row.custom_track_path)
+            .map(row => loadCustomAudio(row.pad_index, row.custom_track_path))
       )
-    } catch (err) {
-      console.error('Failed to save board name:', err)
     }
   }
-  function cancelEditName() {
-    setEditingName(false)
-    setNameInput(boardName)
+
+  async function switchBoard(boardId: string) {
+    if (boardId === activeBoardId) return
+    stopAll()
+    setDbLoading(true)
+    setSelPad(null)
+    setEditing(false)
+    try {
+      setActiveBoardId(boardId)
+      await supabase.from('user_settings').upsert(
+        { user_id: user.id, active_board_id: boardId, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' }
+      )
+      await loadPadsForBoard(boardId)
+      setStatus('Ready')
+    } catch (err) {
+      console.error('Failed to switch board:', err)
+    }
+    setDbLoading(false)
+  }
+
+  async function handleCreateBoard() {
+    if (boards.length >= 5) return
+    setShowBoardSwitcher(false)
+    const newName = `Board ${boards.length + 1}`
+    try {
+      const { data: newBoard } = await supabase
+        .from('boards')
+        .insert({ user_id: user.id, name: newName, position: boards.length })
+        .select('id, name, position').single()
+      if (!newBoard) return
+      setBoards(prev => [...prev, newBoard])
+      setActiveBoardId(newBoard.id)
+      setPads(defaultPads())
+      setSelPad(null)
+      setEditing(false)
+      await supabase.from('user_settings').upsert(
+        { user_id: user.id, active_board_id: newBoard.id, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' }
+      )
+      setStatus(`Created "${newName}"`)
+    } catch (err) {
+      console.error('Failed to create board:', err)
+    }
+  }
+
+  function startRename(boardId: string, currentName: string) {
+    setRenamingBoardId(boardId)
+    setRenameInput(currentName)
+  }
+
+  async function commitRename(boardId: string) {
+    const val = renameInput.trim()
+    setRenamingBoardId(null)
+    if (!val) return
+    try {
+      await supabase.from('boards').update({ name: val }).eq('id', boardId).eq('user_id', user.id)
+      setBoards(prev => prev.map(b => b.id === boardId ? { ...b, name: val } : b))
+    } catch (err) {
+      console.error('Failed to rename board:', err)
+    }
+  }
+
+  function handleDeleteBoard(boardId: string) {
+    if (boards.length <= 1) return
+    const board = boards.find(b => b.id === boardId)
+    setShowBoardSwitcher(false)
+    setModal({
+      title: 'Delete board?',
+      body: `Delete "${board?.name ?? 'this board'}"? All pad configs and custom audio for this board will be removed. This cannot be undone.`,
+      okLabel: 'Delete board',
+      style: 'danger',
+      cb: async () => {
+        try {
+          const { data: padRows } = await supabase
+            .from('pad_configs').select('custom_track_path')
+            .eq('user_id', user.id).eq('board_id', boardId)
+          const paths = (padRows ?? []).filter(p => p.custom_track_path).map(p => p.custom_track_path!)
+          if (paths.length > 0) await supabase.storage.from(STORAGE_BUCKET).remove(paths)
+          await supabase.from('pad_configs').delete().eq('user_id', user.id).eq('board_id', boardId)
+          await supabase.from('boards').delete().eq('id', boardId).eq('user_id', user.id)
+          const newBoards = boards.filter(b => b.id !== boardId)
+          setBoards(newBoards)
+          if (boardId === activeBoardId && newBoards.length > 0) {
+            await switchBoard(newBoards[0].id)
+          }
+        } catch (err) {
+          console.error('Failed to delete board:', err)
+        }
+      },
+    })
   }
   async function handleThemeToggle(newTheme: 'light' | 'dark') {
     setTheme(newTheme)
@@ -374,7 +475,11 @@ export default function Soundboard({ user }: Props) {
       if (pendingFileName && pendingRawRef.current) {
         try {
           setStatus('Uploading…')
-          const storagePath = `${user.id}/pad-${selPad}`
+          const storagePath = `${user.id}/${activeBoardId}/pad-${selPad}`
+          // Remove old file if it's at a different path (e.g. migrated from pre-boards era)
+          if (p.customTrackPath && p.customTrackPath !== storagePath) {
+            try { await supabase.storage.from(STORAGE_BUCKET).remove([p.customTrackPath]) } catch { /* ignore */ }
+          }
           const { error: upErr } = await supabase.storage
             .from(STORAGE_BUCKET)
             .upload(storagePath, pendingRawRef.current, { contentType: pendingFileTypeRef.current, upsert: true })
@@ -386,11 +491,11 @@ export default function Soundboard({ user }: Props) {
             : pd
           ))
           await supabase.from('pad_configs').upsert({
-            user_id: user.id, pad_index: selPad,
+            user_id: user.id, board_id: activeBoardId, pad_index: selPad,
             sound: p.sound, label, color: selColor, icon: emoji,
             custom_track_path: storagePath, custom_track_name: pendingFileName,
             updated_at: new Date().toISOString(),
-          }, { onConflict: 'user_id,pad_index' })
+          }, { onConflict: 'user_id,board_id,pad_index' })
 
           setPendingBuf(null); setPendingFileName(null); pendingRawRef.current = null
           setStatus(`Saved → [${p.keyLabel}] ${label}`, 'active')
@@ -403,11 +508,11 @@ export default function Soundboard({ user }: Props) {
         const emoji2 = editEmoji.trim() || p.icon
         setPads(prev => prev.map((pd, i) => i === selPad ? { ...pd, label: label2, icon: emoji2, color: selColor } : pd))
         await supabase.from('pad_configs').upsert({
-          user_id: user.id, pad_index: selPad,
+          user_id: user.id, board_id: activeBoardId, pad_index: selPad,
           sound: p.sound, label: label2, color: selColor, icon: emoji2,
           custom_track_path: p.customTrackPath, custom_track_name: p.customTrackName,
           updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id,pad_index' })
+        }, { onConflict: 'user_id,board_id,pad_index' })
         setStatus(`Saved → [${p.keyLabel}] ${label2}`, 'active')
       }
     } else {
@@ -422,11 +527,11 @@ export default function Soundboard({ user }: Props) {
         : pd
       ))
       await supabase.from('pad_configs').upsert({
-        user_id: user.id, pad_index: selPad,
+        user_id: user.id, board_id: activeBoardId, pad_index: selPad,
         sound: editSound, label, color: selColor, icon,
         custom_track_path: null, custom_track_name: null,
         updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id,pad_index' })
+      }, { onConflict: 'user_id,board_id,pad_index' })
       setStatus(`Saved → [${p.keyLabel}] ${label}`, 'active')
     }
     setSelPad(null)
@@ -453,11 +558,11 @@ export default function Soundboard({ user }: Props) {
             : pd
           ))
           await supabase.from('pad_configs').upsert({
-            user_id: user.id, pad_index: selPad,
+            user_id: user.id, board_id: activeBoardId, pad_index: selPad,
             sound: def.sound, label: def.defaultLabel, color: def.color, icon: def.icon,
             custom_track_path: null, custom_track_name: null,
             updated_at: new Date().toISOString(),
-          }, { onConflict: 'user_id,pad_index' })
+          }, { onConflict: 'user_id,board_id,pad_index' })
           setUseCustomSource(false)
           setEditSound(def.sound)
           setEditLabel(def.defaultLabel)
@@ -482,8 +587,8 @@ export default function Soundboard({ user }: Props) {
       if (storagePaths.length > 0) {
         await supabase.storage.from(STORAGE_BUCKET).remove(storagePaths)
       }
-      // Delete all pad configs from DB so they don't reload on refresh
-      await supabase.from('pad_configs').delete().eq('user_id', user.id)
+      // Delete all pad configs for this board so they don't reload on refresh
+      await supabase.from('pad_configs').delete().eq('user_id', user.id).eq('board_id', activeBoardId)
     } catch (err) {
       console.error('Failed to clear data from Supabase:', err)
     }
@@ -524,48 +629,61 @@ export default function Soundboard({ user }: Props) {
     }
   }
 
-  // ── Load pad configs + board name from Supabase ─────────────────
+  // ── Load boards + pad configs from Supabase ─────────────────────
   useEffect(() => {
     async function load() {
       try {
         // Load user settings
         const { data: settings } = await supabase
-          .from('user_settings').select('board_name, theme').eq('user_id', user.id).single()
-        if (settings?.board_name) {
-          setBoardName(settings.board_name)
-          setNameInput(settings.board_name)
-        }
+          .from('user_settings').select('board_name, theme, active_board_id')
+          .eq('user_id', user.id).single()
+
         if (settings?.theme === 'light' || settings?.theme === 'dark') {
           setTheme(settings.theme)
         }
 
-        // Load pad configs
-        const { data, error } = await supabase
-          .from('pad_configs').select('*').eq('user_id', user.id)
-        if (error) throw error
-        if (!data || data.length === 0) { setDbLoading(false); return }
+        // Load boards
+        const { data: boardData } = await supabase
+          .from('boards').select('id, name, position')
+          .eq('user_id', user.id).order('position')
 
-        const loaded = defaultPads()
-        for (const row of data) {
-          const i: number = row.pad_index
-          if (i < 0 || i >= loaded.length) continue
-          loaded[i] = {
-            ...loaded[i],
-            sound: row.sound, label: row.label, color: row.color, icon: row.icon,
-            customTrackPath: row.custom_track_path ?? null,
-            customTrackName: row.custom_track_name ?? null,
-            customBuf: null,
-          }
+        let loadedBoards: Board[] = boardData ?? []
+        let resolvedBoardId: string
+
+        if (loadedBoards.length === 0) {
+          // ── First-time migration ───────────────────────────────
+          // Create a board from the old board_name and link existing pad_configs to it.
+          const oldName = settings?.board_name ??
+            `${(user.email?.split('@')[0] ?? 'my').toUpperCase()}'S SOUNDBOARD`
+          const { data: newBoard } = await supabase
+            .from('boards')
+            .insert({ user_id: user.id, name: oldName, position: 0 })
+            .select('id, name, position').single()
+          if (!newBoard) throw new Error('Board creation failed')
+          // Link existing pad_configs (those without a board_id) to this board
+          await supabase.from('pad_configs')
+            .update({ board_id: newBoard.id })
+            .eq('user_id', user.id)
+            .is('board_id', null)
+          await supabase.from('user_settings').upsert(
+            { user_id: user.id, active_board_id: newBoard.id, updated_at: new Date().toISOString() },
+            { onConflict: 'user_id' }
+          )
+          loadedBoards = [newBoard]
+          resolvedBoardId = newBoard.id
+        } else {
+          // Use saved active board, fall back to first board if stale/missing
+          resolvedBoardId =
+            (settings?.active_board_id && loadedBoards.some(b => b.id === settings.active_board_id))
+              ? settings.active_board_id
+              : loadedBoards[0].id
         }
-        setPads(loaded)
 
-        // Download all custom audio and compute normalization gain before
-        // revealing the board — user sees a ready, fully-normalized board.
-        await Promise.all(
-          data
-            .filter(row => row.custom_track_path)
-            .map(row => loadCustomAudio(row.pad_index, row.custom_track_path))
-        )
+        setBoards(loadedBoards)
+        setActiveBoardId(resolvedBoardId)
+
+        // Load pad configs for the active board
+        await loadPadsForBoard(resolvedBoardId)
         setDbLoading(false)
       } catch (err) {
         console.error('Failed to load data:', err)
@@ -618,6 +736,18 @@ export default function Soundboard({ user }: Props) {
     if (showEmojiPicker) document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showEmojiPicker])
+
+  // ── Close board switcher on outside click ────────────────────
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (boardSwitcherRef.current && !boardSwitcherRef.current.contains(e.target as Node)) {
+        setShowBoardSwitcher(false)
+        setRenamingBoardId(null)
+      }
+    }
+    if (showBoardSwitcher) document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showBoardSwitcher])
 
   // ── Sign out ────────────────────────────────────────────────────
   async function handleSignOut() { await supabase.auth.signOut() }
@@ -680,31 +810,84 @@ export default function Soundboard({ user }: Props) {
         {/* Hairline divider under title */}
         <div className="sb-title-divider" />
 
-        {/* Meta row: Board name (left) | Help (right) */}
-        {!editingName ? (
-          <div className="top-meta-row">
-            <span className="wordmark" onClick={startEditName} title="Click to rename">
-              {boardName}
-            </span>
-            <button className="help-btn" onClick={() => setShowHelp(true)}>
-              <span className="help-btn-badge">?</span>
-              Help
+        {/* Meta row: Board switcher (left) | Help (right) */}
+        <div className="top-meta-row">
+          <div className="board-switcher" ref={boardSwitcherRef}>
+            <button
+              className="board-name-btn"
+              onClick={() => setShowBoardSwitcher(s => !s)}
+            >
+              <span className="board-name-text">{activeBoard?.name ?? ''}</span>
+              <span className="board-name-chevron">{showBoardSwitcher ? '▲' : '▼'}</span>
             </button>
+            {showBoardSwitcher && (
+              <div className="board-dropdown">
+                {boards.map(board => (
+                  <div key={board.id} className={`board-dropdown-item${board.id === activeBoardId ? ' active' : ''}`}>
+                    {renamingBoardId === board.id ? (
+                      <input
+                        className="board-rename-input"
+                        value={renameInput}
+                        maxLength={30}
+                        autoFocus
+                        onChange={e => setRenameInput(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') commitRename(board.id)
+                          if (e.key === 'Escape') setRenamingBoardId(null)
+                        }}
+                        onBlur={() => commitRename(board.id)}
+                        onClick={e => e.stopPropagation()}
+                      />
+                    ) : (
+                      <button
+                        className="board-item-name"
+                        onClick={() => { switchBoard(board.id); setShowBoardSwitcher(false) }}
+                      >
+                        {board.id === activeBoardId && <span className="board-active-dot" />}
+                        {board.name}
+                      </button>
+                    )}
+                    <div className="board-item-actions">
+                      <button
+                        className="board-action-btn"
+                        title="Rename"
+                        onClick={e => { e.stopPropagation(); startRename(board.id, board.name) }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                      </button>
+                      {boards.length > 1 && (
+                        <button
+                          className="board-action-btn board-action-delete"
+                          title="Delete board"
+                          onClick={e => { e.stopPropagation(); handleDeleteBoard(board.id) }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                            <path d="M10 11v6M14 11v6" />
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {boards.length < 5 && (
+                  <button className="board-add-btn" onClick={handleCreateBoard}>
+                    + New board
+                  </button>
+                )}
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="wordmark-edit">
-            <input
-              className="wordmark-input"
-              value={nameInput}
-              maxLength={30}
-              onChange={e => setNameInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') saveNameHandler(); if (e.key === 'Escape') cancelEditName() }}
-              autoFocus
-            />
-            <button className="btn btn-solid btn-sm" onClick={saveNameHandler}>Save</button>
-            <button className="btn btn-outline btn-sm" onClick={cancelEditName}>Cancel</button>
-          </div>
-        )}
+          <button className="help-btn" onClick={() => setShowHelp(true)}>
+            <span className="help-btn-badge">?</span>
+            Help
+          </button>
+        </div>
       </div>
 
       {/* Help overlay */}
@@ -733,8 +916,8 @@ export default function Soundboard({ user }: Props) {
                 <p>Press <strong>Edit Pads</strong> to enter edit mode, then tap any pad to configure it. Switch to <strong>Custom</strong> to upload your own audio file (MP3, WAV, or M4A; max 10 MB) — great for dropping in samples, drops, or any sound you want at your fingertips. On <strong>Built-in</strong>, choose from 14 synthesized sounds. Either way, you can set a custom label, color, and emoji.</p>
               </div>
               <div className="help-section">
-                <div className="help-section-title">Board name</div>
-                <p>Click your board name in the top-left to rename it. Changes save automatically.</p>
+                <div className="help-section-title">Your boards</div>
+                <p>Click your board name to open the board switcher. Switch between boards, rename them, or create a new empty board with <strong>+ New board</strong> (up to 5). Each board has its own independent set of 14 pads. Delete a board to remove it and all its sounds permanently.</p>
               </div>
               <div className="help-section">
                 <div className="help-section-title">Saving</div>

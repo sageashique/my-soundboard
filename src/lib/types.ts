@@ -1,3 +1,9 @@
+export interface Board {
+  id: string
+  name: string
+  position: number
+}
+
 export interface PadConfig {
   index: number
   sound: string
