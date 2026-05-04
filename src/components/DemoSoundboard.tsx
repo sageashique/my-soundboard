@@ -310,7 +310,10 @@ export default function DemoSoundboard() {
             </a>
           </div>
 
-          {/* Row 2: Board switcher + Help (no bold divider) */}
+          {/* Bold divider — matches user mode */}
+          <div className="sb-title-divider" />
+
+          {/* Row 2: Board switcher + Help */}
           <div className="top-meta-row">
             <div className="board-switcher" ref={boardSwitcherRef}>
               <button
