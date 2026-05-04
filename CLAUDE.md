@@ -263,7 +263,18 @@ Upload: `upsert: true`, correct `contentType` from `detectAudioMime()`.
 
 ## UI Features
 
-### Board name
+### Page layout (user mode)
+
+Top-to-bottom order, must not change:
+1. Header — wordmark row + bold divider + board-switcher/help row
+2. Pad grid (numpad)
+3. Status bar
+4. Thin divider line
+5. Controls row — `✏️ Edit Pads` (left) + `⚙️ Settings` (right)
+6. Sign-out section (border-top on `.reset-all-section`, no standalone `.divider` div)
+7. Footer
+
+### Board name (user mode)
 
 - Displayed as the wordmark in the top-left.
 - Click to enter inline edit mode (input + Save / Cancel).
@@ -271,10 +282,19 @@ Upload: `upsert: true`, correct `contentType` from `detectAudioMime()`.
 - Max 30 characters.
 - Saved to `user_settings` on Save.
 
+### Settings popover
+
+Both user and demo modes expose a single **⚙️ Settings** button in the controls row (bottom-right). Clicking it opens a popover that opens **upward** (`.settings-popover--up { bottom: calc(100% + 8px) }`). Closes on outside click via `mousedown` listener.
+
+Contents (in order):
+1. **Volume** slider (0–1, step 0.05) — desktop only, hidden on iOS (`isIOS` state). Applied to `masterRef.gain.value` (user) or `gainRef.current` (demo).
+2. **Sound Overlap** toggle — off by default. When off, firing stops all current audio first. When on, sounds stack.
+3. **Dark mode** toggle — `data-theme="dark"` on `<html>`. User mode saves to `user_settings`. Demo is session-only.
+
 ### Theme
 
 - Light and dark modes via `data-theme="dark"` on `<html>`.
-- Toggle in the controls bar. Preference saved to `user_settings`.
+- Toggle inside ⚙️ Settings popover. User mode saves preference to `user_settings`. Demo is session-only.
 - Dark mode uses solid filled pad colors (not the light mode tint+border style).
 - In dark mode, `.pad.sel` uses `box-shadow: inset 0 0 0 2px rgba(255,255,255,0.75)` for the selection indicator — **no `border-color` override**, so the pad's color border still shows through.
 
@@ -288,19 +308,52 @@ A pill below the pad grid showing the current state:
 
 ### Volume
 
-Master volume slider (0–1, step 0.05). Applied directly to `masterRef.gain.value`.
+Master volume slider inside ⚙️ Settings popover (0–1, step 0.05). Applied directly to `masterRef.gain.value`.
 
 ### Sound overlap toggle
 
-Off by default. When off, firing a new pad stops all currently playing sounds first. When on, sounds stack freely.
+Inside ⚙️ Settings popover. Off by default. When off, firing a new pad stops all currently playing sounds first. When on, sounds stack freely.
 
 ### Help overlay
 
-Triggered by the **Help** link in the header. Full-screen overlay with usage instructions. Locks body scroll while open.
+Triggered by the **Help** button in the header row. Full-screen overlay with usage instructions. Locks body scroll while open.
 
 ### Sign out
 
-Inline confirm flow. Calls `supabase.auth.signOut()`.
+Inline confirm flow in `.reset-all-section` (has `border-top`, `margin-top: 12px`, `padding-top: 12px` — no standalone `.divider` div). Calls `supabase.auth.signOut()`.
+
+---
+
+## Demo Mode
+
+Route: `/demo` — served by `src/app/demo/page.tsx` → `src/components/DemoSoundboard.tsx`.
+
+Demo mode is a fully self-contained, unauthenticated soundboard experience. **No Supabase calls.** All state is session-only.
+
+### Demo page layout
+
+Identical to user mode layout order, plus:
+- Loading screen (1s delay) with `[sage]SOUNDS` brand + "🎛️ Demo Mode" pill + spinner
+- **Demo CTA banner** between controls row and footer — `margin-top: 12px` from controls
+
+### Demo boards
+
+Two fixed boards (no create/rename/delete):
+
+**Demo Board 1** — 14 custom audio clips from `public/demo-clips/`. Played via `HTMLAudioElement` (same iOS-safe pattern as user mode custom audio). Clips preloaded on mount into `clipAudiosRef`.
+
+**Demo Board 2** — 14 synthesized sounds via Web Audio API (same `playSound()` as user mode built-in sounds).
+
+### Demo edit mode
+
+- Pads can be customized (label, emoji, color). Board 2 also allows built-in sound selection.
+- **No audio upload** — demo mode only.
+- Changes are session-only.
+- Edit panel shows a "🎛️ Demo Mode" note with Sign up CTA.
+
+### Demo settings
+
+Same ⚙️ Settings popover as user mode: Volume (desktop), Sound Overlap, Dark mode. All session-only.
 
 ---
 
@@ -321,13 +374,17 @@ Inline confirm flow. Calls `supabase.auth.signOut()`.
 |---|---|
 | `src/app/globals.css` | All styles |
 | `src/app/page.tsx` | Root page, auth gate |
-| `src/components/Soundboard.tsx` | Main component — all logic |
+| `src/app/demo/page.tsx` | Demo route — renders `DemoSoundboard` |
+| `src/app/about/page.tsx` | About/portfolio page |
+| `src/components/Soundboard.tsx` | User mode — all logic, Supabase persistence |
+| `src/components/DemoSoundboard.tsx` | Demo mode — self-contained, no Supabase |
 | `src/components/Pad.tsx` | Individual pad component |
 | `src/components/Modal.tsx` | Confirmation modal |
 | `src/lib/sounds.ts` | Built-in sound synthesis |
 | `src/lib/constants.ts` | Pad definitions, key mappings, default state |
 | `src/lib/types.ts` | TypeScript types (`PadState`, `ModalState`) |
 | `src/lib/supabase.ts` | Supabase client |
+| `docs/DEMO_vs_USER.md` | Feature matrix: what differs between demo and user mode |
 
 ---
 
