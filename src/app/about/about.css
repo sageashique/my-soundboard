@@ -163,6 +163,12 @@
   color: #334155;
   font-style: italic;
 }
+/* Stack of body paragraphs (and other block elements) with consistent gap */
+.ap-body-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
 /* ── Steps ── */
 .ap-steps {

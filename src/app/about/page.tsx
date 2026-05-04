@@ -117,25 +117,27 @@ export default function AboutPage() {
       <section className="ap-section">
         <div className="ap-section-inner">
           <h2 className="ap-title">What it does</h2>
-          <p className="ap-body" style={{ marginBottom: '24px' }}>
-            Running a live meeting or stream and want to drop a sound effect at exactly the right moment?
-            Most people end up fumbling between apps, playing audio from their phone, or just going without.
-            [sage]SOUNDS puts every sound on a single keyboard-mapped grid — available the moment you need it,
-            from any browser.
-          </p>
-          <div className="ap-feature-grid">
-            {features.map(f => (
-              <div key={f.title} className="ap-feature-card">
-                <div className="ap-feature-card-title">{f.title}</div>
-                <p className="ap-feature-card-body">{f.body}</p>
-              </div>
-            ))}
+          <div className="ap-body-stack">
+            <p className="ap-body">
+              Running a live meeting or stream and want to drop a sound effect at exactly the right moment?
+              Most people end up fumbling between apps, playing audio from their phone, or just going without.
+              [sage]SOUNDS puts every sound on a single keyboard-mapped grid — available the moment you need it,
+              from any browser.
+            </p>
+            <div className="ap-feature-grid">
+              {features.map(f => (
+                <div key={f.title} className="ap-feature-card">
+                  <div className="ap-feature-card-title">{f.title}</div>
+                  <p className="ap-feature-card-body">{f.body}</p>
+                </div>
+              ))}
+            </div>
+            <p className="ap-body">
+              You get a 14-pad board modelled on an Apple numeric keypad. Every pad is fully customizable.
+              Pads fire on click or keyboard shortcut. One tap on the Stop bar — or the spacebar — cuts everything.
+              Your configuration is saved to your account and ready on any device, any time.
+            </p>
           </div>
-          <p className="ap-body" style={{ marginTop: '24px' }}>
-            You get a 14-pad board modelled on an Apple numeric keypad. Every pad is fully customizable.
-            Pads fire on click or keyboard shortcut. One tap on the Stop bar — or the spacebar — cuts everything.
-            Your configuration is saved to your account and ready on any device, any time.
-          </p>
         </div>
       </section>
 
@@ -198,23 +200,25 @@ export default function AboutPage() {
       <section className="ap-section ap-section-alt">
         <div className="ap-section-inner">
           <h2 className="ap-title">Why I built this</h2>
-          <p className="ap-body">
-            My nephew has a chunky plastic toy soundboard — big buttons, each playing a different sound.
-            Watching him mash them got me thinking: a digital version of this is totally doable, and I could
-            actually make it <em>better</em>. Upload your own audio, map it to a keyboard, fire it in a live
-            meeting or stream. Same idea, more range.
-          </p>
-          <p className="ap-body">
-            What started as a fun weekend project turned into a genuine exploration of how fast you can go from
-            idea to deployed product when you use AI as a co-builder. I used Claude Code throughout — describing
-            what I wanted, reviewing what it built, iterating quickly. No engineering team. No months of runway.
-            Just a PM with a clear idea and a surprisingly capable collaborator.
-          </p>
-          <p className="ap-body">
-            [sage]SOUNDS is proof that the gap between &quot;I have an idea&quot; and &quot;that idea is live on
-            the internet&quot; is smaller than most people think. Practical tools can be reimagined and shipped
-            quickly — and the skills to do it are more accessible than ever.
-          </p>
+          <div className="ap-body-stack">
+            <p className="ap-body">
+              My nephew has a chunky plastic toy soundboard — big buttons, each playing a different sound.
+              Watching him mash them got me thinking: a digital version of this is totally doable, and I could
+              actually make it <em>better</em>. Upload your own audio, map it to a keyboard, fire it in a live
+              meeting or stream. Same idea, more range.
+            </p>
+            <p className="ap-body">
+              What started as a fun weekend project turned into a genuine exploration of how fast you can go from
+              idea to deployed product when you use AI as a co-builder. I used Claude Code throughout — describing
+              what I wanted, reviewing what it built, iterating quickly. No engineering team. No months of runway.
+              Just a PM with a clear idea and a surprisingly capable collaborator.
+            </p>
+            <p className="ap-body">
+              [sage]SOUNDS is proof that the gap between &quot;I have an idea&quot; and &quot;that idea is live on
+              the internet&quot; is smaller than most people think. Practical tools can be reimagined and shipped
+              quickly — and the skills to do it are more accessible than ever.
+            </p>
+          </div>
         </div>
       </section>
 
