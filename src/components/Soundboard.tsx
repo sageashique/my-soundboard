@@ -122,6 +122,12 @@ export default function Soundboard({ user }: Props) {
   const [selColor, setSelColor] = useState('red')
   const [overlapMode, setOverlapMode] = useState(false)
   const [volume, setVolume] = useState(0.8)
+  // iOS does not allow JS to set HTMLAudioElement.volume — hardware buttons only.
+  // Detect once on mount so we can hide the non-functional slider on iOS devices.
+  const [isIOS, setIsIOS] = useState(false)
+  useEffect(() => {
+    setIsIOS(/iPad|iPhone|iPod/.test(navigator.userAgent))
+  }, [])
 
   // Status
   const [statusMsg, setStatusMsg] = useState('Ready')
@@ -795,13 +801,15 @@ export default function Soundboard({ user }: Props) {
             <span className="toggle-thumb" />
           </label>
         </div>
-        <div className="vol-pill">
-          <span className="vol-label">Vol</span>
-          <input
-            type="range" min={0} max={1} step={0.05} value={volume}
-            onChange={e => handleVolume(parseFloat(e.target.value))}
-          />
-        </div>
+        {!isIOS && (
+          <div className="vol-pill">
+            <span className="vol-label">Vol</span>
+            <input
+              type="range" min={0} max={1} step={0.05} value={volume}
+              onChange={e => handleVolume(parseFloat(e.target.value))}
+            />
+          </div>
+        )}
       </div>
 
       <div className="divider" />
