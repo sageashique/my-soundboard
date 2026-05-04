@@ -54,7 +54,7 @@ export default function AuthPage() {
             <span>one <kbd className="auth-tap-badge">tap</kbd> away.</span>
           </h1>
           <p className="auth-split-sub">
-            Built for live meetings, streams, and content creation. Tap a pad or press a key to drop any sound at exactly the right moment.
+            Built for live meetings, streams, and content creation.<span className="auth-sub-extra"> Tap a pad or press a key to drop any sound at exactly the right moment.</span>
           </p>
 
           <div className="auth-split-pills">

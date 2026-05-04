@@ -43,7 +43,7 @@ body {
 
 /* Left panel */
 .auth-split-left {
-  width: 420px;
+  width: 460px;
   flex-shrink: 0;
   background: linear-gradient(160deg, #131c33 0%, #0d1526 100%);
   border-right: 1px solid #1e2d45;
@@ -317,10 +317,18 @@ body {
   }
   .auth-split-hero { flex: unset; }
   .auth-split-headline { font-size: 24px; }
-  .auth-split-padgrid { grid-template-rows: repeat(4, 52px) 20px; }
+  .auth-split-padgrid { grid-template-rows: repeat(4, 52px) 28px; }
   .auth-split-brand { margin-bottom: 32px; }
   .auth-split-sub { margin-bottom: 16px; }
   .auth-split-right { padding: 32px 20px 48px; }
+}
+@media (max-width: 480px) {
+  .auth-split-padgrid { grid-template-rows: repeat(4, 36px) 28px; gap: 4px; margin-bottom: 20px; }
+  .auth-mini-pad { font-size: 13px; border-radius: 8px; }
+  .auth-mini-pad span { font-size: 6px; }
+  .auth-mini-stop { font-size: 9px; }
+  .auth-split-brand { margin-bottom: 16px; }
+  .auth-sub-extra { display: none; }
 }
 
 /* ── DEMO CTA BANNER (inline, between stop bar and footer) ── */
