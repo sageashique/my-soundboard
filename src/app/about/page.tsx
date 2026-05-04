@@ -44,7 +44,7 @@ const steps = [
   {
     n: '4',
     title: 'Layer or cut',
-    body: 'Toggle Sound Overlap to stack effects freely, or keep it clean — one sound at a time.',
+    body: 'Open Settings to toggle Sound Overlap — stack effects freely, or keep it clean — one sound at a time.',
   },
   {
     n: '5',

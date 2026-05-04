@@ -83,6 +83,7 @@ export default function DemoSoundboard() {
 
   const [dark, setDark] = useState(false)
   const [volume, setVolume] = useState(0.8)
+  const [overlapMode, setOverlapMode] = useState(false)
   const [isIOS, setIsIOS] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [selPad, setSelPad] = useState<number | null>(null)
@@ -182,9 +183,11 @@ export default function DemoSoundboard() {
   // ── Board 1: HTMLAudioElement — reliable on all iOS ───────────────────
   function triggerClipPad(idx: number, pad: PadState) {
     const clip = BOARD1_CLIPS[idx]
-    activeSrcsRef.current.forEach(n => { try { n.stop() } catch {} })
-    activeSrcsRef.current.clear()
-    clipAudiosRef.current.forEach(a => { a.pause(); a.currentTime = 0 })
+    if (!overlapMode) {
+      activeSrcsRef.current.forEach(n => { try { n.stop() } catch {} })
+      activeSrcsRef.current.clear()
+      clipAudiosRef.current.forEach(a => { a.pause(); a.currentTime = 0 })
+    }
 
     const audio = clipAudiosRef.current.get(clip.file) ?? new Audio(`/demo-clips/${clip.file}`)
     clipAudiosRef.current.set(clip.file, audio)
@@ -201,9 +204,11 @@ export default function DemoSoundboard() {
   // ── Board 2: Web Audio synth ───────────────────────────────────────────
   function triggerSynthPad(pad: PadState) {
     const { ctx, gain } = getCtx()
-    activeSrcsRef.current.forEach(n => { try { n.stop() } catch {} })
-    activeSrcsRef.current.clear()
-    clipAudiosRef.current.forEach(a => { a.pause(); a.currentTime = 0 })
+    if (!overlapMode) {
+      activeSrcsRef.current.forEach(n => { try { n.stop() } catch {} })
+      activeSrcsRef.current.clear()
+      clipAudiosRef.current.forEach(a => { a.pause(); a.currentTime = 0 })
+    }
     const node = playSound(pad.sound, ctx, gain, activeSrcsRef.current)
     if (node) setStatus(`▶ ${pad.label}`)
   }
@@ -427,6 +432,14 @@ export default function DemoSoundboard() {
                   </div>
                 )}
                 <div className="settings-row">
+                  <div className="settings-label">Sound overlap</div>
+                  <label className="toggle">
+                    <input type="checkbox" checked={overlapMode} onChange={e => setOverlapMode(e.target.checked)} />
+                    <span className="toggle-track" />
+                    <span className="toggle-thumb" />
+                  </label>
+                </div>
+                <div className="settings-row">
                   <div className="settings-label">Dark mode</div>
                   <label className="toggle">
                     <input type="checkbox" checked={dark} onChange={e => setDark(e.target.checked)} />
@@ -567,7 +580,11 @@ export default function DemoSoundboard() {
               </div>
               <div className="help-section">
                 <div className="help-section-title">Editing pads</div>
-                <p>Tap <strong>Edit pads</strong> then tap any pad to change its label, icon, or color. Right-click any pad to edit directly. Changes are session-only in demo mode.</p>
+                <p>Tap <strong>✏️ Edit pads</strong> then tap any pad to change its label, icon, or color. Right-click any pad to edit directly. Changes are session-only in demo mode.</p>
+              </div>
+              <div className="help-section">
+                <div className="help-section-title">Settings</div>
+                <p>Tap <strong>⚙️ Settings</strong> at the bottom to adjust volume (desktop), toggle <strong>Sound Overlap</strong> to let sounds stack instead of cutting off, and switch between light and dark mode.</p>
               </div>
               <div className="help-section">
                 <div className="help-section-title">Want more?</div>

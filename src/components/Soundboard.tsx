@@ -921,8 +921,8 @@ export default function Soundboard({ user }: Props) {
                 <p>Press the <strong>Stop</strong> bar or hit <strong>Space</strong> to stop all audio instantly.</p>
               </div>
               <div className="help-section">
-                <div className="help-section-title">Volume &amp; overlap</div>
-                <p>Use the volume slider to control master output. Toggle <strong>Sound Overlap</strong> to let sounds layer on top of each other instead of cutting off.</p>
+                <div className="help-section-title">Settings</div>
+                <p>Tap <strong>⚙️ Settings</strong> at the bottom to adjust volume (desktop), toggle <strong>Sound Overlap</strong> to let sounds layer instead of cutting off, and switch between light and dark mode.</p>
               </div>
               <div className="help-section">
                 <div className="help-section-title">Editing a pad</div>
