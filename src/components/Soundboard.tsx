@@ -122,6 +122,8 @@ export default function Soundboard({ user }: Props) {
   const [selColor, setSelColor] = useState('red')
   const [overlapMode, setOverlapMode] = useState(false)
   const [volume, setVolume] = useState(0.8)
+  const [showSettings, setShowSettings] = useState(false)
+  const settingsRef = useRef<HTMLDivElement>(null)
   // iOS does not allow JS to set HTMLAudioElement.volume — hardware buttons only.
   // Detect once on mount so we can hide the non-functional slider on iOS devices.
   const [isIOS, setIsIOS] = useState(false)
@@ -749,6 +751,17 @@ export default function Soundboard({ user }: Props) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showBoardSwitcher])
 
+  // ── Close settings popover on outside click ───────────────────
+  useEffect(() => {
+    if (!showSettings) return
+    function h(e: MouseEvent) {
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node))
+        setShowSettings(false)
+    }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [showSettings])
+
   // ── Sign out ────────────────────────────────────────────────────
   async function handleSignOut() { await supabase.auth.signOut() }
 
@@ -968,47 +981,8 @@ export default function Soundboard({ user }: Props) {
 
       <div className="divider" />
 
-      {/* Controls row 1: Sound Overlap (left) + Volume (right) */}
-      <div className="controls-bar controls-bar-split">
-        <div className="toggle-group">
-          <span className="toggle-label">Sound Overlap</span>
-          <label className="toggle">
-            <input
-              type="checkbox" checked={overlapMode}
-              onChange={e => {
-                setOverlapMode(e.target.checked)
-                setStatus(e.target.checked ? 'Sound overlap on' : 'Sound overlap off')
-              }}
-            />
-            <span className="toggle-track" />
-            <span className="toggle-thumb" />
-          </label>
-        </div>
-        {!isIOS && (
-          <div className="vol-pill">
-            <span className="vol-label">Vol</span>
-            <input
-              type="range" min={0} max={1} step={0.05} value={volume}
-              onChange={e => handleVolume(parseFloat(e.target.value))}
-            />
-          </div>
-        )}
-      </div>
-
-      <div className="divider" />
-
-      {/* Controls row 2: Theme toggle + Edit Pads */}
-      <div className="controls-bar controls-bar-split">
-        <div className="ctrl-toggle">
-          <button
-            className={`ctrl-btn${theme === 'light' ? ' active' : ''}`}
-            onClick={() => handleThemeToggle('light')}
-          >Light</button>
-          <button
-            className={`ctrl-btn${theme === 'dark' ? ' active' : ''}`}
-            onClick={() => handleThemeToggle('dark')}
-          >Dark</button>
-        </div>
+      {/* Controls row: Edit Pads + Settings */}
+      <div className="controls-bar controls-bar-split" style={{ marginBottom: 0 }}>
         <button
           className={`btn${editing ? ' btn-edit-active' : ' btn-outline'}`}
           onClick={() => {
@@ -1016,8 +990,58 @@ export default function Soundboard({ user }: Props) {
             else setEditing(true)
           }}
         >
-          Edit Pads
+          {editing ? '✓ Done' : '✏️ Edit Pads'}
         </button>
+        <div className="settings-wrap" ref={settingsRef}>
+          <button
+            className={`btn${showSettings ? ' btn-edit-active' : ' btn-outline'}`}
+            onClick={() => setShowSettings(s => !s)}
+          >
+            ⚙️ Settings
+          </button>
+          {showSettings && (
+            <div className="settings-popover settings-popover--up">
+              {!isIOS && (
+                <div className="settings-row">
+                  <div>
+                    <div className="settings-label">Volume</div>
+                    <div className="settings-sub">Desktop only</div>
+                  </div>
+                  <input
+                    type="range" min={0} max={1} step={0.05} value={volume}
+                    onChange={e => handleVolume(parseFloat(e.target.value))}
+                    className="settings-vol-slider"
+                  />
+                </div>
+              )}
+              <div className="settings-row">
+                <div className="settings-label">Sound overlap</div>
+                <label className="toggle">
+                  <input
+                    type="checkbox" checked={overlapMode}
+                    onChange={e => {
+                      setOverlapMode(e.target.checked)
+                      setStatus(e.target.checked ? 'Sound overlap on' : 'Sound overlap off')
+                    }}
+                  />
+                  <span className="toggle-track" />
+                  <span className="toggle-thumb" />
+                </label>
+              </div>
+              <div className="settings-row">
+                <div className="settings-label">Dark mode</div>
+                <label className="toggle">
+                  <input
+                    type="checkbox" checked={theme === 'dark'}
+                    onChange={e => handleThemeToggle(e.target.checked ? 'dark' : 'light')}
+                  />
+                  <span className="toggle-track" />
+                  <span className="toggle-thumb" />
+                </label>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Reset All — only visible in edit mode, lives under theme/edit controls */}
