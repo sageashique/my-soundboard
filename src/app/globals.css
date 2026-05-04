@@ -315,11 +315,11 @@ body {
   gap: 5px;
   font-size: 12px;
   font-weight: 500;
-  color: #4f46e5;
+  color: #94a3b8;
   text-decoration: none;
   transition: color 0.15s;
 }
-.auth-split-footer-link:hover { color: #818cf8; }
+.auth-split-footer-link:hover { color: #f1f5f9; }
 .auth-split-footer-sep { font-size: 10px; color: #334155; user-select: none; }
 
 /* Auth mobile */
