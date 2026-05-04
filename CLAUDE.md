@@ -363,7 +363,7 @@ Route: `/auth` — served by `src/app/auth/page.tsx`.
 
 Split-panel layout, always dark — independent of the app's light/dark theme toggle.
 
-- **Left panel** (`420px`, dark gradient `#131c33 → #0d1526`): brand mark, hero headline, scrolling marquee pills, 14-pad mini-grid preview, demo CTA link
+- **Left panel** (`460px`, dark gradient `#131c33 → #0d1526`): brand mark, hero headline, scrolling marquee pills, 14-pad mini-grid preview, demo CTA link
 - **Right panel** (flex: 1, `#0f172a`): sign-in/sign-up tabs, email/password form, OR divider, demo button, footer links
 
 ### Auth page conventions
@@ -372,7 +372,15 @@ Split-panel layout, always dark — independent of the app's light/dark theme to
 - `auth-tap-badge`: `<kbd>` style for "tap" in headline — indigo border + background, `#a5b4fc` text
 - Marquee pills: `.auth-split-pills` container with `mask-image` edge fade; `.auth-split-pills-track` animates via `@keyframes auth-marquee 28s`. Pause on hover. 6 pills duplicated for seamless loop.
 - Mini-pad grid: `grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 62px) 24px`. Pad-0 uses `.auth-mini-0 { grid-column: span 2 }`, pad-enter uses `.auth-mini-enter { grid-row: span 2 }`. Stop bar spans all 4 columns.
-- Mobile (`max-width: 768px`): panels stack vertically; row heights shrink to `repeat(4, 52px) 20px`.
+- Demo CTA (`.auth-split-demo-cta`): pill-shaped on mobile (`border-radius: 50px`, full-width) to distinguish it from the rectangular pad grid above it.
+
+### Mobile behavior (`max-width: 768px`)
+
+Panels stack vertically. Left panel shows full hero content; right panel shows form below.
+
+- Row heights use `13vw` (scales proportionally with screen width — ~49px at 375px, ~62px at 480px). Stop bar stays fixed at `28px`.
+- At `max-width: 480px`: emoji size reduces, border-radius tightens, second sub-copy sentence hidden (`.auth-sub-extra { display: none }`).
+- **`.auth-mobile-signin`** — mobile-only "Sign in →" pill button in the brand row (`margin-left: auto` pushes it right). On click, smooth-scrolls to the right panel via `useRef`. Hidden at `min-width: 769px`.
 
 ---
 
