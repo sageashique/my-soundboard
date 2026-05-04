@@ -1094,7 +1094,7 @@ input[type='range']::-webkit-slider-thumb {
 }
 
 /* RESET ALL */
-.reset-all-section { width: 100%; max-width: 420px; margin-left: auto; margin-right: auto; padding: 4px 0 8px; }
+.reset-all-section { width: 100%; max-width: 420px; margin-left: auto; margin-right: auto; margin-top: 12px; padding: 12px 0 8px; border-top: 1px solid var(--border); }
 .bottom-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; }
 /* Reset All row — only rendered when editing, sits under theme/edit controls */
 .controls-reset-row { justify-content: flex-start; padding: 2px 0; margin-bottom: 16px; }

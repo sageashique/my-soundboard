@@ -1227,8 +1227,6 @@ export default function Soundboard({ user }: Props) {
         </div>
       )}
 
-      <div className="divider" />
-
       {/* Bottom bar — email + sign out */}
       <div className="reset-all-section">
         {!showSignOutConfirm ? (
