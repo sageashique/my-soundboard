@@ -24,7 +24,7 @@ const BOARD1_CLIPS = [
   { file: 'zelda-open-chest.wav',    label: 'Zelda Chest',      icon: '⚔️', color: 'yellow' }, // pos 3  key 9
   { file: 'a-few-moments-later.mp3', label: 'Moments Later',    icon: '⏰', color: 'blue'   }, // pos 4  key −
   { file: 'dun-dun-dun.wav',         label: 'Dun Dun Dun',      icon: '🎭', color: 'purple' }, // pos 5  key 4
-  { file: 'we-do-not-care.wav',      label: "Don't Care",       icon: '🤷', color: 'red'    }, // pos 6  key 5
+  { file: 'bing-bing-bong.wav',      label: 'Bing Bing Bong',   icon: '🔔', color: 'pink'   }, // pos 6  key 5
   { file: 'whats-going-on-here.mp3', label: "What's Going On?", icon: '🤨', color: 'pink'   }, // pos 7  key 6
   { file: 'crowd-laughing.wav',      label: 'Laughs',           icon: '😂', color: 'yellow' }, // pos 8  key +
   { file: 'sad-trombone.wav',        label: 'Sad Trombone',     icon: '😢', color: 'blue'   }, // pos 9  key 1
@@ -32,7 +32,7 @@ const BOARD1_CLIPS = [
   { file: 'emotional-damage.wav',    label: 'Emotional Damage', icon: '💥', color: 'red'    }, // pos 11 key 3
   { file: 'crowd-cheering.mp3',      label: 'Cheers',           icon: '🎉', color: 'green'  }, // pos 12 key ENT
   { file: 'faaah.wav',               label: 'FAAAH!',           icon: '😮', color: 'pink'   }, // pos 13 key 0
-  { file: 'bing-bing-bong.wav',      label: 'Bing Bing Bong',   icon: '🔔', color: 'pink'   }, // pos 14 key .
+  { file: 'come-on-man.mp3',         label: 'Come On Man',      icon: '🤦', color: 'red'    }, // pos 14 key .
 ]
 
 function board1Pads(): PadState[] {
