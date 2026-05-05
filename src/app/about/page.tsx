@@ -138,10 +138,10 @@ export default function AboutPage() {
               <div className="ap-builder-name">Sage Ashique</div>
               <div className="ap-builder-role">Product Manager &amp; AI Enthusiast</div>
               <p className="ap-builder-bio">
-                I build products at the intersection of AI and user experience. [sage]SOUNDS is a production-grade
-                app I built end-to-end — from architecture decisions to deployment — using AI as a co-builder
-                throughout. This project is part of my portfolio demonstrating hands-on technical depth alongside
-                strategic product thinking.
+                Product manager with a background in enterprise platforms and internal tools. I built [sage]SOUNDS
+                end-to-end, from idea to deployment, using AI as a co-builder throughout. I wanted to show what a
+                PM can do when they take full ownership, not just define requirements and hand things off. This is
+                the project that shows it.
               </p>
               <a
                 href="https://www.linkedin.com/in/sageashique"
@@ -165,29 +165,30 @@ export default function AboutPage() {
           <h2 className="ap-title">Why I built this</h2>
           <div className="ap-body-stack">
             <p className="ap-body">
-              My nephew has a chunky plastic toy soundboard — big buttons, each playing a different sound.
-              Watching him mash them got me thinking: a digital version of this is totally doable, and I could
-              actually make it <em>better</em>. Upload your own audio, map it to a keyboard, organize sounds across
-              multiple boards, and fire them in a live meeting or stream — same idea, more range.
+              My nephew had a chunky plastic toy soundboard. Big buttons, each one playing a different sound.
+              Watching him mash them got me thinking: how hard would it be to build a digital version of this,
+              but make it better? Start with generic sounds, then go beyond that. Upload your own audio, map it
+              to a keyboard, organize sounds across multiple boards, fire them during a live meeting or stream.
+              Same idea, more range. I wanted to see how fast I could build my own version. Challenge set.
+              Challenge accepted.
             </p>
             <p className="ap-body">
-              What started as a fun weekend project turned into a genuine exploration of how fast you can go from
-              idea to deployed product when you use AI as a co-builder. I used Claude Code throughout — describing
-              what I wanted, reviewing what it built, and iterating quickly. Features that would have taken days to
-              scope and hand off went live within hours. No engineering team. No months of runway. Just a PM with
-              a clear idea and a surprisingly capable collaborator.
+              I used Claude Code throughout the build. Described what I wanted, reviewed what it built, iterated
+              quickly. Features that would have taken days to scope and hand off went live in hours. No engineering
+              team. No months of runway. Just a PM with a clear idea and a tool that could keep up. That combination
+              turned out to be more powerful than I expected.
             </p>
             <p className="ap-body">
-              What I found along the way: clarity is still the bottleneck. The fundamentals of good product thinking —
-              knowing what you actually want, breaking it down into something buildable, and holding the line on what
-              matters — those didn&apos;t go anywhere. If anything, AI amplified them. Fuzzy inputs still produce
-              fuzzy outputs. Sharp inputs produce something you can ship.
+              Clarity is still the bottleneck. You still need to know what you want, break it into something
+              buildable, and hold the line on what matters. AI didn&apos;t change that. If anything, it made it
+              more obvious. Fuzzy inputs produce fuzzy outputs. Sharp ones produce something you can ship.
+              That&apos;s a skill set I&apos;ve been building for years, and it translated directly.
             </p>
             <p className="ap-body">
-              [sage]SOUNDS isn&apos;t a prototype. It&apos;s a production-grade app with auth, cloud storage, a real
-              database, and deployment infrastructure. I built it to show what&apos;s possible when a PM takes
-              ownership of the full stack — not just the roadmap. This is what it looks like when someone knows
-              what good looks like — and cares enough to get there.
+              [sage]SOUNDS isn&apos;t a prototype. It has auth, cloud storage, a real database, and deployment
+              infrastructure. I built it to show what&apos;s possible when a PM takes ownership of the full stack,
+              not just the roadmap. You don&apos;t have to write every line of code to ship something real.
+              You just have to know what you&apos;re building and care enough to see it through.
             </p>
           </div>
         </div>
