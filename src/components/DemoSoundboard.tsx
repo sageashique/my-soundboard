@@ -217,7 +217,7 @@ export default function DemoSoundboard() {
   function triggerPad(idx: number) {
     const pad = pads[idx]
     setFiringPad(idx)
-    setTimeout(() => setFiringPad(null), 140)
+    setTimeout(() => setFiringPad(null), 700)
     if (activeBoardIdx === 0) triggerClipPad(idx, pad)
     else                      triggerSynthPad(pad)
   }
