@@ -117,7 +117,7 @@ export default function AuthPage() {
 
           {/* Subheading — breakpoint-specific copy */}
           <p className="auth-split-sub auth-sub-desktop">
-            Stop fumbling for audio mid-stream. Upload your own sounds, map them to keyboard shortcuts, and fire them instantly — no plugins, no lag.
+            Upload your own sounds, map them to keyboard shortcuts, and fire them instantly — no plugins, no lag, no fumbling.
           </p>
           <p className="auth-split-sub auth-sub-tablet">
             Upload your own sounds, map them to shortcuts, and fire them instantly — no plugins, no fumbling.
