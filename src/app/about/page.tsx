@@ -90,7 +90,7 @@ export default function AboutPage() {
         <Link href="/" className="ap-nav-logo">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" alt="" className="ap-nav-logo-icon" />
-          [sage]SOUNDS
+          <span><span className="logo-bracket">[</span><span className="logo-sage">sage</span><span className="logo-bracket">]</span><span className="logo-sounds">SOUNDS</span></span>
         </Link>
         <Link href="/auth" className="ap-nav-back">← Back to app</Link>
       </nav>

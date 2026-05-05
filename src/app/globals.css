@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
   --bg: #f0f4ff;
@@ -181,10 +181,9 @@ body {
   flex-shrink: 0;
 }
 .auth-split-brandname {
-  font-size: 19px;
-  font-weight: 800;
-  color: #f8fafc;
-  letter-spacing: 0.06em;
+  font-size: 16px;
+  display: inline-flex;
+  align-items: baseline;
 }
 .auth-split-brand-text {
   display: flex;
@@ -897,15 +896,15 @@ input[type='range']::-webkit-slider-thumb {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 5px;
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 8px;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 7px;
   flex-shrink: 0;
 }
 [data-theme="dark"] .pad-icon-badge {
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.04);
 }
-.pad-icon { font-size: 28px; line-height: 1; }
+.pad-icon { font-size: 24px; line-height: 1; }
 .pad-label {
   font-size: 10px;
   font-weight: 500;
@@ -1681,13 +1680,17 @@ input[type='text'] { width: 130px; }
   gap: 8px;
   padding-bottom: 10px;
 }
-/* App brand name — preserves [sage]SOUNDS casing (no text-transform) */
-.sb-appname {
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  color: var(--text);
-}
+/* App brand name — inner spans handle color/weight via .logo-* classes */
+.sb-appname { font-size: 17px; display: inline-flex; align-items: baseline; }
+
+/* Logo wordmark — Combo A style, theme-aware */
+.logo-bracket { color: #6366f1; font-weight: 500; }
+.logo-sage    { color: var(--text2); font-weight: 500; }
+.logo-sounds  { color: var(--text); font-weight: 800; letter-spacing: -0.01em; font-size: 1.41em; }
+
+/* Auth page (always dark, no CSS vars) */
+.auth-split-brandname .logo-sage   { color: #94a3b8; }
+.auth-split-brandname .logo-sounds { color: #f1f5f9; }
 /* Hairline divider — weight visually echoes the title */
 .sb-title-divider {
   width: 100%;

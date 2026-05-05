@@ -93,7 +93,7 @@ export default function AuthPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" alt="" className="auth-split-logo-img" />
           <div className="auth-split-brand-text">
-            <span className="auth-split-brandname">[sage]SOUNDS</span>
+            <span className="auth-split-brandname"><span className="logo-bracket">[</span><span className="logo-sage">sage</span><span className="logo-bracket">]</span><span className="logo-sounds">SOUNDS</span></span>
             <a
               href="https://www.linkedin.com/in/sageashique"
               target="_blank"

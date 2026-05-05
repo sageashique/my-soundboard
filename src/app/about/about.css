@@ -30,13 +30,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: #0f172a;
+  font-size: 12px;
   text-decoration: none;
 }
-.ap-nav-logo:hover { color: #4f46e5; }
+.ap-nav-logo .logo-sage   { color: #64748b; }
+.ap-nav-logo .logo-sounds { color: #0f172a; font-size: inherit; }
+.ap-nav-logo:hover .logo-bracket { color: #4338ca; }
+.ap-nav-logo:hover .logo-sounds  { color: #4338ca; }
 .ap-nav-back {
   font-size: 12px;
   font-weight: 500;

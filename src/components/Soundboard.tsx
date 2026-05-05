@@ -805,7 +805,7 @@ export default function Soundboard({ user }: Props) {
           <div className="sb-wordmark-row">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.svg" alt="" className="sb-logo" />
-            <span className="sb-appname">[sage]SOUNDS</span>
+            <span className="sb-appname"><span className="logo-bracket">[</span><span className="logo-sage">sage</span><span className="logo-bracket">]</span><span className="logo-sounds">SOUNDS</span></span>
           </div>
           <a
             href="https://www.linkedin.com/in/sageashique"
