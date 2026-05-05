@@ -121,6 +121,7 @@ export default function Soundboard({ user }: Props) {
   const [editing, setEditing] = useState(false)
   const [selColor, setSelColor] = useState('red')
   const [overlapMode, setOverlapMode] = useState(false)
+  const [firingPads, setFiringPads] = useState<Set<number>>(new Set())
   const [volume, setVolume] = useState(0.8)
   const [showSettings, setShowSettings] = useState(false)
   const settingsRef = useRef<HTMLDivElement>(null)
@@ -249,6 +250,8 @@ export default function Soundboard({ user }: Props) {
     activeHtmlAudiosRef.current.forEach((_, a) => { try { a.pause(); a.currentTime = 0 } catch { /* already ended */ } })
     activeHtmlAudiosRef.current.clear()
     currentSourceRef.current = null
+    padRefs.current.forEach(r => r?.stopFire())
+    setFiringPads(new Set())
     setStatus('⏹ Stopped', 'stopped')
   }, [volume])
 
@@ -266,6 +269,8 @@ export default function Soundboard({ user }: Props) {
       activeHtmlAudiosRef.current.forEach((_, a) => { try { a.pause(); a.currentTime = 0 } catch { /* already ended */ } })
       activeHtmlAudiosRef.current.clear()
       currentSourceRef.current = null
+      padRefs.current.forEach(r => r?.stopFire())
+      setFiringPads(new Set())
     }
 
     if (p.customRawBuf) {
@@ -282,11 +287,17 @@ export default function Soundboard({ user }: Props) {
         htmlAudio.volume = Math.min(volume * (p.customGain ?? 1), 1)
         activeHtmlAudiosRef.current.set(htmlAudio, p.customGain ?? 1)
         htmlAudio.play()
-          .then(() => setStatus(`${p.icon} ${p.label}`, 'active'))
+          .then(() => {
+            padRefs.current[index]?.startFire()
+            setFiringPads(prev => new Set([...prev, index]))
+            setStatus(`${p.icon} ${p.label}`, 'active')
+          })
           .catch(() => setStatus('Could not play audio', 'stopped'))
         htmlAudio.onended = () => {
           URL.revokeObjectURL(url)
           activeHtmlAudiosRef.current.delete(htmlAudio)
+          padRefs.current[index]?.stopFire()
+          setFiringPads(prev => { const s = new Set(prev); s.delete(index); return s })
           if (activeSourcesRef.current.size === 0 && activeHtmlAudiosRef.current.size === 0) setStatus('Ready', 'idle')
         }
       } catch {
@@ -299,16 +310,28 @@ export default function Soundboard({ user }: Props) {
       // Attach onended to EVERY new node (multi-node sounds like Clap/AirHorn/Laugh
       // add several nodes; only tracking the last one leaves orphans in the set and
       // the status pill stuck on "active" indefinitely).
+      const newNodes: AudioBufferSourceNode[] = []
       activeSourcesRef.current.forEach(node => {
-        if (!prevNodes.has(node)) {
-          node.onended = () => {
-            activeSourcesRef.current.delete(node)
-            if (currentSourceRef.current === node) currentSourceRef.current = null
-            if (activeSourcesRef.current.size === 0 && activeHtmlAudiosRef.current.size === 0) setStatus('Ready', 'idle')
+        if (!prevNodes.has(node)) newNodes.push(node as AudioBufferSourceNode)
+      })
+      let remaining = newNodes.length
+      newNodes.forEach(node => {
+        node.onended = () => {
+          activeSourcesRef.current.delete(node)
+          if (currentSourceRef.current === node) currentSourceRef.current = null
+          remaining--
+          if (remaining <= 0) {
+            padRefs.current[index]?.stopFire()
+            setFiringPads(prev => { const s = new Set(prev); s.delete(index); return s })
           }
+          if (activeSourcesRef.current.size === 0 && activeHtmlAudiosRef.current.size === 0) setStatus('Ready', 'idle')
         }
       })
       if (src && !overlapMode) currentSourceRef.current = src
+      if (newNodes.length > 0) {
+        padRefs.current[index]?.startFire()
+        setFiringPads(prev => new Set([...prev, index]))
+      }
     }
 
     setStatus(`${p.icon} ${p.label}`, 'active')
@@ -974,7 +997,7 @@ export default function Soundboard({ user }: Props) {
           </button>
         ) : (
           <span className={`status-pill${statusState !== 'idle' ? ` ${statusState}` : ''}`}>
-            {statusMsg}
+            {firingPads.size > 1 ? '🎛️ Mixing…' : statusMsg}
           </span>
         )}
       </div>

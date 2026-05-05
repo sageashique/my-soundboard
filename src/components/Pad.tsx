@@ -3,7 +3,8 @@ import { forwardRef, useImperativeHandle, useRef } from 'react'
 import type { PadState } from '@/lib/types'
 
 export interface PadHandle {
-  flash: () => void
+  startFire: () => void
+  stopFire: () => void
 }
 
 interface Props {
@@ -17,14 +18,8 @@ const Pad = forwardRef<PadHandle, Props>(function Pad({ pad, selected, editMode,
   const elRef = useRef<HTMLDivElement>(null)
 
   useImperativeHandle(ref, () => ({
-    flash() {
-      const el = elRef.current
-      if (!el) return
-      el.classList.remove('fire')
-      void el.offsetWidth
-      el.classList.add('fire')
-      setTimeout(() => el.classList.remove('fire'), 700)
-    },
+    startFire() { elRef.current?.classList.add('fire') },
+    stopFire()  { elRef.current?.classList.remove('fire') },
   }))
 
   return (

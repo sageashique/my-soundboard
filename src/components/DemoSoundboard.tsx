@@ -90,7 +90,7 @@ export default function DemoSoundboard() {
   const [helpOpen, setHelpOpen] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const settingsRef = useRef<HTMLDivElement>(null)
-  const [firingPad, setFiringPad] = useState<number | null>(null)
+  const [firingPads, setFiringPads] = useState<Set<number>>(new Set())
   const [firingStop, setFiringStop] = useState(false)
   const [status, setStatus] = useState<string | null>(null)
 
@@ -171,10 +171,18 @@ export default function DemoSoundboard() {
     return { ctx: audioCtxRef.current, gain: gainRef.current! }
   }
 
+  function addFiring(idx: number) {
+    setFiringPads(prev => new Set([...prev, idx]))
+  }
+  function removeFiring(idx: number) {
+    setFiringPads(prev => { const s = new Set(prev); s.delete(idx); return s })
+  }
+
   function stopAll() {
     activeSrcsRef.current.forEach(n => { try { n.stop() } catch {} })
     activeSrcsRef.current.clear()
     clipAudiosRef.current.forEach(a => { a.pause(); a.currentTime = 0 })
+    setFiringPads(new Set())
     setStatus(null)
     setFiringStop(true)
     setTimeout(() => setFiringStop(false), 140)
@@ -187,6 +195,7 @@ export default function DemoSoundboard() {
       activeSrcsRef.current.forEach(n => { try { n.stop() } catch {} })
       activeSrcsRef.current.clear()
       clipAudiosRef.current.forEach(a => { a.pause(); a.currentTime = 0 })
+      setFiringPads(new Set())
     }
 
     const audio = clipAudiosRef.current.get(clip.file) ?? new Audio(`/demo-clips/${clip.file}`)
@@ -195,31 +204,41 @@ export default function DemoSoundboard() {
     audio.currentTime = 0
     audio.play()
       .then(() => {
+        addFiring(idx)
         setStatus(`▶ ${pad.label}`)
-        audio.addEventListener('ended', () => setStatus(null), { once: true })
+        audio.addEventListener('ended', () => {
+          removeFiring(idx)
+          setStatus(prev => prev === `▶ ${pad.label}` ? null : prev)
+        }, { once: true })
       })
       .catch(err => console.error('clip play failed:', clip.file, err))
   }
 
   // ── Board 2: Web Audio synth ───────────────────────────────────────────
-  function triggerSynthPad(pad: PadState) {
+  function triggerSynthPad(idx: number, pad: PadState) {
     const { ctx, gain } = getCtx()
     if (!overlapMode) {
       activeSrcsRef.current.forEach(n => { try { n.stop() } catch {} })
       activeSrcsRef.current.clear()
       clipAudiosRef.current.forEach(a => { a.pause(); a.currentTime = 0 })
+      setFiringPads(new Set())
     }
     const node = playSound(pad.sound, ctx, gain, activeSrcsRef.current)
-    if (node) setStatus(`▶ ${pad.label}`)
+    if (node) {
+      addFiring(idx)
+      setStatus(`▶ ${pad.label}`)
+      node.onended = () => {
+        removeFiring(idx)
+        setStatus(prev => prev === `▶ ${pad.label}` ? null : prev)
+      }
+    }
   }
 
   // ── Main trigger ───────────────────────────────────────────────────────
   function triggerPad(idx: number) {
     const pad = pads[idx]
-    setFiringPad(idx)
-    setTimeout(() => setFiringPad(null), 700)
     if (activeBoardIdx === 0) triggerClipPad(idx, pad)
-    else                      triggerSynthPad(pad)
+    else                      triggerSynthPad(idx, pad)
   }
 
   // ── Volume ─────────────────────────────────────────────────────────────
@@ -366,7 +385,7 @@ export default function DemoSoundboard() {
               className={[
                 'pad', pad.gridClass, `c-${pad.color}`,
                 editMode && pad.index === selPad ? 'sel' : '',
-                pad.index === firingPad ? 'fire' : '',
+                firingPads.has(pad.index) ? 'fire' : '',
                 editMode && pad.index !== selPad ? 'edit-mode' : '',
               ].filter(Boolean).join(' ')}
               onClick={() => handlePadClick(pad.index)}
@@ -392,8 +411,8 @@ export default function DemoSoundboard() {
             ? <button className="exit-edit-btn btn" onClick={() => { setEditMode(false); setSelPad(null) }}>
                 Exit Edit Mode
               </button>
-            : <div className={`status-pill${status ? ' active' : ''}`}>
-                {status || 'Tap a pad or press a numpad key to play'}
+            : <div className={`status-pill${(status || firingPads.size > 1) ? ' active' : ''}`}>
+                {firingPads.size > 1 ? '🎛️ Mixing…' : (status || 'Tap a pad or press a numpad key to play')}
               </div>
           }
         </div>
