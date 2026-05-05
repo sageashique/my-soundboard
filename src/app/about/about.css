@@ -465,52 +465,29 @@
   justify-content: center;
   padding: 16px 0 40px;
 }
-.ap-hero-grid {
+.ap-hero-anim-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  grid-auto-rows: 76px;
+  gap: 8px;
   width: 100%;
   max-width: 360px;
 }
-.ap-demo-pad {
-  border-radius: 14px;
-  padding: 16px 14px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  cursor: default;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  aspect-ratio: 1;
-  position: relative;
-  overflow: hidden;
-}
-.ap-demo-pad.fire { transform: scale(0.93); }
-.ap-demo-emoji { font-size: 26px; line-height: 1; }
-.ap-demo-bottom { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
-.ap-demo-label { font-size: 11px; font-weight: 600; line-height: 1.2; }
-.ap-demo-pad.fire .ap-demo-label { display: none; }
-.ap-demo-wave { display: none; align-items: flex-end; gap: 3px; height: 14px; }
-.ap-demo-pad.fire .ap-demo-wave { display: flex; }
-.ap-demo-wave span { width: 3px; height: 3px; border-radius: 2px; background: currentColor; }
-.ap-demo-pad.fire .ap-demo-wave span:nth-child(1) { animation: waveform-bar 0.36s ease-in-out 0s infinite alternate; }
-.ap-demo-pad.fire .ap-demo-wave span:nth-child(2) { animation: waveform-bar 0.36s ease-in-out 0.13s infinite alternate; }
-.ap-demo-pad.fire .ap-demo-wave span:nth-child(3) { animation: waveform-bar 0.36s ease-in-out 0.06s infinite alternate; }
 
-/* Light-mode pad colors */
-.ap-demo-red    { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
-.ap-demo-green  { background: #dcfce7; color: #16a34a; border: 1px solid #86efac; }
-.ap-demo-blue   { background: #dbeafe; color: #2563eb; border: 1px solid #93c5fd; }
-.ap-demo-yellow { background: #fef9c3; color: #b45309; border: 1px solid #fde047; }
-.ap-demo-purple { background: #ede9fe; color: #7c3aed; border: 1px solid #c4b5fd; }
-.ap-demo-pink   { background: #fce7f3; color: #db2777; border: 1px solid #f9a8d4; }
+/* Light-mode color overrides for adp-* classes (about page only) */
+.ap-hero-preview .adp-red    { border-color: #fca5a5; background: rgba(239,68,68,0.08);   color: #dc2626; }
+.ap-hero-preview .adp-green  { border-color: #86efac; background: rgba(34,197,94,0.08);   color: #16a34a; }
+.ap-hero-preview .adp-blue   { border-color: #93c5fd; background: rgba(59,130,246,0.08);  color: #2563eb; }
+.ap-hero-preview .adp-yellow { border-color: #fde047; background: rgba(234,179,8,0.08);   color: #b45309; }
+.ap-hero-preview .adp-purple { border-color: #c4b5fd; background: rgba(139,92,246,0.08);  color: #7c3aed; }
+.ap-hero-preview .adp-pink   { border-color: #f9a8d4; background: rgba(236,72,153,0.08);  color: #db2777; }
 
-/* Glow on fire */
-.ap-demo-red.fire    { box-shadow: 0 0 18px rgba(220,38,38,0.35); }
-.ap-demo-green.fire  { box-shadow: 0 0 18px rgba(22,163,74,0.35); }
-.ap-demo-blue.fire   { box-shadow: 0 0 18px rgba(37,99,235,0.35); }
-.ap-demo-yellow.fire { box-shadow: 0 0 18px rgba(180,83,9,0.30); }
-.ap-demo-purple.fire { box-shadow: 0 0 18px rgba(124,58,237,0.35); }
-.ap-demo-pink.fire   { box-shadow: 0 0 18px rgba(219,39,119,0.35); }
+.ap-hero-preview .adp-red.adp-active    { background: rgba(239,68,68,0.18);  border-color: #f87171; box-shadow: 0 0 18px rgba(220,38,38,0.25); }
+.ap-hero-preview .adp-green.adp-active  { background: rgba(34,197,94,0.18);  border-color: #4ade80; box-shadow: 0 0 18px rgba(22,163,74,0.25); }
+.ap-hero-preview .adp-blue.adp-active   { background: rgba(59,130,246,0.18); border-color: #60a5fa; box-shadow: 0 0 18px rgba(37,99,235,0.25); }
+.ap-hero-preview .adp-yellow.adp-active { background: rgba(234,179,8,0.18);  border-color: #fbbf24; box-shadow: 0 0 18px rgba(180,83,9,0.20); }
+.ap-hero-preview .adp-purple.adp-active { background: rgba(139,92,246,0.18); border-color: #a78bfa; box-shadow: 0 0 18px rgba(124,58,237,0.25); }
+.ap-hero-preview .adp-pink.adp-active   { background: rgba(236,72,153,0.18); border-color: #f472b6; box-shadow: 0 0 18px rgba(219,39,119,0.25); }
 
 /* ── Project card (More work section) ── */
 .ap-project-card {

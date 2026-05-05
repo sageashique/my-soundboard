@@ -40,13 +40,13 @@ export default function AboutHeroAnimation() {
   }, [])
 
   return (
-    <div className="ap-hero-grid">
+    <div className="ap-hero-anim-grid">
       {pads.map((pad, i) => (
-        <div key={i} className={`ap-demo-pad ap-demo-${pad.color}${activePad === i ? ' fire' : ''}`}>
-          <span className="ap-demo-emoji">{pad.emoji}</span>
-          <div className="ap-demo-bottom">
-            <span className="ap-demo-label">{pad.label}</span>
-            <div className="ap-demo-wave" aria-hidden>
+        <div key={i} className={`auth-demo-pad adp-${pad.color}${activePad === i ? ' adp-active' : ''}`}>
+          <span className="auth-demo-emoji">{pad.emoji}</span>
+          <div className="auth-demo-bottom">
+            <span className="auth-demo-label">{pad.label}</span>
+            <div className="auth-demo-wave" aria-hidden>
               <span/><span/><span/>
             </div>
           </div>
