@@ -1,14 +1,50 @@
 'use client'
 import Link from 'next/link'
-import { useState, useRef, FormEvent } from 'react'
+import { useState, useRef, useEffect, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+
+const demoPads = [
+  { emoji: '🥁', label: 'Kick',    color: 'red'    },
+  { emoji: '🪘', label: 'Snare',   color: 'green'  },
+  { emoji: '🎵', label: 'Hi-Hat',  color: 'blue'   },
+  { emoji: '📯', label: 'Horn',    color: 'yellow' },
+  { emoji: '🎯', label: 'Rimshot', color: 'purple' },
+  { emoji: '🎸', label: '808',     color: 'pink'   },
+  { emoji: '⬆️', label: 'Riser',   color: 'red'    },
+  { emoji: '👏', label: 'Clap',    color: 'green'  },
+  { emoji: '🎹', label: 'Synth',   color: 'blue'   },
+]
 
 export default function AuthPage() {
   const router = useRouter()
   const formRef = useRef<HTMLDivElement>(null)
   const [tab, setTab] = useState<'login' | 'signup'>('login')
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [activePad, setActivePad] = useState<number | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const recent: number[] = []
+
+    function fire() {
+      if (cancelled) return
+      let next
+      do { next = Math.floor(Math.random() * 9) }
+      while (recent.includes(next))
+      recent.push(next)
+      if (recent.length > 3) recent.shift()
+      setActivePad(next)
+      setTimeout(() => {
+        if (cancelled) return
+        setActivePad(null)
+        setTimeout(fire, 700 + Math.random() * 1300)
+      }, 1400)
+    }
+
+    const t = setTimeout(fire, 900)
+    return () => { cancelled = true; clearTimeout(t) }
+  }, [])
 
   async function handleGoogleSignIn() {
     setGoogleLoading(true)
@@ -53,27 +89,6 @@ export default function AuthPage() {
       {/* ── LEFT PANEL ── */}
       <div className="auth-split-left">
 
-        {/* Animated background pad grid */}
-        <div className="auth-bg-grid" aria-hidden="true">
-          <div className="auth-bg-pad abp-red"    style={{animationDelay:'0s'}}/>
-          <div className="auth-bg-pad abp-green"  style={{animationDelay:'3.2s'}}/>
-          <div className="auth-bg-pad abp-blue"   style={{animationDelay:'7.1s'}}/>
-          <div className="auth-bg-pad abp-yellow" style={{animationDelay:'1.4s'}}/>
-          <div className="auth-bg-pad abp-purple" style={{animationDelay:'5.5s'}}/>
-          <div className="auth-bg-pad abp-pink"   style={{animationDelay:'11.2s'}}/>
-          <div className="auth-bg-pad abp-red"    style={{animationDelay:'8.7s'}}/>
-          <div className="auth-bg-pad abp-blue"   style={{animationDelay:'2.8s'}}/>
-          <div className="auth-bg-pad abp-green"  style={{animationDelay:'14.3s'}}/>
-          <div className="auth-bg-pad abp-yellow" style={{animationDelay:'6.1s'}}/>
-          <div className="auth-bg-pad abp-purple" style={{animationDelay:'9.8s'}}/>
-          <div className="auth-bg-pad abp-red"    style={{animationDelay:'4.2s'}}/>
-          <div className="auth-bg-pad abp-pink"   style={{animationDelay:'12.6s'}}/>
-          <div className="auth-bg-pad abp-blue"   style={{animationDelay:'0.9s'}}/>
-          <div className="auth-bg-pad abp-green"  style={{animationDelay:'15.4s'}}/>
-          <div className="auth-bg-pad abp-yellow" style={{animationDelay:'7.7s'}}/>
-        </div>
-        <div className="auth-bg-overlay" aria-hidden="true"/>
-
         <div className="auth-split-brand">
           <div className="auth-split-logo">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -107,16 +122,26 @@ export default function AuthPage() {
             Built for live meetings, streams, and content creation.
           </p>
 
-          <div className="auth-features">
-            <div className="auth-feature-line"><span>✓</span> Upload audio and map it to any key</div>
-            <div className="auth-feature-line"><span>✓</span> Works in any browser, no plugins needed</div>
-            <div className="auth-feature-line"><span>✓</span> Free to start. Syncs across all your devices.</div>
+          {/* 3×3 animated pad grid */}
+          <div className="auth-demo-grid">
+            {demoPads.map((pad, i) => (
+              <div key={i} className={`auth-demo-pad adp-${pad.color}${activePad === i ? ' adp-active' : ''}`}>
+                <span className="auth-demo-emoji">{pad.emoji}</span>
+                <div className="auth-demo-bottom">
+                  <span className="auth-demo-label">{pad.label}</span>
+                  <div className="auth-demo-wave" aria-hidden="true">
+                    <span/><span/><span/>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
 
-          <Link href="/demo" className="auth-split-demo-cta">
-            🎛️ Try the demo — no account needed
-            <span>→</span>
-          </Link>
+          {/* Split CTA row */}
+          <div className="auth-cta-row">
+            <Link href="/demo" className="auth-cta-btn auth-cta-demo">Try the Demo</Link>
+            <Link href="/about" className="auth-cta-btn auth-cta-about">About the App</Link>
+          </div>
         </div>
       </div>
 
@@ -189,10 +214,6 @@ export default function AuthPage() {
               {loading ? 'Please wait…' : tab === 'login' ? 'Sign in →' : 'Create account →'}
             </button>
           </form>
-
-          <Link href="/demo" className="auth-split-demo-btn">
-            🎛️ Try the demo without an account
-          </Link>
 
           <div className="auth-split-footer">
             <Link href="/about" className="auth-split-footer-link">About the App</Link>
