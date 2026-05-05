@@ -322,6 +322,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  margin-top: 32px;
   padding-top: 16px;
   border-top: 1px solid #253b5a;
 }
@@ -343,15 +344,15 @@ body {
   .auth-split-page { flex-direction: column; }
   .auth-split-left {
     width: 100%;
-    padding: 32px 24px 28px;
+    padding: 40px 24px 32px;
     border-right: none;
     border-bottom: 1px solid #1e2d45;
   }
   .auth-split-hero { flex: unset; }
-  .auth-split-headline { font-size: 24px; }
   .auth-demo-grid { grid-auto-rows: 68px; }
-  .auth-split-brand { margin-bottom: 28px; }
-  .auth-split-sub { margin-bottom: 16px; }
+  .auth-split-brand { margin-bottom: 40px; }
+  .auth-split-headline { margin-bottom: 20px; }
+  .auth-split-sub { margin-bottom: 28px; }
   .auth-split-right { padding: 32px 20px 48px; }
 }
 @media (max-width: 480px) {
