@@ -169,15 +169,9 @@ body {
   gap: 10px;
   margin-bottom: 36px;
 }
-.auth-split-logo {
+.auth-split-logo-img {
   width: 34px;
   height: 34px;
-  border-radius: 9px;
-  background: #4f46e5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
   flex-shrink: 0;
 }
 .auth-split-brandname {
