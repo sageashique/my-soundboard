@@ -202,16 +202,19 @@ export default function DemoSoundboard() {
     clipAudiosRef.current.set(clip.file, audio)
     audio.volume = volume
     audio.currentTime = 0
+    addFiring(idx)
     audio.play()
       .then(() => {
-        addFiring(idx)
         setStatus(`▶ ${pad.label}`)
         audio.addEventListener('ended', () => {
           removeFiring(idx)
           setStatus(prev => prev === `▶ ${pad.label}` ? null : prev)
         }, { once: true })
       })
-      .catch(err => console.error('clip play failed:', clip.file, err))
+      .catch(err => {
+        removeFiring(idx)
+        console.error('clip play failed:', clip.file, err)
+      })
   }
 
   // ── Board 2: Web Audio synth ───────────────────────────────────────────

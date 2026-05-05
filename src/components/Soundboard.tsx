@@ -286,13 +286,15 @@ export default function Soundboard({ user }: Props) {
         const htmlAudio = new Audio(url)
         htmlAudio.volume = Math.min(volume * (p.customGain ?? 1), 1)
         activeHtmlAudiosRef.current.set(htmlAudio, p.customGain ?? 1)
+        padRefs.current[index]?.startFire()
+        setFiringPads(prev => new Set([...prev, index]))
         htmlAudio.play()
-          .then(() => {
-            padRefs.current[index]?.startFire()
-            setFiringPads(prev => new Set([...prev, index]))
-            setStatus(`${p.icon} ${p.label}`, 'active')
+          .then(() => setStatus(`${p.icon} ${p.label}`, 'active'))
+          .catch(() => {
+            padRefs.current[index]?.stopFire()
+            setFiringPads(prev => { const s = new Set(prev); s.delete(index); return s })
+            setStatus('Could not play audio', 'stopped')
           })
-          .catch(() => setStatus('Could not play audio', 'stopped'))
         htmlAudio.onended = () => {
           URL.revokeObjectURL(url)
           activeHtmlAudiosRef.current.delete(htmlAudio)
