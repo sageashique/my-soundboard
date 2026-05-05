@@ -136,7 +136,7 @@ export default function Soundboard({ user }: Props) {
   const [statusState, setStatusState] = useState<'idle' | 'active' | 'stopped'>('idle')
 
   // Theme
-  const [theme, setTheme] = useState<'light' | 'dark'>('light')
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark')
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
@@ -1029,11 +1029,11 @@ export default function Soundboard({ user }: Props) {
                 </label>
               </div>
               <div className="settings-row">
-                <div className="settings-label">Dark mode</div>
+                <div className="settings-label">Light mode</div>
                 <label className="toggle">
                   <input
-                    type="checkbox" checked={theme === 'dark'}
-                    onChange={e => handleThemeToggle(e.target.checked ? 'dark' : 'light')}
+                    type="checkbox" checked={theme === 'light'}
+                    onChange={e => handleThemeToggle(e.target.checked ? 'light' : 'dark')}
                   />
                   <span className="toggle-track" />
                   <span className="toggle-thumb" />

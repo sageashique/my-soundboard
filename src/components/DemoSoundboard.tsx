@@ -81,7 +81,7 @@ export default function DemoSoundboard() {
   const [showBoardSwitcher, setShowBoardSwitcher] = useState(false)
   const boardSwitcherRef = useRef<HTMLDivElement>(null)
 
-  const [dark, setDark] = useState(false)
+  const [dark, setDark] = useState(true)
   const [volume, setVolume] = useState(0.8)
   const [overlapMode, setOverlapMode] = useState(false)
   const [isIOS, setIsIOS] = useState(false)
@@ -373,8 +373,9 @@ export default function DemoSoundboard() {
               onContextMenu={e => { e.preventDefault(); openEdit(pad.index) }}
             >
               <span className="pad-key">{pad.keyLabel}</span>
-              <span className="pad-icon">{pad.icon}</span>
+              <span className="pad-icon-badge"><span className="pad-icon">{pad.icon}</span></span>
               <span className="pad-label">{pad.label}</span>
+              <div className="pad-wave" aria-hidden><span/><span/><span/></div>
             </div>
           ))}
 
@@ -440,9 +441,9 @@ export default function DemoSoundboard() {
                   </label>
                 </div>
                 <div className="settings-row">
-                  <div className="settings-label">Dark mode</div>
+                  <div className="settings-label">Light mode</div>
                   <label className="toggle">
-                    <input type="checkbox" checked={dark} onChange={e => setDark(e.target.checked)} />
+                    <input type="checkbox" checked={!dark} onChange={e => setDark(!e.target.checked)} />
                     <span className="toggle-track" />
                     <span className="toggle-thumb" />
                   </label>

@@ -23,7 +23,7 @@ const Pad = forwardRef<PadHandle, Props>(function Pad({ pad, selected, editMode,
       el.classList.remove('fire')
       void el.offsetWidth
       el.classList.add('fire')
-      setTimeout(() => el.classList.remove('fire'), 200)
+      setTimeout(() => el.classList.remove('fire'), 700)
     },
   }))
 
@@ -37,8 +37,9 @@ const Pad = forwardRef<PadHandle, Props>(function Pad({ pad, selected, editMode,
     >
       <span className="pad-key">{pad.keyLabel}</span>
       {pad.customBuf && <span className="custom-dot" aria-hidden />}
-      <span className="pad-icon">{pad.icon}</span>
+      <span className="pad-icon-badge"><span className="pad-icon">{pad.icon}</span></span>
       <span className="pad-label">{pad.label}</span>
+      <div className="pad-wave" aria-hidden><span/><span/><span/></div>
     </div>
   )
 })
