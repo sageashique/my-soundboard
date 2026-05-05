@@ -19,7 +19,7 @@ type AudioNode = AudioBufferSourceNode | OscillatorNode
 
 // ── Demo Board 1: custom clips (position order = pad index order) ──────────
 const BOARD1_CLIPS = [
-  { file: 'bye-bye.mp3',             label: 'Bye Bye',          icon: '👋', color: 'green'  }, // pos 1  key 7
+  { file: 'sage-linkedin-msg.m4a',    label: 'From Sage',        icon: '🙋', color: 'blue'   }, // pos 1  key 7
   { file: 'spongebob-horn.wav',      label: 'Spongebob Horn',   icon: '🧽', color: 'yellow' }, // pos 2  key 8
   { file: 'zelda-open-chest.wav',    label: 'Zelda Chest',      icon: '⚔️', color: 'yellow' }, // pos 3  key 9
   { file: 'a-few-moments-later.mp3', label: 'Moments Later',    icon: '⏰', color: 'blue'   }, // pos 4  key −
