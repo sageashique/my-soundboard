@@ -905,6 +905,7 @@ input[type='range']::-webkit-slider-thumb {
   background: rgba(255, 255, 255, 0.04);
 }
 .pad-icon { font-size: 24px; line-height: 1; }
+.pad-icon-img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; display: block; }
 .pad-label {
   font-size: 10px;
   font-weight: 500;

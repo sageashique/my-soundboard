@@ -19,7 +19,7 @@ type AudioNode = AudioBufferSourceNode | OscillatorNode
 
 // ── Demo Board 1: custom clips (position order = pad index order) ──────────
 const BOARD1_CLIPS = [
-  { file: 'sage-linkedin-msg.m4a',    label: 'From Sage',        icon: '🙋', color: 'blue'   }, // pos 1  key 7
+  { file: 'sage-linkedin-msg.m4a',    label: 'From Sage',        icon: '🙋', color: 'green', iconImg: '/sage.jpg' }, // pos 1  key 7
   { file: 'spongebob-horn.wav',      label: 'Spongebob Horn',   icon: '🧽', color: 'yellow' }, // pos 2  key 8
   { file: 'zelda-open-chest.wav',    label: 'Zelda Chest',      icon: '⚔️', color: 'yellow' }, // pos 3  key 9
   { file: 'a-few-moments-later.mp3', label: 'Moments Later',    icon: '⏰', color: 'blue'   }, // pos 4  key −
@@ -395,7 +395,10 @@ export default function DemoSoundboard() {
               onContextMenu={e => { e.preventDefault(); openEdit(pad.index) }}
             >
               <span className="pad-key">{pad.keyLabel}</span>
-              <span className="pad-icon-badge"><span className="pad-icon">{pad.icon}</span></span>
+              {activeBoardIdx === 0 && BOARD1_CLIPS[pad.index]?.iconImg
+                ? <span className="pad-icon-badge"><img src={BOARD1_CLIPS[pad.index].iconImg} alt="" className="pad-icon-img" /></span>
+                : <span className="pad-icon-badge"><span className="pad-icon">{pad.icon}</span></span>
+              }
               <span className="pad-label">{pad.label}</span>
               <div className="pad-wave" aria-hidden><span/><span/><span/></div>
             </div>
