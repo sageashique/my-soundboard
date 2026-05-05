@@ -72,6 +72,10 @@ const platforms = [
     desc: 'Powers three things: PostgreSQL for pad configs and user settings, Auth for account management, and object storage for custom audio uploads.',
   },
   {
+    name: 'Google Cloud',
+    desc: 'Provides OAuth via Google Sign-In, enabling one-click account creation and sign-in without passwords.',
+  },
+  {
     name: 'GitHub',
     desc: 'Version control and CI/CD trigger. The main branch stays in sync with production at all times.',
   },
@@ -123,50 +127,29 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ── Why I built this ── */}
+      {/* ── Builder card ── */}
       <section className="ap-section ap-section-alt">
         <div className="ap-section-inner">
-          <h2 className="ap-title">Why I built this</h2>
-          <div className="ap-why-split">
-            <div className="ap-body-stack">
-              <p className="ap-body">
-                My nephew has a chunky plastic toy soundboard — big buttons, each playing a different sound.
-                Watching him mash them got me thinking: a digital version of this is totally doable, and I could
-                actually make it <em>better</em>. Upload your own audio, map it to a keyboard, organize sounds across
-                multiple boards, and fire them in a live meeting or stream — same idea, more range.
+          <p className="ap-label">The builder</p>
+          <div className="ap-builder-card">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/sage.jpg" alt="Sage Ashique" className="ap-builder-photo" />
+            <div className="ap-builder-info">
+              <div className="ap-builder-name">Sage Ashique</div>
+              <div className="ap-builder-role">Product Manager &amp; AI Enthusiast</div>
+              <p className="ap-builder-bio">
+                I build products at the intersection of AI and user experience. [sage]SOUNDS is a production-grade
+                app I built end-to-end — from architecture decisions to deployment — using AI as a co-builder
+                throughout. This project is part of my portfolio demonstrating hands-on technical depth alongside
+                strategic product thinking.
               </p>
-              <p className="ap-body">
-                What started as a fun weekend project turned into a genuine exploration of how fast you can go from
-                idea to deployed product when you use AI as a co-builder. I used Claude Code throughout — describing
-                what I wanted, reviewing what it built, and iterating quickly. Features that would have taken days to
-                scope and hand off went live within hours. No engineering team. No months of runway. Just a PM with
-                a clear idea and a surprisingly capable collaborator.
-              </p>
-              <p className="ap-body">
-                What I found along the way: clarity is still the bottleneck. The fundamentals of good product thinking —
-                knowing what you actually want, breaking it down into something buildable, and holding the line on what
-                matters — those didn&apos;t go anywhere. If anything, AI amplified them. Fuzzy inputs still produce
-                fuzzy outputs. Sharp inputs produce something you can ship.
-              </p>
-              <p className="ap-body">
-                [sage]SOUNDS isn&apos;t a prototype. It&apos;s a production-grade app with auth, cloud storage, a real
-                database, and deployment infrastructure. I built it to show what&apos;s possible when a PM takes
-                ownership of the full stack — not just the roadmap. This is what it looks like when someone knows
-                what good looks like — and cares enough to get there.
-              </p>
-            </div>
-            <div className="ap-why-photo-card">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/sage.jpg" alt="Sage Ashique" className="ap-why-photo" />
-              <div className="ap-why-name">Sage Ashique</div>
-              <div className="ap-why-role">Product Manager &amp; AI Enthusiast</div>
               <a
                 href="https://www.linkedin.com/in/sageashique"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="ap-why-linkedin"
+                className="ap-builder-linkedin"
               >
-                <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
                 </svg>
                 Connect on LinkedIn
@@ -176,8 +159,42 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ── Features ── */}
+      {/* ── Why I built this ── */}
       <section className="ap-section">
+        <div className="ap-section-inner">
+          <h2 className="ap-title">Why I built this</h2>
+          <div className="ap-body-stack">
+            <p className="ap-body">
+              My nephew has a chunky plastic toy soundboard — big buttons, each playing a different sound.
+              Watching him mash them got me thinking: a digital version of this is totally doable, and I could
+              actually make it <em>better</em>. Upload your own audio, map it to a keyboard, organize sounds across
+              multiple boards, and fire them in a live meeting or stream — same idea, more range.
+            </p>
+            <p className="ap-body">
+              What started as a fun weekend project turned into a genuine exploration of how fast you can go from
+              idea to deployed product when you use AI as a co-builder. I used Claude Code throughout — describing
+              what I wanted, reviewing what it built, and iterating quickly. Features that would have taken days to
+              scope and hand off went live within hours. No engineering team. No months of runway. Just a PM with
+              a clear idea and a surprisingly capable collaborator.
+            </p>
+            <p className="ap-body">
+              What I found along the way: clarity is still the bottleneck. The fundamentals of good product thinking —
+              knowing what you actually want, breaking it down into something buildable, and holding the line on what
+              matters — those didn&apos;t go anywhere. If anything, AI amplified them. Fuzzy inputs still produce
+              fuzzy outputs. Sharp inputs produce something you can ship.
+            </p>
+            <p className="ap-body">
+              [sage]SOUNDS isn&apos;t a prototype. It&apos;s a production-grade app with auth, cloud storage, a real
+              database, and deployment infrastructure. I built it to show what&apos;s possible when a PM takes
+              ownership of the full stack — not just the roadmap. This is what it looks like when someone knows
+              what good looks like — and cares enough to get there.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Features ── */}
+      <section className="ap-section ap-section-alt">
         <div className="ap-section-inner ap-section-inner-wide">
           <h2 className="ap-title">Features</h2>
           <div className="ap-features-grid">
@@ -193,7 +210,7 @@ export default function AboutPage() {
       </section>
 
       {/* ── How it works ── */}
-      <section className="ap-section ap-section-alt">
+      <section className="ap-section">
         <div className="ap-section-inner">
           <h2 className="ap-title">How it works</h2>
           <div className="ap-steps">
@@ -211,7 +228,7 @@ export default function AboutPage() {
       </section>
 
       {/* ── Built with ── */}
-      <section className="ap-section">
+      <section className="ap-section ap-section-alt">
         <div className="ap-section-inner">
           <h2 className="ap-title">Built with</h2>
           <div className="ap-tech-grid">
@@ -242,38 +259,6 @@ export default function AboutPage() {
                   </li>
                 ))}
               </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Builder card ── */}
-      <section className="ap-section ap-section-alt">
-        <div className="ap-section-inner">
-          <p className="ap-label">The builder</p>
-          <div className="ap-builder-card">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/sage.jpg" alt="Sage Ashique" className="ap-builder-photo" />
-            <div className="ap-builder-info">
-              <div className="ap-builder-name">Sage Ashique</div>
-              <div className="ap-builder-role">Product Manager &amp; AI Enthusiast</div>
-              <p className="ap-builder-bio">
-                I build products at the intersection of AI and user experience. [sage]SOUNDS is a production-grade
-                app I built end-to-end — from architecture decisions to deployment — using AI as a co-builder
-                throughout. This project is part of my portfolio demonstrating hands-on technical depth alongside
-                strategic product thinking.
-              </p>
-              <a
-                href="https://www.linkedin.com/in/sageashique"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ap-builder-linkedin"
-              >
-                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                </svg>
-                Connect on LinkedIn
-              </a>
             </div>
           </div>
         </div>

@@ -321,70 +321,83 @@
   margin: 0 auto;
 }
 
-/* ── Why I built this — 2-col split ── */
-.ap-why-split {
-  display: grid;
-  grid-template-columns: 1fr 260px;
-  gap: 40px;
-  align-items: start;
+/* ── Why I built this — header row + full-width body ── */
+.ap-why-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
 }
-.ap-why-photo-card {
+.ap-title-flush {
+  margin-bottom: 0;
+}
+.ap-why-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 24px;
+  border-radius: 12px;
+  padding: 12px 18px;
+  flex-shrink: 0;
+}
+.ap-why-card-photo {
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
-  gap: 10px;
-  position: sticky;
-  top: 72px;
+  gap: 5px;
 }
 .ap-why-photo {
-  width: 80px;
-  height: 80px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 0 0 3px #ffffff, 0 0 0 5px #c7d2fe;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #c7d2fe;
 }
 .ap-why-name {
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
   color: #0f172a;
-  margin-top: 2px;
+  white-space: nowrap;
+}
+.ap-why-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .ap-why-role {
   font-size: 12px;
   font-weight: 500;
   color: #4f46e5;
-  line-height: 1.4;
+  line-height: 1.35;
+  max-width: 140px;
 }
 .ap-why-linkedin {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: #ffffff;
   background: #4f46e5;
   text-decoration: none;
-  border-radius: 8px;
-  padding: 8px 14px;
+  border-radius: 7px;
+  padding: 6px 11px;
   transition: background 0.15s;
-  margin-top: 4px;
-  width: 100%;
-  justify-content: center;
+  white-space: nowrap;
 }
 .ap-why-linkedin:hover { background: #4338ca; }
 
-/* ── Features grid (3-col) ── */
+/* ── Features grid (3-col, centered partial rows) ── */
 .ap-features-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 12px;
 }
 .ap-feature-item {
+  flex: 0 0 calc(33.333% - 8px);
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
@@ -645,8 +658,7 @@
   .ap-hero { gap: 36px; padding: 64px 32px 0; }
   .ap-hero-preview { max-width: 380px; }
   .ap-project-screenshot-wrap { width: 200px; }
-  .ap-features-grid { grid-template-columns: repeat(2, 1fr); }
-  .ap-why-split { grid-template-columns: 1fr 220px; gap: 28px; }
+  .ap-feature-item { flex: 0 0 calc(50% - 6px); }
 }
 @media (max-width: 768px) {
   .ap-nav { padding: 0 20px; }
@@ -668,11 +680,9 @@
   .ap-hero-desc { font-size: 15px; }
   .ap-section { padding: 52px 20px; }
   .ap-tech-grid { grid-template-columns: 1fr; }
-  .ap-features-grid { grid-template-columns: repeat(2, 1fr); }
-  .ap-why-split { grid-template-columns: 1fr; }
-  .ap-why-photo-card { position: static; flex-direction: row; text-align: left; align-items: center; gap: 16px; }
-  .ap-why-photo { width: 60px; height: 60px; flex-shrink: 0; }
-  .ap-why-linkedin { width: auto; }
+  .ap-features-grid { gap: 10px; }
+  .ap-feature-item { flex: 0 0 calc(50% - 5px); }
+  .ap-why-header { flex-direction: column; align-items: flex-start; gap: 16px; }
   .ap-builder-card { flex-direction: column; gap: 20px; padding: 24px; }
   .ap-footer { flex-direction: column; gap: 12px; text-align: center; padding: 24px 20px; }
   .ap-project-card { flex-direction: column; }
@@ -685,7 +695,5 @@
   .ap-card { padding: 20px; }
   .ap-step { padding: 18px 20px; }
   .ap-project-info { padding: 20px; }
-  .ap-features-grid { grid-template-columns: 1fr; }
-  .ap-why-photo-card { flex-direction: column; text-align: center; }
-  .ap-why-linkedin { width: 100%; justify-content: center; }
+  .ap-feature-item { flex: 0 0 100%; }
 }
