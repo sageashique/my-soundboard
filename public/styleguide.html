@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>[sage]SOUNDS — Style Guide</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #0d1526; color: #f1f5f9; padding: 0 0 80px; }
+
+    /* ── Layout ── */
+    .sg-header {
+      background: #131c33;
+      border-bottom: 1px solid #1e2d45;
+      padding: 32px 48px;
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+    }
+    .sg-header-title { font-size: 13px; font-weight: 600; color: #94a3b8; letter-spacing: 0.08em; text-transform: uppercase; }
+    .sg-header-logo { display: inline-flex; align-items: baseline; }
+    .sg-header-logo .lb { color: #6366f1; font-weight: 500; font-size: 17px; }
+    .sg-header-logo .ls { color: #f1f5f9; font-weight: 500; font-size: 17px; }
+    .sg-header-logo .lw { color: #f1f5f9; font-weight: 800; font-size: 24px; letter-spacing: -0.01em; }
+
+    .sg-body { max-width: 900px; margin: 0 auto; padding: 48px 48px 0; display: flex; flex-direction: column; gap: 56px; }
+
+    .sg-section { display: flex; flex-direction: column; gap: 24px; }
+    .sg-section-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #4a5c7a;
+      padding-bottom: 12px; border-bottom: 1px solid #1e2d45;
+    }
+
+    .sg-row { display: flex; flex-wrap: wrap; gap: 16px; }
+    .sg-card {
+      background: #131c33; border: 1px solid #1e2d45; border-radius: 12px; padding: 20px 24px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .sg-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #4a5c7a; }
+    .sg-value { font-size: 12px; font-weight: 500; color: #94a3b8; font-family: 'DM Mono', 'Courier New', monospace; }
+
+    /* ── Logo section ── */
+    .logo-demo {
+      background: #0d1526; border: 1px solid #1e2d45; border-radius: 12px;
+      padding: 32px 36px; display: flex; align-items: center; gap: 12px;
+    }
+    .logo-demo.light { background: #f0f4ff; border-color: #c5d0e8; }
+    .logo-icon {
+      width: 32px; height: 32px; border-radius: 8px; background: #4f46e5; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-icon svg { display: block; }
+    .logo-wordmark { display: inline-flex; align-items: baseline; }
+    .lb { color: #6366f1; font-weight: 500; }
+    .ls-dark { color: #f1f5f9; font-weight: 500; }
+    .ls-light { color: #0d1526; font-weight: 500; }
+    .lw-dark { color: #f1f5f9; font-weight: 800; letter-spacing: -0.01em; }
+    .lw-light { color: #0d1526; font-weight: 800; letter-spacing: -0.01em; }
+
+    .logo-sm .lb, .logo-sm .ls-dark, .logo-sm .ls-light { font-size: 13px; }
+    .logo-sm .lw-dark, .logo-sm .lw-light { font-size: 18px; }
+    .logo-md .lb, .logo-md .ls-dark, .logo-md .ls-light { font-size: 17px; }
+    .logo-md .lw-dark, .logo-md .lw-light { font-size: 24px; }
+    .logo-lg .lb, .logo-lg .ls-dark, .logo-lg .ls-light { font-size: 22px; }
+    .logo-lg .lw-dark, .logo-lg .lw-light { font-size: 32px; }
+
+    .logo-rule { font-size: 12px; color: #94a3b8; line-height: 1.5; }
+    .logo-rule code { background: #1a2744; padding: 1px 5px; border-radius: 4px; font-size: 11px; color: #a78bfa; }
+
+    /* ── Typography ── */
+    .type-row { display: flex; flex-direction: column; gap: 4px; padding: 16px 20px; background: #131c33; border: 1px solid #1e2d45; border-radius: 10px; }
+    .type-meta { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #4a5c7a; margin-top: 4px; }
+
+    /* ── Colors ── */
+    .color-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+    .color-swatch {
+      border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06);
+    }
+    .swatch-block { height: 56px; }
+    .swatch-info { background: #131c33; padding: 10px 12px; }
+    .swatch-name { font-size: 11px; font-weight: 600; color: #f1f5f9; }
+    .swatch-hex  { font-size: 10px; color: #94a3b8; font-family: monospace; margin-top: 2px; }
+    .swatch-use  { font-size: 10px; color: #4a5c7a; margin-top: 2px; }
+
+    .palette-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #4a5c7a; margin-bottom: 8px; }
+
+    /* ── Pad colors ── */
+    .pad-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+    .pad-swatch { border-radius: 8px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; border: 1.5px solid; }
+    .pad-swatch-name { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+    .pad-swatch-colors { font-size: 9px; color: rgba(255,255,255,0.5); font-family: monospace; text-align: center; line-height: 1.4; }
+
+    /* ── Spacing ── */
+    .spacing-row { display: flex; align-items: center; gap: 16px; }
+    .spacing-block { background: #4f46e5; border-radius: 4px; height: 24px; flex-shrink: 0; }
+    .spacing-label { font-size: 12px; color: #94a3b8; }
+    .spacing-value { font-size: 10px; color: #4a5c7a; font-family: monospace; }
+
+    hr { border: none; border-top: 1px solid #1e2d45; }
+  </style>
+</head>
+<body>
+
+  <div class="sg-header">
+    <div class="sg-header-logo">
+      <span class="lb">[</span><span class="ls">sage</span><span class="lb">]</span><span class="lw" style="color:#f1f5f9;font-weight:800;font-size:24px;letter-spacing:-0.01em">SOUNDS</span>
+    </div>
+    <div class="sg-header-title">— Style Guide v1.0</div>
+  </div>
+
+  <div class="sg-body">
+
+    <!-- ── LOGO ── -->
+    <div class="sg-section">
+      <div class="sg-section-title">Logo</div>
+
+      <div class="sg-row">
+        <div style="flex:1;min-width:260px">
+          <div class="palette-label">Dark backgrounds</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="logo-demo" style="gap:10px">
+              <div class="logo-icon">
+                <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+                  <rect x="4" y="18" width="5" height="10" rx="2.5" fill="white"/>
+                  <rect x="13" y="8" width="5" height="20" rx="2.5" fill="white"/>
+                  <rect x="22" y="13" width="5" height="15" rx="2.5" fill="white"/>
+                </svg>
+              </div>
+              <div class="logo-wordmark logo-md">
+                <span class="lb">[</span><span class="ls-dark">sage</span><span class="lb">]</span><span class="lw-dark">SOUNDS</span>
+              </div>
+            </div>
+            <div class="logo-demo" style="gap:10px">
+              <div class="logo-icon" style="width:24px;height:24px;border-radius:6px">
+                <svg width="15" height="15" viewBox="0 0 32 32" fill="none">
+                  <rect x="4" y="18" width="5" height="10" rx="2.5" fill="white"/>
+                  <rect x="13" y="8" width="5" height="20" rx="2.5" fill="white"/>
+                  <rect x="22" y="13" width="5" height="15" rx="2.5" fill="white"/>
+                </svg>
+              </div>
+              <div class="logo-wordmark logo-sm">
+                <span class="lb">[</span><span class="ls-dark">sage</span><span class="lb">]</span><span class="lw-dark">SOUNDS</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex:1;min-width:260px">
+          <div class="palette-label">Light backgrounds</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="logo-demo light" style="gap:10px">
+              <div class="logo-icon">
+                <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+                  <rect x="4" y="18" width="5" height="10" rx="2.5" fill="white"/>
+                  <rect x="13" y="8" width="5" height="20" rx="2.5" fill="white"/>
+                  <rect x="22" y="13" width="5" height="15" rx="2.5" fill="white"/>
+                </svg>
+              </div>
+              <div class="logo-wordmark logo-md">
+                <span class="lb">[</span><span class="ls-light">sage</span><span class="lb">]</span><span class="lw-light">SOUNDS</span>
+              </div>
+            </div>
+            <div class="logo-demo light" style="gap:10px">
+              <div class="logo-icon" style="width:24px;height:24px;border-radius:6px">
+                <svg width="15" height="15" viewBox="0 0 32 32" fill="none">
+                  <rect x="4" y="18" width="5" height="10" rx="2.5" fill="white"/>
+                  <rect x="13" y="8" width="5" height="20" rx="2.5" fill="white"/>
+                  <rect x="22" y="13" width="5" height="15" rx="2.5" fill="white"/>
+                </svg>
+              </div>
+              <div class="logo-wordmark logo-sm">
+                <span class="lb">[</span><span class="ls-light">sage</span><span class="lb">]</span><span class="lw-light">SOUNDS</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;padding:16px 20px;background:#131c33;border:1px solid #1e2d45;border-radius:10px">
+        <div class="sg-label">Logo rules</div>
+        <div class="logo-rule">
+          <code>[</code> and <code>]</code> are always <code>#6366f1</code> (indigo-500) — on any background.<br/>
+          <code>sage</code> matches primary text: <code>#f1f5f9</code> on dark, <code>#0d1526</code> on light. Weight 500.<br/>
+          <code>SOUNDS</code> is primary text color. Weight 800, tracking <code>-0.01em</code>, size 1.41× the <code>[sage]</code> size.<br/>
+          Never use all-caps, never alter the bracket characters, never change <code>SOUNDS</code> to title case.
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TYPOGRAPHY ── -->
+    <div class="sg-section">
+      <div class="sg-section-title">Typography — Inter</div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="type-row">
+          <div style="font-size:32px;font-weight:800;letter-spacing:-0.02em;color:#f1f5f9">Page headline</div>
+          <div class="type-meta">Inter 800 · 32–48px · tracking -0.02em · Page titles, hero copy</div>
+        </div>
+        <div class="type-row">
+          <div style="font-size:24px;font-weight:800;letter-spacing:-0.01em;color:#f1f5f9">SOUNDS wordmark</div>
+          <div class="type-meta">Inter 800 · 24px · tracking -0.01em · Logo SOUNDS, board name</div>
+        </div>
+        <div class="type-row">
+          <div style="font-size:18px;font-weight:700;color:#f1f5f9">Section heading</div>
+          <div class="type-meta">Inter 700 · 16–20px · Card titles, modal headers</div>
+        </div>
+        <div class="type-row">
+          <div style="font-size:14px;font-weight:600;color:#f1f5f9">Navigation label</div>
+          <div class="type-meta">Inter 600 · 12–14px · Nav items, button text, settings labels</div>
+        </div>
+        <div class="type-row">
+          <div style="font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#94a3b8">PAD LABEL</div>
+          <div class="type-meta">Inter 600 · 9–11px · tracking 0.1em · uppercase · Pad names, category labels</div>
+        </div>
+        <div class="type-row">
+          <div style="font-size:14px;font-weight:500;color:#94a3b8">Supporting text and descriptions</div>
+          <div class="type-meta">Inter 500 · 13–14px · Subtitles, subheadings, helper copy</div>
+        </div>
+        <div class="type-row">
+          <div style="font-size:13px;font-weight:400;color:#94a3b8">Body copy for longer reading passages and descriptions in the interface.</div>
+          <div class="type-meta">Inter 400 · 13px · Body text, tooltips, descriptions</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── COLORS: DARK PALETTE ── -->
+    <div class="sg-section">
+      <div class="sg-section-title">Color — Dark Palette (default)</div>
+      <div class="color-grid">
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#0d1526"></div>
+          <div class="swatch-info"><div class="swatch-name">Background</div><div class="swatch-hex">--bg: #0d1526</div><div class="swatch-use">Page background</div></div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#131c33"></div>
+          <div class="swatch-info"><div class="swatch-name">Surface</div><div class="swatch-hex">--surface: #131c33</div><div class="swatch-use">Cards, panels</div></div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#1a2744"></div>
+          <div class="swatch-info"><div class="swatch-name">Surface 2</div><div class="swatch-hex">--surface2: #1a2744</div><div class="swatch-use">Hover states, inputs</div></div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#1e2d45"></div>
+          <div class="swatch-info"><div class="swatch-name">Border</div><div class="swatch-hex">--border: #1e2d45</div><div class="swatch-use">Dividers, outlines</div></div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#f1f5f9"></div>
+          <div class="swatch-info"><div class="swatch-name">Text</div><div class="swatch-hex">--text: #f1f5f9</div><div class="swatch-use">Primary text</div></div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#94a3b8"></div>
+          <div class="swatch-info"><div class="swatch-name">Text 2</div><div class="swatch-hex">--text2: #94a3b8</div><div class="swatch-use">Secondary, muted</div></div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#6366f1"></div>
+          <div class="swatch-info"><div class="swatch-name">Brand</div><div class="swatch-hex">#6366f1</div><div class="swatch-use">Logo brackets, accent</div></div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#4f46e5"></div>
+          <div class="swatch-info"><div class="swatch-name">Brand Deep</div><div class="swatch-hex">#4f46e5</div><div class="swatch-use">Buttons, icon bg</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── COLORS: LIGHT PALETTE ── -->
+    <div class="sg-section">
+      <div class="sg-section-title">Color — Light Palette</div>
+      <div class="color-grid">
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#f0f4ff;border:1px solid #c5d0e8"></div>
+          <div class="swatch-info"><div class="swatch-name">Background</div><div class="swatch-hex">--bg: #f0f4ff</div><div class="swatch-use">Page background</div></div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#ffffff;border:1px solid #c5d0e8"></div>
+          <div class="swatch-info"><div class="swatch-name">Surface</div><div class="swatch-hex">--surface: #ffffff</div><div class="swatch-use">Cards, panels</div></div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#e4eaf8;border:1px solid #c5d0e8"></div>
+          <div class="swatch-info"><div class="swatch-name">Surface 2</div><div class="swatch-hex">--surface2: #e4eaf8</div><div class="swatch-use">Hover states</div></div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#c5d0e8;border:1px solid #c5d0e8"></div>
+          <div class="swatch-info"><div class="swatch-name">Border</div><div class="swatch-hex">--border: #c5d0e8</div><div class="swatch-use">Dividers, outlines</div></div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#0d1526;border:1px solid #c5d0e8"></div>
+          <div class="swatch-info"><div class="swatch-name">Text</div><div class="swatch-hex">--text: #0d1526</div><div class="swatch-use">Primary text</div></div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#4a5c7a;border:1px solid #c5d0e8"></div>
+          <div class="swatch-info"><div class="swatch-name">Text 2</div><div class="swatch-hex">--text2: #4a5c7a</div><div class="swatch-use">Secondary, muted</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAD COLORS ── -->
+    <div class="sg-section">
+      <div class="sg-section-title">Pad Colors</div>
+      <div class="pad-grid">
+        <div class="pad-swatch" style="background:rgba(160,48,48,0.18);border-color:#a03030;color:#f87171">
+          <span style="font-size:18px">🥁</span>
+          <div class="pad-swatch-name" style="color:#f87171">Red</div>
+          <div class="pad-swatch-colors">border #a03030<br/>text #f87171</div>
+        </div>
+        <div class="pad-swatch" style="background:rgba(42,102,69,0.18);border-color:#2a6645;color:#4ade80">
+          <span style="font-size:18px">🥁</span>
+          <div class="pad-swatch-name" style="color:#4ade80">Green</div>
+          <div class="pad-swatch-colors">border #2a6645<br/>text #4ade80</div>
+        </div>
+        <div class="pad-swatch" style="background:rgba(42,79,140,0.18);border-color:#2a4f8c;color:#60a5fa">
+          <span style="font-size:18px">🥁</span>
+          <div class="pad-swatch-name" style="color:#60a5fa">Blue</div>
+          <div class="pad-swatch-colors">border #2a4f8c<br/>text #60a5fa</div>
+        </div>
+        <div class="pad-swatch" style="background:rgba(138,96,16,0.18);border-color:#8a6010;color:#fbbf24">
+          <span style="font-size:18px">🥁</span>
+          <div class="pad-swatch-name" style="color:#fbbf24">Yellow</div>
+          <div class="pad-swatch-colors">border #8a6010<br/>text #fbbf24</div>
+        </div>
+        <div class="pad-swatch" style="background:rgba(90,48,144,0.18);border-color:#5a3090;color:#a78bfa">
+          <span style="font-size:18px">🥁</span>
+          <div class="pad-swatch-name" style="color:#a78bfa">Purple</div>
+          <div class="pad-swatch-colors">border #5a3090<br/>text #a78bfa</div>
+        </div>
+        <div class="pad-swatch" style="background:rgba(138,40,96,0.18);border-color:#8a2860;color:#f472b6">
+          <span style="font-size:18px">🥁</span>
+          <div class="pad-swatch-name" style="color:#f472b6">Pink</div>
+          <div class="pad-swatch-colors">border #8a2860<br/>text #f472b6</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#4a5c7a;margin-top:4px">Active/fire state: background opacity 0.36, brightened border, color-matched box-shadow glow. Light palette uses pastel fills instead.</div>
+    </div>
+
+    <!-- ── SPACING & RADIUS ── -->
+    <div class="sg-section">
+      <div class="sg-section-title">Spacing &amp; Radius</div>
+      <div class="sg-row">
+        <div class="sg-card" style="flex:1">
+          <div class="sg-label">Gap / grid spacing</div>
+          <div class="spacing-row"><div class="spacing-block" style="width:8px"></div><div><div class="spacing-label">8px</div><div class="spacing-value">--gap: 8px · pad grid gaps</div></div></div>
+          <div class="spacing-row"><div class="spacing-block" style="width:16px"></div><div><div class="spacing-label">16px</div><div class="spacing-value">Component internal padding</div></div></div>
+          <div class="spacing-row"><div class="spacing-block" style="width:24px"></div><div><div class="spacing-label">24px</div><div class="spacing-value">Section gaps, card padding</div></div></div>
+          <div class="spacing-row"><div class="spacing-block" style="width:48px"></div><div><div class="spacing-label">48px</div><div class="spacing-value">Page padding, major sections</div></div></div>
+        </div>
+        <div class="sg-card" style="flex:1">
+          <div class="sg-label">Border radius</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:40px;height:40px;background:#4f46e5;border-radius:6px"></div>
+              <div><div class="spacing-label" style="font-size:12px;color:#f1f5f9">6px</div><div class="spacing-value">Small chips, icon bg</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:40px;height:40px;background:#4f46e5;border-radius:8px"></div>
+              <div><div class="spacing-label" style="font-size:12px;color:#f1f5f9">8px</div><div class="spacing-value">Buttons, toggles, badges</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:40px;height:40px;background:#4f46e5;border-radius:14px"></div>
+              <div><div class="spacing-label" style="font-size:12px;color:#f1f5f9">14px — --pad-radius</div><div class="spacing-value">Pads, main cards</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:40px;height:40px;background:#4f46e5;border-radius:20px"></div>
+              <div><div class="spacing-label" style="font-size:12px;color:#f1f5f9">20px+</div><div class="spacing-value">Modals, large panels</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MOTION ── -->
+    <div class="sg-section">
+      <div class="sg-section-title">Motion</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="sg-card">
+          <div class="sg-label">Pad press</div>
+          <div class="logo-rule">Scale to <code>0.93</code> on press / fire, transition <code>transform 0.07s</code>. Hold for 700ms then release.</div>
+        </div>
+        <div class="sg-card">
+          <div class="sg-label">Waveform bars</div>
+          <div class="logo-rule">3 bars animated with <code>waveform-bar</code> keyframe (3px → 10px height), staggered at 0s / 0.06s / 0.13s, 0.36s ease-in-out alternate loop. Visible only during pad fire.</div>
+        </div>
+        <div class="sg-card">
+          <div class="sg-label">Glow on fire</div>
+          <div class="logo-rule">Dark mode: <code>box-shadow: 0 0 18px rgba(color, 0.30–0.35)</code> using the pad's accent color. Light mode: <code>0 0 14px rgba(color, 0.20)</code>. Transitions with <code>box-shadow 0.1s</code>.</div>
+        </div>
+        <div class="sg-card">
+          <div class="sg-label">UI interactions</div>
+          <div class="logo-rule">Background: <code>0.15s</code>. Border-color: <code>0.1s</code>. Transform: <code>0.07s</code>. All ease default. No transitions on color/opacity beyond these.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

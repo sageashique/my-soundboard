@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import './about.css'
+import AboutHeroAnimation from '@/components/AboutHeroAnimation'
 
 export const metadata = {
   title: 'About — [sage]SOUNDS',
@@ -109,22 +110,7 @@ export default function AboutPage() {
           <Link href="/demo" className="ap-hero-cta">Try the demo →</Link>
         </div>
         <div className="ap-hero-preview">
-          <div className="ap-devices">
-            <div className="ap-device-desktop">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/sagesound-app.png" alt="[sage]SOUNDS on desktop" className="ap-device-img ap-device-img-desktop" />
-            </div>
-            <div className="ap-devices-row">
-              <div className="ap-device-tablet">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/sagesound-app.png" alt="[sage]SOUNDS on tablet" className="ap-device-img ap-device-img-tablet" />
-              </div>
-              <div className="ap-device-phone">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/sagesound-app.png" alt="[sage]SOUNDS on phone" className="ap-device-img ap-device-img-phone" />
-              </div>
-            </div>
-          </div>
+          <AboutHeroAnimation />
         </div>
       </section>
 
@@ -202,8 +188,10 @@ export default function AboutPage() {
           <div className="ap-features-grid">
             {features.map(f => (
               <div key={f.title} className="ap-feature-item">
-                <span className="ap-feature-emoji">{f.emoji}</span>
-                <div className="ap-feature-item-title">{f.title}</div>
+                <div className="ap-feature-header">
+                  <span className="ap-feature-emoji">{f.emoji}</span>
+                  <div className="ap-feature-item-title">{f.title}</div>
+                </div>
                 <p className="ap-feature-item-body">{f.body}</p>
               </div>
             ))}

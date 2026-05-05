@@ -372,11 +372,11 @@ body {
   gap: 5px;
   font-size: 12px;
   font-weight: 500;
-  color: #94a3b8;
+  color: #6366f1;
   text-decoration: none;
   transition: color 0.15s;
 }
-.auth-split-footer-link:hover { color: #f1f5f9; }
+.auth-split-footer-link:hover { color: #818cf8; }
 .auth-split-footer-sep { font-size: 10px; color: #334155; user-select: none; }
 
 /* Auth desktop (≥1024px) — full copy, larger headline */
@@ -561,7 +561,7 @@ body {
   border: 1.5px solid #2d3f5a;
   border-radius: 8px;
   font-family: 'Inter', sans-serif;
-  font-size: 15px;
+  font-size: 16px;
   background: #1a2744;
   color: #f1f5f9;
   outline: none;
@@ -1685,11 +1685,11 @@ input[type='text'] { width: 130px; }
 
 /* Logo wordmark — Combo A style, theme-aware */
 .logo-bracket { color: #6366f1; font-weight: 500; }
-.logo-sage    { color: var(--text2); font-weight: 500; }
+.logo-sage    { color: var(--text); font-weight: 500; }
 .logo-sounds  { color: var(--text); font-weight: 800; letter-spacing: -0.01em; font-size: 1.41em; }
 
 /* Auth page (always dark, no CSS vars) */
-.auth-split-brandname .logo-sage   { color: #94a3b8; }
+.auth-split-brandname .logo-sage   { color: #f1f5f9; }
 .auth-split-brandname .logo-sounds { color: #f1f5f9; }
 /* Hairline divider — weight visually echoes the title */
 .sb-title-divider {
