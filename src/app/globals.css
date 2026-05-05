@@ -43,8 +43,7 @@ body {
 
 /* Left panel */
 .auth-split-left {
-  width: 460px;
-  flex-shrink: 0;
+  flex: 1;
   background: linear-gradient(160deg, #131c33 0%, #0d1526 100%);
   border-right: 1px solid #1e2d45;
   display: flex;
@@ -235,8 +234,39 @@ body {
   font-size: 14px;
   color: #94a3b8;
   line-height: 1.6;
+  margin-bottom: 16px;
+}
+/* Subheading breakpoint visibility */
+.auth-sub-desktop { display: none; }
+.auth-sub-tablet  { display: none; }
+.auth-sub-mobile  { display: block; }
+/* Bullets */
+.auth-bullets {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin-bottom: 20px;
-  max-width: 320px;
+  padding: 0;
+}
+.auth-bullets li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+.auth-bullets li span { font-size: 15px; flex-shrink: 0; }
+.auth-bullets-desktop { display: none; }
+.auth-bullets-tablet  { display: none; }
+/* Trust line */
+.auth-trust-line {
+  display: none;
+  font-size: 11px;
+  color: #475569;
+  letter-spacing: 0.03em;
+  margin-top: 12px;
 }
 .auth-tap-badge {
   display: inline-block;
@@ -254,7 +284,8 @@ body {
 }
 /* Right panel */
 .auth-split-right {
-  flex: 1;
+  width: 460px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -333,6 +364,21 @@ body {
 .auth-split-footer-link:hover { color: #f1f5f9; }
 .auth-split-footer-sep { font-size: 10px; color: #334155; user-select: none; }
 
+/* Auth desktop (≥1024px) — full copy, bigger type, larger grid */
+@media (min-width: 1024px) {
+  .auth-split-headline { font-size: 48px; }
+  .auth-demo-grid { grid-auto-rows: 96px; }
+  .auth-sub-mobile  { display: none; }
+  .auth-sub-desktop { display: block; }
+  .auth-bullets-desktop { display: flex; }
+  .auth-trust-line { display: block; }
+}
+/* Auth tablet (769px–1023px) — medium copy, abbreviated bullets */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .auth-sub-mobile  { display: none; }
+  .auth-sub-tablet  { display: block; }
+  .auth-bullets-tablet { display: flex; }
+}
 /* Auth mobile */
 @media (max-width: 768px) {
   .auth-split-page { flex-direction: column; }

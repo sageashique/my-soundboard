@@ -114,9 +114,29 @@ export default function AuthPage() {
             Your sounds,<br />
             <span>one <kbd className="auth-tap-badge">tap</kbd> away.</span>
           </h1>
-          <p className="auth-split-sub">
-            Built for live meetings, streams, and content creation.
+
+          {/* Subheading — breakpoint-specific copy */}
+          <p className="auth-split-sub auth-sub-desktop">
+            Stop fumbling for audio mid-stream. Upload your own sounds, map them to keyboard shortcuts, and fire them instantly — no plugins, no lag.
           </p>
+          <p className="auth-split-sub auth-sub-tablet">
+            Upload your own sounds, map them to shortcuts, and fire them instantly — no plugins, no fumbling.
+          </p>
+          <p className="auth-split-sub auth-sub-mobile">
+            Upload your own sounds and fire them instantly — no plugins needed.
+          </p>
+
+          {/* Bullets — desktop full, tablet abbreviated */}
+          <ul className="auth-bullets auth-bullets-desktop">
+            <li><span>🎵</span> Upload any audio — MP3, WAV, or M4A, your sounds your way</li>
+            <li><span>⚡</span> Instant playback — fires the moment you tap or press a key</li>
+            <li><span>☁️</span> Everything syncs to your account, works on any device</li>
+          </ul>
+          <ul className="auth-bullets auth-bullets-tablet">
+            <li><span>🎵</span> Upload any audio — your sounds, your way</li>
+            <li><span>⚡</span> Instant playback, no lag</li>
+            <li><span>☁️</span> Syncs to your account, any device</li>
+          </ul>
 
           {/* 3×3 animated pad grid */}
           <div className="auth-demo-grid">
@@ -138,6 +158,9 @@ export default function AuthPage() {
             <Link href="/demo" className="auth-cta-btn auth-cta-demo">Try the Demo</Link>
             <Link href="/about" className="auth-cta-btn auth-cta-about">About the App</Link>
           </div>
+
+          {/* Trust line — desktop only */}
+          <p className="auth-trust-line">Free to start · No credit card · Works in any browser</p>
         </div>
       </div>
 
