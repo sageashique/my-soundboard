@@ -52,6 +52,28 @@ export default function AuthPage() {
 
       {/* ── LEFT PANEL ── */}
       <div className="auth-split-left">
+
+        {/* Animated background pad grid */}
+        <div className="auth-bg-grid" aria-hidden="true">
+          <div className="auth-bg-pad abp-red"    style={{animationDelay:'0s'}}/>
+          <div className="auth-bg-pad abp-green"  style={{animationDelay:'3.2s'}}/>
+          <div className="auth-bg-pad abp-blue"   style={{animationDelay:'7.1s'}}/>
+          <div className="auth-bg-pad abp-yellow" style={{animationDelay:'1.4s'}}/>
+          <div className="auth-bg-pad abp-purple" style={{animationDelay:'5.5s'}}/>
+          <div className="auth-bg-pad abp-pink"   style={{animationDelay:'11.2s'}}/>
+          <div className="auth-bg-pad abp-red"    style={{animationDelay:'8.7s'}}/>
+          <div className="auth-bg-pad abp-blue"   style={{animationDelay:'2.8s'}}/>
+          <div className="auth-bg-pad abp-green"  style={{animationDelay:'14.3s'}}/>
+          <div className="auth-bg-pad abp-yellow" style={{animationDelay:'6.1s'}}/>
+          <div className="auth-bg-pad abp-purple" style={{animationDelay:'9.8s'}}/>
+          <div className="auth-bg-pad abp-red"    style={{animationDelay:'4.2s'}}/>
+          <div className="auth-bg-pad abp-pink"   style={{animationDelay:'12.6s'}}/>
+          <div className="auth-bg-pad abp-blue"   style={{animationDelay:'0.9s'}}/>
+          <div className="auth-bg-pad abp-green"  style={{animationDelay:'15.4s'}}/>
+          <div className="auth-bg-pad abp-yellow" style={{animationDelay:'7.7s'}}/>
+        </div>
+        <div className="auth-bg-overlay" aria-hidden="true"/>
+
         <div className="auth-split-brand">
           <div className="auth-split-logo">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -59,21 +81,21 @@ export default function AuthPage() {
               <path d="M8 12h8M12 8v8"/>
             </svg>
           </div>
-          <span className="auth-split-brandname">[sage]SOUNDS</span>
-          <div className="auth-brand-meta">
-            <a href="/about" className="auth-brand-meta-about">About the App</a>
+          <div className="auth-split-brand-text">
+            <span className="auth-split-brandname">[sage]SOUNDS</span>
             <a
               href="https://www.linkedin.com/in/sageashique"
               target="_blank"
               rel="noopener noreferrer"
-              className="auth-brand-meta-built"
+              className="auth-byline"
             >
-              <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
               </svg>
               Built by Sage Ashique
             </a>
           </div>
+          <button className="auth-mobile-signin" onClick={() => formRef.current?.scrollIntoView({ behavior: 'smooth' })}>Sign in →</button>
         </div>
 
         <div className="auth-split-hero">
@@ -82,47 +104,13 @@ export default function AuthPage() {
             <span>one <kbd className="auth-tap-badge">tap</kbd> away.</span>
           </h1>
           <p className="auth-split-sub">
-            Built for live meetings, streams, and content creation.<span className="auth-sub-extra"> Tap a pad or press a key to drop any sound at exactly the right moment.</span>
+            Built for live meetings, streams, and content creation.
           </p>
 
-          <div className="auth-split-pills">
-            <div className="auth-split-pills-track">
-              <span className="auth-split-pill">🎵 Upload your own audio</span>
-              <span className="auth-split-pill">🎙️ Works on any device</span>
-              <span className="auth-split-pill">🎛️ Up to 5 soundboards</span>
-              <span className="auth-split-pill">🔒 Free to get started</span>
-              <span className="auth-split-pill">☁️ Cross-device sync</span>
-              <span className="auth-split-pill">⌨️ Keyboard shortcuts</span>
-              <span className="auth-split-pill">🎵 Upload your own audio</span>
-              <span className="auth-split-pill">🎙️ Works on any device</span>
-              <span className="auth-split-pill">🎛️ Up to 5 soundboards</span>
-              <span className="auth-split-pill">🔒 Free to get started</span>
-              <span className="auth-split-pill">☁️ Cross-device sync</span>
-              <span className="auth-split-pill">⌨️ Keyboard shortcuts</span>
-            </div>
-          </div>
-
-          <div className="auth-split-padgrid">
-            {/* Row 1 */}
-            <div className="auth-mini-pad mp-red">🥁<span>Kick</span></div>
-            <div className="auth-mini-pad mp-green">🪘<span>Snare</span></div>
-            <div className="auth-mini-pad mp-blue">🎵<span>Hi-Hat</span></div>
-            <div className="auth-mini-pad mp-yellow">📯<span>Horn</span></div>
-            {/* Row 2 */}
-            <div className="auth-mini-pad mp-purple">🎯<span>Rimshot</span></div>
-            <div className="auth-mini-pad mp-pink">🎸<span>808</span></div>
-            <div className="auth-mini-pad mp-red">⬆️<span>Riser</span></div>
-            <div className="auth-mini-pad mp-green">👏<span>Clap</span></div>
-            {/* Row 3 */}
-            <div className="auth-mini-pad mp-blue">🚨<span>Siren</span></div>
-            <div className="auth-mini-pad mp-yellow">💿<span>Scratch</span></div>
-            <div className="auth-mini-pad mp-purple">💨<span>Swoosh</span></div>
-            <div className="auth-mini-pad mp-pink auth-mini-enter">🔔<span>Notif</span></div>
-            {/* Row 4 */}
-            <div className="auth-mini-pad mp-green auth-mini-0">😂<span>Laugh</span></div>
-            <div className="auth-mini-pad mp-blue">🎹<span>Synth</span></div>
-            {/* Stop bar */}
-            <div className="auth-mini-stop">⏹ STOP ALL</div>
+          <div className="auth-features">
+            <div className="auth-feature-line"><span>✓</span> Upload audio and map it to any key</div>
+            <div className="auth-feature-line"><span>✓</span> Works in any browser, no plugins needed</div>
+            <div className="auth-feature-line"><span>✓</span> Free to start. Syncs across all your devices.</div>
           </div>
 
           <Link href="/demo" className="auth-split-demo-cta">
