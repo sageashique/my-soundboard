@@ -156,7 +156,7 @@ body {
 .auth-split-padgrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(4, 62px) 24px;
+  grid-template-rows: repeat(4, 62px) 38px;
   gap: 6px;
   margin-bottom: 28px;
 }
@@ -312,6 +312,7 @@ body {
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
+  margin-top: 20px;
   margin-bottom: 28px;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   text-decoration: none;
