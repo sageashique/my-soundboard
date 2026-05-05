@@ -87,22 +87,35 @@ body {
   color: #f8fafc;
   letter-spacing: 0.06em;
 }
-.auth-mobile-signin {
+.auth-brand-meta {
   margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.auth-brand-meta-about {
   font-size: 12px;
   font-weight: 600;
   color: #a5b4fc;
-  border: 1px solid rgba(129,140,248,0.4);
-  background: rgba(79,70,229,0.12);
-  border-radius: 20px;
-  padding: 5px 13px;
-  cursor: pointer;
-  font-family: 'Inter', sans-serif;
-  transition: background 0.15s;
+  text-decoration: none;
+  transition: color 0.15s;
   white-space: nowrap;
 }
-.auth-mobile-signin:hover { background: rgba(79,70,229,0.22); }
-@media (min-width: 769px) { .auth-mobile-signin { display: none; } }
+.auth-brand-meta-about:hover { color: #c7d2fe; }
+.auth-brand-meta-built {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b;
+  text-decoration: none;
+  transition: color 0.15s;
+  white-space: nowrap;
+}
+.auth-brand-meta-built:hover { color: #94a3b8; }
 .auth-split-hero {
   position: relative;
   flex: 1;
