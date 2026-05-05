@@ -1,0 +1,691 @@
+/* ─────────────────────────────────────────────
+   About page — scoped with ap- prefix
+   Font: Inter (loaded globally)
+   Primary: #4f46e5 (indigo-600)
+   Neutrals: slate scale
+───────────────────────────────────────────── */
+
+/* ── Page shell ── */
+.ap-page {
+  min-height: 100vh;
+  background: #f8fafc;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #0f172a;
+}
+
+/* ── Nav ── */
+.ap-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  height: 56px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+}
+.ap-nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #0f172a;
+  text-decoration: none;
+}
+.ap-nav-logo:hover { color: #4f46e5; }
+.ap-nav-back {
+  font-size: 12px;
+  font-weight: 500;
+  color: #94a3b8;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.ap-nav-back:hover { color: #4f46e5; }
+
+.ap-nav-logo-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  flex-shrink: 0;
+}
+
+/* ── Hero ── */
+.ap-hero {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 72px 48px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 56px;
+}
+.ap-hero-inner {
+  flex: 1;
+  min-width: 0;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  text-align: left;
+}
+.ap-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #4f46e5;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 20px;
+  padding: 4px 12px;
+}
+.ap-hero-title {
+  font-size: 48px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+  line-height: 1.1;
+  margin: 0;
+}
+.ap-hero-desc {
+  font-size: 17px;
+  line-height: 1.7;
+  color: #475569;
+  margin: 0;
+}
+.ap-hero-cta {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  background: #4f46e5;
+  padding: 12px 24px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: background 0.15s, transform 0.1s;
+}
+.ap-hero-cta:hover { background: #4338ca; transform: translateY(-1px); }
+
+/* ── Section shell ── */
+.ap-section {
+  padding: 72px 32px;
+}
+.ap-section-alt {
+  background: #f1f5f9;
+}
+.ap-section-inner {
+  max-width: 760px;
+  margin: 0 auto;
+}
+.ap-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #4f46e5;
+  margin: 0 0 10px;
+}
+.ap-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+  margin: 0 0 24px;
+  line-height: 1.25;
+}
+
+/* ── Card ── */
+.ap-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 28px 32px;
+}
+.ap-body-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ap-body {
+  font-size: 15px;
+  line-height: 1.75;
+  color: #475569;
+  margin: 0;
+}
+.ap-body em {
+  color: #334155;
+  font-style: italic;
+}
+/* Stack of body paragraphs (and other block elements) with consistent gap */
+.ap-body-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Steps ── */
+.ap-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #ffffff;
+}
+.ap-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 22px 28px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.ap-step:last-child { border-bottom: none; }
+.ap-step-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: #eef2ff;
+  color: #4f46e5;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.ap-step-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+.ap-step-body {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ── Tech grid ── */
+.ap-tech-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.ap-tech-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin: 0 0 16px;
+}
+.ap-tech-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ap-tech-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: #334155;
+}
+.ap-tech-platform {
+  align-items: flex-start;
+}
+.ap-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+.ap-dot-indigo { background: #818cf8; }
+.ap-dot-violet { background: #a78bfa; }
+.ap-platform-name {
+  font-weight: 600;
+  color: #1e293b;
+}
+.ap-platform-desc {
+  color: #64748b;
+}
+
+/* ── Builder card ── */
+.ap-builder-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 36px;
+}
+.ap-builder-photo {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px #ffffff, 0 0 0 5px #c7d2fe;
+}
+.ap-builder-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+.ap-builder-role {
+  font-size: 13px;
+  font-weight: 500;
+  color: #4f46e5;
+  letter-spacing: 0.02em;
+  margin-bottom: 14px;
+}
+.ap-builder-bio {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #475569;
+  margin: 0 0 20px;
+}
+.ap-builder-linkedin {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  background: #4f46e5;
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  transition: background 0.15s;
+}
+.ap-builder-linkedin:hover { background: #4338ca; }
+
+/* ── Wide section inner (for features grid) ── */
+.ap-section-inner-wide {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+/* ── Why I built this — 2-col split ── */
+.ap-why-split {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 40px;
+  align-items: start;
+}
+.ap-why-photo-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  position: sticky;
+  top: 72px;
+}
+.ap-why-photo {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 3px #ffffff, 0 0 0 5px #c7d2fe;
+}
+.ap-why-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 2px;
+}
+.ap-why-role {
+  font-size: 12px;
+  font-weight: 500;
+  color: #4f46e5;
+  line-height: 1.4;
+}
+.ap-why-linkedin {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  background: #4f46e5;
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  transition: background 0.15s;
+  margin-top: 4px;
+  width: 100%;
+  justify-content: center;
+}
+.ap-why-linkedin:hover { background: #4338ca; }
+
+/* ── Features grid (3-col) ── */
+.ap-features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.ap-feature-item {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px 20px 18px;
+}
+.ap-feature-emoji {
+  font-size: 22px;
+  display: block;
+  margin-bottom: 10px;
+}
+.ap-feature-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 5px;
+}
+.ap-feature-item-body {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ── Footer — matches UI_STANDARDS ── */
+.ap-footer-std {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px 32px;
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+.ap-footer-brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #4f46e5;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.ap-footer-brand-link:hover { color: #3730a3; }
+.ap-footer-pipe {
+  font-size: 11px;
+  color: #94a3b8;
+  user-select: none;
+}
+
+/* ── Hero preview — device mockups ── */
+.ap-hero-preview {
+  flex: 1;
+  min-width: 0;
+  max-width: 480px;
+  align-self: center;
+  padding: 16px 0 40px;
+}
+.ap-devices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ap-devices-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+/* Shared frame base */
+.ap-device-desktop,
+.ap-device-tablet,
+.ap-device-phone {
+  background: #161b27;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* Desktop — browser-style frame */
+.ap-device-desktop {
+  border-radius: 10px;
+  padding: 26px 7px 7px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.40), 0 0 0 1px rgba(255,255,255,0.07);
+  width: 100%;
+}
+.ap-device-desktop::before {
+  content: '';
+  position: absolute;
+  top: 9px;
+  left: 13px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 12px 0 0 #f59e0b, 24px 0 0 #22c55e;
+}
+.ap-device-desktop::after {
+  content: '';
+  position: absolute;
+  top: 11px;
+  left: 56px;
+  right: 13px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.08);
+}
+
+/* Tablet — portrait frame */
+.ap-device-tablet {
+  flex: 1.15;
+  border-radius: 14px;
+  padding: 20px 6px 14px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06);
+}
+.ap-device-tablet::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.18);
+}
+
+/* Phone — tall narrow frame */
+.ap-device-phone {
+  flex: 0.85;
+  border-radius: 22px;
+  padding: 18px 5px 16px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06);
+}
+.ap-device-phone::before {
+  content: '';
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.18);
+}
+
+/* Screen areas */
+.ap-device-img {
+  display: block;
+  width: 100%;
+  object-fit: cover;
+  object-position: top center;
+  border-radius: 4px;
+}
+.ap-device-img-desktop { height: 168px; }
+.ap-device-img-tablet  {
+  height: 210px;
+  transform: scale(1.35);
+  transform-origin: top center;
+  border-radius: 3px;
+}
+.ap-device-img-phone   {
+  height: 210px;
+  transform: scale(1.8);
+  transform-origin: top center;
+  border-radius: 2px;
+}
+
+/* ── Project card (More work section) ── */
+.ap-project-card {
+  display: flex;
+  gap: 0;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+.ap-project-card:hover {
+  box-shadow: 0 8px 32px rgba(79,70,229,0.10);
+  transform: translateY(-2px);
+}
+.ap-project-screenshot-wrap {
+  width: 260px;
+  flex-shrink: 0;
+  background: #f1f5f9;
+  overflow: hidden;
+  display: flex;
+  align-items: stretch;
+}
+.ap-project-screenshot {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+  display: block;
+}
+.ap-project-info {
+  flex: 1;
+  min-width: 0;
+  padding: 32px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ap-project-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ap-project-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+.ap-project-subtitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: #4f46e5;
+  margin-top: 3px;
+}
+.ap-project-arrow {
+  font-size: 20px;
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.ap-project-card:hover .ap-project-arrow { color: #4f46e5; }
+.ap-project-desc {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #475569;
+  margin: 0;
+}
+.ap-project-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.ap-tag {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #4f46e5;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 20px;
+  padding: 3px 10px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 960px) {
+  .ap-hero { gap: 36px; padding: 64px 32px 0; }
+  .ap-hero-preview { max-width: 380px; }
+  .ap-project-screenshot-wrap { width: 200px; }
+  .ap-features-grid { grid-template-columns: repeat(2, 1fr); }
+  .ap-why-split { grid-template-columns: 1fr 220px; gap: 28px; }
+}
+@media (max-width: 768px) {
+  .ap-nav { padding: 0 20px; }
+  .ap-hero {
+    flex-direction: column;
+    align-items: center;
+    padding: 56px 20px 0;
+    gap: 40px;
+    text-align: center;
+  }
+  .ap-hero-inner {
+    align-items: center;
+    text-align: center;
+    padding-bottom: 0;
+    max-width: 100%;
+  }
+  .ap-hero-preview { max-width: 100%; width: 100%; padding: 0 0 8px; }
+  .ap-hero-title { font-size: 36px; }
+  .ap-hero-desc { font-size: 15px; }
+  .ap-section { padding: 52px 20px; }
+  .ap-tech-grid { grid-template-columns: 1fr; }
+  .ap-features-grid { grid-template-columns: repeat(2, 1fr); }
+  .ap-why-split { grid-template-columns: 1fr; }
+  .ap-why-photo-card { position: static; flex-direction: row; text-align: left; align-items: center; gap: 16px; }
+  .ap-why-photo { width: 60px; height: 60px; flex-shrink: 0; }
+  .ap-why-linkedin { width: auto; }
+  .ap-builder-card { flex-direction: column; gap: 20px; padding: 24px; }
+  .ap-footer { flex-direction: column; gap: 12px; text-align: center; padding: 24px 20px; }
+  .ap-project-card { flex-direction: column; }
+  .ap-project-screenshot-wrap { width: 100%; height: 200px; }
+  .ap-project-info { padding: 24px; }
+}
+@media (max-width: 480px) {
+  .ap-hero-title { font-size: 28px; }
+  .ap-title { font-size: 22px; }
+  .ap-card { padding: 20px; }
+  .ap-step { padding: 18px 20px; }
+  .ap-project-info { padding: 20px; }
+  .ap-features-grid { grid-template-columns: 1fr; }
+  .ap-why-photo-card { flex-direction: column; text-align: center; }
+  .ap-why-linkedin { width: 100%; justify-content: center; }
+}
