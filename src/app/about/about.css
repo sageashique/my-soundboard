@@ -33,9 +33,11 @@
   font-size: 12px;
   text-decoration: none;
 }
-.ap-nav-logo .logo-sage   { color: #64748b; }
+.ap-nav-logo .logo-bracket { color: #6366f1; }
+.ap-nav-logo .logo-sage   { color: #0f172a; }
 .ap-nav-logo .logo-sounds { color: #0f172a; font-size: inherit; }
 .ap-nav-logo:hover .logo-bracket { color: #4338ca; }
+.ap-nav-logo:hover .logo-sage    { color: #4338ca; }
 .ap-nav-logo:hover .logo-sounds  { color: #4338ca; }
 .ap-nav-back {
   font-size: 12px;
