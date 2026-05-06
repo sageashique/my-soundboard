@@ -181,6 +181,8 @@ export default function Soundboard({ user }: Props) {
   const [pendingIconBlob, setPendingIconBlob] = useState<Blob | null>(null)
   const [pendingIconPreview, setPendingIconPreview] = useState<string | null>(null)
   const [replacingIcon, setReplacingIcon] = useState(false)
+  const [cropperHasFile, setCropperHasFile] = useState(false)
+  const cropFnRef = useRef<(() => void) | null>(null)
   const [showResetOptions, setShowResetOptions] = useState(false)
   const boardSwitcherRef = useRef<HTMLDivElement>(null)
 
@@ -501,6 +503,7 @@ export default function Soundboard({ user }: Props) {
     setPendingIconBlob(null)
     setPendingIconPreview(null)
     setReplacingIcon(false)
+    setCropperHasFile(false)
     setShowResetOptions(false)
     setStatus(`Pad [${p.keyLabel}] selected`)
   }
@@ -923,6 +926,7 @@ export default function Soundboard({ user }: Props) {
     setPendingIconBlob(null)
     if (pendingIconPreview) { URL.revokeObjectURL(pendingIconPreview); setPendingIconPreview(null) }
     setReplacingIcon(false)
+    setCropperHasFile(false)
     setShowResetOptions(false)
     setSelPad(null)
   }
@@ -1391,11 +1395,15 @@ export default function Soundboard({ user }: Props) {
                             setPendingIconBlob(blob)
                             setPendingIconPreview(URL.createObjectURL(blob))
                             setReplacingIcon(false)
+                            setCropperHasFile(false)
                           }}
                           onCancel={() => {
                             setReplacingIcon(false)
+                            setCropperHasFile(false)
                             if (!pads[selPad!]?.iconImgUrl) setIconTab('emoji')
                           }}
+                          onSrcChange={setCropperHasFile}
+                          cropFnRef={cropFnRef}
                         />
                       )
                   )}
@@ -1429,7 +1437,24 @@ export default function Soundboard({ user }: Props) {
 
             {/* Footer */}
             <div className="ep-footer">
-              {showResetOptions ? (
+              {cropperHasFile ? (
+                <>
+                  <button className="btn btn-outline" onClick={() => {
+                    setCropperHasFile(false)
+                    setReplacingIcon(false)
+                    if (!pads[selPad!]?.iconImgUrl) setIconTab('emoji')
+                  }}>
+                    Cancel
+                  </button>
+                  <button
+                    className="btn btn-solid"
+                    onClick={() => cropFnRef.current?.()}
+                    disabled={!cropFnRef.current}
+                  >
+                    Use image
+                  </button>
+                </>
+              ) : showResetOptions ? (
                 <div className="ep-reset-options">
                   <button className="btn btn-danger-outline ep-reset-opt" onClick={handleClearSound}>Clear sound</button>
                   <button className="btn btn-danger-outline ep-reset-opt" onClick={handleClearIcon}>Clear icon</button>
