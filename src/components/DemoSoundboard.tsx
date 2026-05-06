@@ -430,12 +430,14 @@ export default function DemoSoundboard() {
 
         {/* Controls row: Edit pads + Settings (below the grid, matching user mode position) */}
         <div className="controls-bar controls-bar-split">
-          <button
-            className={`btn${editMode ? ' btn-edit-active' : ' btn-outline'}`}
-            onClick={() => { setEditMode(e => !e); setSelPad(null) }}
-          >
-            {editMode ? '✓ Done' : '✏️ Edit pads'}
-          </button>
+          {!editMode && (
+            <button
+              className="btn btn-outline"
+              onClick={() => { setEditMode(true); setSelPad(null) }}
+            >
+              ✏️ Edit pads
+            </button>
+          )}
 
           <div className="settings-wrap" ref={settingsRef}>
             <button

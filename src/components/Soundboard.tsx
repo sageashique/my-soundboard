@@ -175,13 +175,13 @@ export default function Soundboard({ user }: Props) {
   // Emoji picker
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const emojiPickerRef = useRef<HTMLDivElement>(null)
-  const boardSwitcherRef = useRef<HTMLDivElement>(null)
 
   // Icon picker state
   const [iconTab, setIconTab] = useState<'emoji' | 'image'>('emoji')
   const [pendingIconBlob, setPendingIconBlob] = useState<Blob | null>(null)
   const [pendingIconPreview, setPendingIconPreview] = useState<string | null>(null)
   const [showResetOptions, setShowResetOptions] = useState(false)
+  const boardSwitcherRef = useRef<HTMLDivElement>(null)
 
   const [modal, setModal] = useState<ModalState | null>(null)
   const [dbLoading, setDbLoading] = useState(true)
@@ -1132,15 +1132,14 @@ export default function Soundboard({ user }: Props) {
 
       {/* Controls row: Edit Pads + Settings */}
       <div className="controls-bar controls-bar-split">
-        <button
-          className={`btn${editing ? ' btn-edit-active' : ' btn-outline'}`}
-          onClick={() => {
-            if (editing) { setEditing(false); setSelPad(null); setStatus('Ready') }
-            else setEditing(true)
-          }}
-        >
-          {editing ? '✓ Done' : '✏️ Edit Pads'}
-        </button>
+        {!editing && (
+          <button
+            className="btn btn-outline"
+            onClick={() => setEditing(true)}
+          >
+            ✏️ Edit Pads
+          </button>
+        )}
         <div className="settings-wrap" ref={settingsRef}>
           <button
             className={`btn${showSettings ? ' btn-edit-active' : ' btn-outline'}`}
@@ -1243,73 +1242,73 @@ export default function Soundboard({ user }: Props) {
               {/* Controls */}
               <div className="ep-controls">
 
-                {/* Source */}
-                <div className="ep-group">
-                  <span className="ep-label">Source</span>
-                  <div className="ep-source-toggle">
-                    <button className={`ep-src-btn${!useCustomSource ? ' active' : ''}`} onClick={() => setUseCustomSource(false)}>Built-in</button>
-                    <button className={`ep-src-btn${useCustomSource ? ' active' : ''}`} onClick={() => setUseCustomSource(true)}>Custom</button>
-                  </div>
-                </div>
-
-                {/* Built-in sound */}
-                {!useCustomSource && (
+                {/* Source card */}
+                <div className="ep-source-card">
                   <div className="ep-group">
-                    <span className="ep-label">Sound</span>
-                    <select value={editSound} onChange={e => {
-                      const s = e.target.value
-                      setEditSound(s)
-                      if (!editLabel || Object.values(SOUND_LABELS).includes(editLabel))
-                        setEditLabel(SOUND_LABELS[s] || '')
-                      setEditEmoji(SOUND_ICONS[s] || '🎵')
-                    }}>
-                      <option value="kick">🥁 Kick</option>
-                      <option value="snare">🪘 Snare</option>
-                      <option value="hihat">🎵 Hi-Hat</option>
-                      <option value="clap">👏 Clap</option>
-                      <option value="rimshot">🎯 Rimshot</option>
-                      <option value="bass">🎸 808 Bass</option>
-                      <option value="synth">🎹 Synth</option>
-                      <option value="riser">⬆️ Riser</option>
-                      <option value="scratch">💿 Scratch</option>
-                      <option value="airhorn">📯 Air Horn</option>
-                      <option value="laugh">😂 Laugh</option>
-                      <option value="noti">🔔 Notif</option>
-                      <option value="siren">🚨 Siren</option>
-                      <option value="swoosh">💨 Swoosh</option>
-                    </select>
-                  </div>
-                )}
-
-                {/* Custom audio upload */}
-                {useCustomSource && (
-                  <div className="ep-group">
-                    <span className="ep-label">Audio</span>
-                    <div
-                      className="drop-zone"
-                      ref={dzRef}
-                      onDragOver={e => { e.preventDefault(); dzRef.current?.classList.add('over') }}
-                      onDragLeave={() => dzRef.current?.classList.remove('over')}
-                      onDrop={e => {
-                        e.preventDefault()
-                        dzRef.current?.classList.remove('over')
-                        if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0])
-                      }}
-                    >
-                      <input
-                        type="file"
-                        accept=".mp3,.wav,.m4a,audio/mpeg,audio/wav,audio/mp4,audio/x-m4a,video/mp4"
-                        onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); (e.target as HTMLInputElement).value = '' }}
-                      />
-                      <div className="dz-text">
-                        {pendingFileName
-                          ? <><strong>{pendingFileName}</strong><small>Ready to assign</small></>
-                          : <><strong>Drop file here</strong> or click to browse<small>MP3 · WAV · M4A &nbsp;·&nbsp; max 10 MB</small></>
-                        }
-                      </div>
+                    <span className="ep-label">Source</span>
+                    <div className="ep-source-toggle">
+                      <button className={`ep-src-btn${!useCustomSource ? ' active' : ''}`} onClick={() => setUseCustomSource(false)}>Built-in</button>
+                      <button className={`ep-src-btn${useCustomSource ? ' active' : ''}`} onClick={() => setUseCustomSource(true)}>Custom</button>
                     </div>
                   </div>
-                )}
+
+                  {!useCustomSource && (
+                    <div className="ep-sub-group">
+                      <span className="ep-sub-label">Sound</span>
+                      <select value={editSound} onChange={e => {
+                        const s = e.target.value
+                        setEditSound(s)
+                        if (!editLabel || Object.values(SOUND_LABELS).includes(editLabel))
+                          setEditLabel(SOUND_LABELS[s] || '')
+                        setEditEmoji(SOUND_ICONS[s] || '🎵')
+                      }}>
+                        <option value="kick">🥁 Kick</option>
+                        <option value="snare">🪘 Snare</option>
+                        <option value="hihat">🎵 Hi-Hat</option>
+                        <option value="clap">👏 Clap</option>
+                        <option value="rimshot">🎯 Rimshot</option>
+                        <option value="bass">🎸 808 Bass</option>
+                        <option value="synth">🎹 Synth</option>
+                        <option value="riser">⬆️ Riser</option>
+                        <option value="scratch">💿 Scratch</option>
+                        <option value="airhorn">📯 Air Horn</option>
+                        <option value="laugh">😂 Laugh</option>
+                        <option value="noti">🔔 Notif</option>
+                        <option value="siren">🚨 Siren</option>
+                        <option value="swoosh">💨 Swoosh</option>
+                      </select>
+                    </div>
+                  )}
+
+                  {useCustomSource && (
+                    <div className="ep-sub-group">
+                      <span className="ep-sub-label">Audio file</span>
+                      <div
+                        className="drop-zone"
+                        ref={dzRef}
+                        onDragOver={e => { e.preventDefault(); dzRef.current?.classList.add('over') }}
+                        onDragLeave={() => dzRef.current?.classList.remove('over')}
+                        onDrop={e => {
+                          e.preventDefault()
+                          dzRef.current?.classList.remove('over')
+                          if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0])
+                        }}
+                      >
+                        <input
+                          type="file"
+                          accept=".mp3,.wav,.m4a,audio/mpeg,audio/wav,audio/mp4,audio/x-m4a,video/mp4"
+                          onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); (e.target as HTMLInputElement).value = '' }}
+                        />
+                        <div className="dz-text">
+                          {pendingFileName
+                            ? <><strong>{pendingFileName}</strong><small>Ready to assign</small></>
+                            : <><strong>Drop file here</strong> or click to browse<small>MP3 · WAV · M4A &nbsp;·&nbsp; max 10 MB</small></>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* Icon — Emoji or Image */}
                 <div className="ep-group">
@@ -1327,13 +1326,16 @@ export default function Soundboard({ user }: Props) {
 
                   {iconTab === 'emoji' && (
                     <div className="emoji-picker-wrap" ref={emojiPickerRef}>
-                      <button
-                        className="emoji-trigger"
-                        onClick={() => setShowEmojiPicker(p => !p)}
-                        title="Pick emoji"
-                      >
-                        {editEmoji || SOUND_ICONS[editSound] || '🎵'}
-                      </button>
+                      <div className="ep-emoji-row">
+                        <button
+                          className="emoji-trigger"
+                          onClick={() => setShowEmojiPicker(p => !p)}
+                          title="Pick emoji"
+                        >
+                          {editEmoji || SOUND_ICONS[editSound] || '🎵'}
+                        </button>
+                        <span className="ep-emoji-hint">Click to pick</span>
+                      </div>
                       {showEmojiPicker && (
                         <div className="emoji-popover">
                           <EmojiPicker
@@ -1342,7 +1344,7 @@ export default function Soundboard({ user }: Props) {
                               setEditEmoji(e.native)
                               setShowEmojiPicker(false)
                             }}
-                            theme="light"
+                            theme={theme}
                             previewPosition="none"
                             skinTonePosition="none"
                           />
@@ -1374,7 +1376,7 @@ export default function Soundboard({ user }: Props) {
                             setPendingIconBlob(blob)
                             setPendingIconPreview(URL.createObjectURL(blob))
                           }}
-                          onCancel={() => setIconTab('emoji')}
+                          onCancel={() => { if (!pads[selPad!]?.iconImgUrl) setIconTab('emoji') }}
                         />
                       )
                   )}

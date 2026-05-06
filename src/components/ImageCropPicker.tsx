@@ -69,23 +69,25 @@ export default function ImageCropPicker({ onCrop, onCancel }: Props) {
 
   return (
     <div className="icp-crop-wrap">
-      <ReactCrop
-        crop={crop}
-        onChange={c => setCrop(c)}
-        onComplete={c => setCompletedCrop(c)}
-        aspect={1}
-        circularCrop
-        minWidth={40}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          ref={imgRef}
-          src={src}
-          alt=""
-          className="icp-crop-img"
-          onLoad={onImageLoad}
-        />
-      </ReactCrop>
+      <div className="icp-crop-area">
+        <ReactCrop
+          crop={crop}
+          onChange={c => setCrop(c)}
+          onComplete={c => setCompletedCrop(c)}
+          aspect={1}
+          circularCrop
+          minWidth={40}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            ref={imgRef}
+            src={src}
+            alt=""
+            className="icp-crop-img"
+            onLoad={onImageLoad}
+          />
+        </ReactCrop>
+      </div>
       <div className="icp-crop-actions">
         <button
           className="btn btn-outline"
