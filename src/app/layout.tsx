@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Soundboard',
-  description: 'Personal soundboard with custom tracks',
+  title: '[sage]SOUNDS — Browser Soundboard by Sage Ashique',
+  description: 'Browser soundboard for live sessions. Upload sounds, map to shortcuts, fire instantly. By Sage Ashique, Product Manager — built end-to-end with AI.',
 }
 
 export const viewport: Viewport = {
