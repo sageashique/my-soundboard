@@ -10,6 +10,7 @@ import Modal from './Modal'
 import dynamic from 'next/dynamic'
 
 const EmojiPicker = dynamic(() => import('@emoji-mart/react'), { ssr: false })
+const ImageCropPicker = dynamic(() => import('./ImageCropPicker'), { ssr: false })
 
 const STORAGE_BUCKET = 'custom-tracks'
 
@@ -121,6 +122,7 @@ export default function Soundboard({ user }: Props) {
   const [editing, setEditing] = useState(false)
   const [selColor, setSelColor] = useState('red')
   const [overlapMode, setOverlapMode] = useState(false)
+  const [firingPads, setFiringPads] = useState<Set<number>>(new Set())
   const [volume, setVolume] = useState(0.8)
   const [showSettings, setShowSettings] = useState(false)
   const settingsRef = useRef<HTMLDivElement>(null)
@@ -136,7 +138,7 @@ export default function Soundboard({ user }: Props) {
   const [statusState, setStatusState] = useState<'idle' | 'active' | 'stopped'>('idle')
 
   // Theme
-  const [theme, setTheme] = useState<'light' | 'dark'>('light')
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark')
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
@@ -173,6 +175,12 @@ export default function Soundboard({ user }: Props) {
   // Emoji picker
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const emojiPickerRef = useRef<HTMLDivElement>(null)
+
+  // Icon picker state
+  const [iconTab, setIconTab] = useState<'emoji' | 'image'>('emoji')
+  const [pendingIconBlob, setPendingIconBlob] = useState<Blob | null>(null)
+  const [pendingIconPreview, setPendingIconPreview] = useState<string | null>(null)
+  const [showResetOptions, setShowResetOptions] = useState(false)
   const boardSwitcherRef = useRef<HTMLDivElement>(null)
 
   const [modal, setModal] = useState<ModalState | null>(null)
@@ -249,6 +257,8 @@ export default function Soundboard({ user }: Props) {
     activeHtmlAudiosRef.current.forEach((_, a) => { try { a.pause(); a.currentTime = 0 } catch { /* already ended */ } })
     activeHtmlAudiosRef.current.clear()
     currentSourceRef.current = null
+    padRefs.current.forEach(r => r?.stopFire())
+    setFiringPads(new Set())
     setStatus('⏹ Stopped', 'stopped')
   }, [volume])
 
@@ -266,6 +276,8 @@ export default function Soundboard({ user }: Props) {
       activeHtmlAudiosRef.current.forEach((_, a) => { try { a.pause(); a.currentTime = 0 } catch { /* already ended */ } })
       activeHtmlAudiosRef.current.clear()
       currentSourceRef.current = null
+      padRefs.current.forEach(r => r?.stopFire())
+      setFiringPads(new Set())
     }
 
     if (p.customRawBuf) {
@@ -281,12 +293,20 @@ export default function Soundboard({ user }: Props) {
         const htmlAudio = new Audio(url)
         htmlAudio.volume = Math.min(volume * (p.customGain ?? 1), 1)
         activeHtmlAudiosRef.current.set(htmlAudio, p.customGain ?? 1)
+        padRefs.current[index]?.startFire()
+        setFiringPads(prev => new Set([...prev, index]))
         htmlAudio.play()
           .then(() => setStatus(`${p.icon} ${p.label}`, 'active'))
-          .catch(() => setStatus('Could not play audio', 'stopped'))
+          .catch(() => {
+            padRefs.current[index]?.stopFire()
+            setFiringPads(prev => { const s = new Set(prev); s.delete(index); return s })
+            setStatus('Could not play audio', 'stopped')
+          })
         htmlAudio.onended = () => {
           URL.revokeObjectURL(url)
           activeHtmlAudiosRef.current.delete(htmlAudio)
+          padRefs.current[index]?.stopFire()
+          setFiringPads(prev => { const s = new Set(prev); s.delete(index); return s })
           if (activeSourcesRef.current.size === 0 && activeHtmlAudiosRef.current.size === 0) setStatus('Ready', 'idle')
         }
       } catch {
@@ -299,16 +319,28 @@ export default function Soundboard({ user }: Props) {
       // Attach onended to EVERY new node (multi-node sounds like Clap/AirHorn/Laugh
       // add several nodes; only tracking the last one leaves orphans in the set and
       // the status pill stuck on "active" indefinitely).
+      const newNodes: AudioBufferSourceNode[] = []
       activeSourcesRef.current.forEach(node => {
-        if (!prevNodes.has(node)) {
-          node.onended = () => {
-            activeSourcesRef.current.delete(node)
-            if (currentSourceRef.current === node) currentSourceRef.current = null
-            if (activeSourcesRef.current.size === 0 && activeHtmlAudiosRef.current.size === 0) setStatus('Ready', 'idle')
+        if (!prevNodes.has(node)) newNodes.push(node as AudioBufferSourceNode)
+      })
+      let remaining = newNodes.length
+      newNodes.forEach(node => {
+        node.onended = () => {
+          activeSourcesRef.current.delete(node)
+          if (currentSourceRef.current === node) currentSourceRef.current = null
+          remaining--
+          if (remaining <= 0) {
+            padRefs.current[index]?.stopFire()
+            setFiringPads(prev => { const s = new Set(prev); s.delete(index); return s })
           }
+          if (activeSourcesRef.current.size === 0 && activeHtmlAudiosRef.current.size === 0) setStatus('Ready', 'idle')
         }
       })
       if (src && !overlapMode) currentSourceRef.current = src
+      if (newNodes.length > 0) {
+        padRefs.current[index]?.startFire()
+        setFiringPads(prev => new Set([...prev, index]))
+      }
     }
 
     setStatus(`${p.icon} ${p.label}`, 'active')
@@ -333,16 +365,19 @@ export default function Soundboard({ user }: Props) {
           sound: row.sound, label: row.label, color: row.color, icon: row.icon,
           customTrackPath: row.custom_track_path ?? null,
           customTrackName: row.custom_track_name ?? null,
+          iconImgPath: row.icon_img_path ?? null,
           customBuf: null, customRawBuf: null, customGain: 1,
         }
       }
     }
     setPads(loaded)
     if (data && data.length > 0) {
-      await Promise.all(
-        data.filter(row => row.custom_track_path)
-            .map(row => loadCustomAudio(row.pad_index, row.custom_track_path))
-      )
+      await Promise.all([
+        ...data.filter(row => row.custom_track_path)
+               .map(row => loadCustomAudio(row.pad_index, row.custom_track_path)),
+        ...data.filter(row => row.icon_img_path)
+               .map(row => loadIconImage(row.pad_index, row.icon_img_path)),
+      ])
     }
   }
 
@@ -461,6 +496,10 @@ export default function Soundboard({ user }: Props) {
     setPendingBuf(null)
     setPendingFileName(null)
     pendingRawRef.current = null
+    setIconTab(p.iconImgUrl ? 'image' : 'emoji')
+    setPendingIconBlob(null)
+    setPendingIconPreview(null)
+    setShowResetOptions(false)
     setStatus(`Pad [${p.keyLabel}] selected`)
   }
 
@@ -468,6 +507,25 @@ export default function Soundboard({ user }: Props) {
   async function handleSave() {
     if (selPad === null) return
     const p = pads[selPad]
+
+    // Handle icon image upload (independent of sound source)
+    let newIconImgPath = p.iconImgPath ?? null
+    let newIconImgUrl = p.iconImgUrl ?? null
+    if (pendingIconBlob) {
+      try {
+        const iconPath = `${user.id}/${activeBoardId}/pad-${selPad}-icon.jpg`
+        const { error: iconErr } = await supabase.storage
+          .from(STORAGE_BUCKET)
+          .upload(iconPath, pendingIconBlob, { contentType: 'image/jpeg', upsert: true })
+        if (!iconErr) {
+          if (newIconImgUrl) URL.revokeObjectURL(newIconImgUrl)
+          newIconImgPath = iconPath
+          newIconImgUrl = URL.createObjectURL(pendingIconBlob)
+          setPendingIconBlob(null)
+          if (pendingIconPreview) { URL.revokeObjectURL(pendingIconPreview); setPendingIconPreview(null) }
+        }
+      } catch { /* continue, icon upload is non-critical */ }
+    }
 
     if (useCustomSource) {
       if (!pendingRawRef.current && !p.customBuf) { setStatus('Drop an audio file first'); return }
@@ -489,13 +547,14 @@ export default function Soundboard({ user }: Props) {
 
           const rawCopy = pendingRawRef.current.slice(0)
           setPads(prev => prev.map((pd, i) => i === selPad
-            ? { ...pd, label, icon: emoji, customBuf: pendingBuf ?? null, customRawBuf: rawCopy, customTrackPath: storagePath, customTrackName: pendingFileName!, color: selColor, customGain: pendingGain } as PadState
+            ? { ...pd, label, icon: emoji, customBuf: pendingBuf ?? null, customRawBuf: rawCopy, customTrackPath: storagePath, customTrackName: pendingFileName!, color: selColor, customGain: pendingGain, iconImgPath: newIconImgPath, iconImgUrl: newIconImgUrl } as PadState
             : pd
           ))
           await supabase.from('pad_configs').upsert({
             user_id: user.id, board_id: activeBoardId, pad_index: selPad,
             sound: p.sound, label, color: selColor, icon: emoji,
             custom_track_path: storagePath, custom_track_name: pendingFileName,
+            icon_img_path: newIconImgPath,
             updated_at: new Date().toISOString(),
           }, { onConflict: 'user_id,board_id,pad_index' })
 
@@ -508,11 +567,12 @@ export default function Soundboard({ user }: Props) {
       } else {
         const label2 = editLabel || p.label
         const emoji2 = editEmoji.trim() || p.icon
-        setPads(prev => prev.map((pd, i) => i === selPad ? { ...pd, label: label2, icon: emoji2, color: selColor } : pd))
+        setPads(prev => prev.map((pd, i) => i === selPad ? { ...pd, label: label2, icon: emoji2, color: selColor, iconImgPath: newIconImgPath, iconImgUrl: newIconImgUrl } : pd))
         await supabase.from('pad_configs').upsert({
           user_id: user.id, board_id: activeBoardId, pad_index: selPad,
           sound: p.sound, label: label2, color: selColor, icon: emoji2,
           custom_track_path: p.customTrackPath, custom_track_name: p.customTrackName,
+          icon_img_path: newIconImgPath,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id,board_id,pad_index' })
         setStatus(`Saved → [${p.keyLabel}] ${label2}`, 'active')
@@ -525,13 +585,14 @@ export default function Soundboard({ user }: Props) {
         try { await supabase.storage.from(STORAGE_BUCKET).remove([p.customTrackPath]) } catch { /* ignore */ }
       }
       setPads(prev => prev.map((pd, i) => i === selPad
-        ? { ...pd, sound: editSound, label, icon, color: selColor, customBuf: null, customRawBuf: null, customTrackPath: null, customTrackName: null, customGain: 1 }
+        ? { ...pd, sound: editSound, label, icon, color: selColor, customBuf: null, customRawBuf: null, customTrackPath: null, customTrackName: null, customGain: 1, iconImgPath: newIconImgPath, iconImgUrl: newIconImgUrl }
         : pd
       ))
       await supabase.from('pad_configs').upsert({
         user_id: user.id, board_id: activeBoardId, pad_index: selPad,
         sound: editSound, label, color: selColor, icon,
         custom_track_path: null, custom_track_name: null,
+        icon_img_path: newIconImgPath,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id,board_id,pad_index' })
       setStatus(`Saved → [${p.keyLabel}] ${label}`, 'active')
@@ -539,30 +600,102 @@ export default function Soundboard({ user }: Props) {
     setSelPad(null)
   }
 
-  // ── Reset pad ──────────────────────────────────────────────────
+  // ── Granular reset handlers ────────────────────────────────────
+  function handleClearSound() {
+    if (selPad === null) return
+    const p = pads[selPad]
+    if (!p.customTrackPath && !p.customBuf) { setShowResetOptions(false); return }
+    setModal({
+      title: 'Clear custom sound?',
+      body: 'Remove the custom audio from this pad? It will revert to a built-in sound.',
+      okLabel: 'Clear sound',
+      style: 'danger',
+      cb: async () => {
+        if (p.customTrackPath) {
+          try { await supabase.storage.from(STORAGE_BUCKET).remove([p.customTrackPath]) } catch { /* ignore */ }
+        }
+        const def = getDefaultForIndex(selPad)
+        setPads(prev => prev.map((pd, i) => i === selPad
+          ? { ...pd, sound: def?.sound ?? 'kick', customBuf: null, customRawBuf: null, customTrackPath: null, customTrackName: null, customGain: 1 }
+          : pd
+        ))
+        await supabase.from('pad_configs').upsert({
+          user_id: user.id, board_id: activeBoardId, pad_index: selPad,
+          sound: def?.sound ?? 'kick', label: p.label, color: p.color, icon: p.icon,
+          custom_track_path: null, custom_track_name: null,
+          icon_img_path: p.iconImgPath ?? null,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id,board_id,pad_index' })
+        setUseCustomSource(false)
+        setEditSound(def?.sound ?? 'kick')
+        setShowResetOptions(false)
+        setStatus(`Sound cleared for [${p.keyLabel}]`)
+      },
+    })
+  }
+
+  function handleClearIcon() {
+    if (selPad === null) return
+    const p = pads[selPad]
+    if (!p.iconImgPath && !p.iconImgUrl && !pendingIconBlob) { setShowResetOptions(false); return }
+    setModal({
+      title: 'Clear icon image?',
+      body: 'Remove the custom image from this pad? It will revert to the emoji icon.',
+      okLabel: 'Clear icon',
+      style: 'danger',
+      cb: async () => {
+        if (p.iconImgPath) {
+          try { await supabase.storage.from(STORAGE_BUCKET).remove([p.iconImgPath]) } catch { /* ignore */ }
+        }
+        if (p.iconImgUrl) URL.revokeObjectURL(p.iconImgUrl)
+        if (pendingIconPreview) { URL.revokeObjectURL(pendingIconPreview); setPendingIconPreview(null) }
+        setPendingIconBlob(null)
+        setPads(prev => prev.map((pd, i) => i === selPad
+          ? { ...pd, iconImgPath: null, iconImgUrl: null }
+          : pd
+        ))
+        await supabase.from('pad_configs').upsert({
+          user_id: user.id, board_id: activeBoardId, pad_index: selPad,
+          sound: p.sound, label: p.label, color: p.color, icon: p.icon,
+          custom_track_path: p.customTrackPath, custom_track_name: p.customTrackName,
+          icon_img_path: null,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id,board_id,pad_index' })
+        setIconTab('emoji')
+        setShowResetOptions(false)
+        setStatus(`Icon cleared for [${p.keyLabel}]`)
+      },
+    })
+  }
+
   function handleResetPad() {
     if (selPad === null) return
     const p = pads[selPad]
     setModal({
-      title: 'Reset pad?',
-      body: `Reset this pad to its default sound? Your custom audio will be removed.`,
-      okLabel: 'Reset',
+      title: 'Reset pad to default?',
+      body: 'Reset everything — sound, icon, label, and color — back to the factory default. This cannot be undone.',
+      okLabel: 'Reset pad',
       style: 'danger',
       cb: async () => {
         const def = getDefaultForIndex(selPad)
         if (!def) return
         try {
-          if (p.customTrackPath) {
-            await supabase.storage.from(STORAGE_BUCKET).remove([p.customTrackPath])
-          }
+          const storagePaths: string[] = []
+          if (p.customTrackPath) storagePaths.push(p.customTrackPath)
+          if (p.iconImgPath) storagePaths.push(p.iconImgPath)
+          if (storagePaths.length > 0) await supabase.storage.from(STORAGE_BUCKET).remove(storagePaths)
+          if (p.iconImgUrl) URL.revokeObjectURL(p.iconImgUrl)
+          if (pendingIconPreview) { URL.revokeObjectURL(pendingIconPreview); setPendingIconPreview(null) }
+          setPendingIconBlob(null)
           setPads(prev => prev.map((pd, i) => i === selPad
-            ? { ...pd, sound: def.sound, label: def.defaultLabel, icon: def.icon, color: def.color, customBuf: null, customRawBuf: null, customTrackPath: null, customTrackName: null, customGain: 1 }
+            ? { ...pd, sound: def.sound, label: def.defaultLabel, icon: def.icon, color: def.color, customBuf: null, customRawBuf: null, customTrackPath: null, customTrackName: null, customGain: 1, iconImgPath: null, iconImgUrl: null }
             : pd
           ))
           await supabase.from('pad_configs').upsert({
             user_id: user.id, board_id: activeBoardId, pad_index: selPad,
             sound: def.sound, label: def.defaultLabel, color: def.color, icon: def.icon,
             custom_track_path: null, custom_track_name: null,
+            icon_img_path: null,
             updated_at: new Date().toISOString(),
           }, { onConflict: 'user_id,board_id,pad_index' })
           setUseCustomSource(false)
@@ -570,6 +703,8 @@ export default function Soundboard({ user }: Props) {
           setEditLabel(def.defaultLabel)
           setEditEmoji('')
           setSelColor(def.color)
+          setIconTab('emoji')
+          setShowResetOptions(false)
           setStatus(`Pad [${p.keyLabel}] reset to default`)
           setSelPad(null)
         } catch (err) {
@@ -711,6 +846,17 @@ export default function Soundboard({ user }: Props) {
     }
   }
 
+  async function loadIconImage(padIndex: number, storagePath: string) {
+    try {
+      const { data, error } = await supabase.storage.from(STORAGE_BUCKET).download(storagePath)
+      if (error || !data) return
+      const url = URL.createObjectURL(data)
+      setPads(prev => prev.map((p, i) => i === padIndex ? { ...p, iconImgUrl: url } : p))
+    } catch (err) {
+      console.warn(`Could not load icon for pad ${padIndex}:`, err)
+    }
+  }
+
   // ── Keyboard events ─────────────────────────────────────────────
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -773,6 +919,9 @@ export default function Soundboard({ user }: Props) {
     pendingFileTypeRef.current = 'audio/mpeg'
     setPendingGain(1)
     setShowEmojiPicker(false)
+    setPendingIconBlob(null)
+    if (pendingIconPreview) { URL.revokeObjectURL(pendingIconPreview); setPendingIconPreview(null) }
+    setShowResetOptions(false)
     setSelPad(null)
   }
 
@@ -805,7 +954,7 @@ export default function Soundboard({ user }: Props) {
           <div className="sb-wordmark-row">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.svg" alt="" className="sb-logo" />
-            <span className="sb-appname">[sage]SOUNDS</span>
+            <span className="sb-appname"><span className="logo-bracket">[</span><span className="logo-sage">sage</span><span className="logo-bracket">]</span><span className="logo-sounds">SOUNDS</span></span>
           </div>
           <a
             href="https://www.linkedin.com/in/sageashique"
@@ -974,7 +1123,7 @@ export default function Soundboard({ user }: Props) {
           </button>
         ) : (
           <span className={`status-pill${statusState !== 'idle' ? ` ${statusState}` : ''}`}>
-            {statusMsg}
+            {firingPads.size > 1 ? '🎛️ Mixing…' : statusMsg}
           </span>
         )}
       </div>
@@ -1029,11 +1178,11 @@ export default function Soundboard({ user }: Props) {
                 </label>
               </div>
               <div className="settings-row">
-                <div className="settings-label">Dark mode</div>
+                <div className="settings-label">Light mode</div>
                 <label className="toggle">
                   <input
-                    type="checkbox" checked={theme === 'dark'}
-                    onChange={e => handleThemeToggle(e.target.checked ? 'dark' : 'light')}
+                    type="checkbox" checked={theme === 'light'}
+                    onChange={e => handleThemeToggle(e.target.checked ? 'light' : 'dark')}
                   />
                   <span className="toggle-track" />
                   <span className="toggle-thumb" />
@@ -1079,9 +1228,13 @@ export default function Soundboard({ user }: Props) {
               {/* Live preview */}
               <div className="ep-preview">
                 <div className={`ep-preview-pad c-${selColor}`}>
-                  <span className="ep-preview-icon">
-                    {editEmoji || SOUND_ICONS[editSound] || '🎵'}
-                  </span>
+                  {(() => {
+                    const previewSrc = pendingIconPreview ?? (iconTab === 'image' ? pads[selPad!]?.iconImgUrl : null)
+                    return previewSrc
+                      // eslint-disable-next-line @next/next/no-img-element
+                      ? <img src={previewSrc} alt="" className="ep-preview-img" />
+                      : <span className="ep-preview-icon">{editEmoji || SOUND_ICONS[editSound] || '🎵'}</span>
+                  })()}
                   <span className="ep-preview-label">{editLabel || selectedPad.label}</span>
                 </div>
                 <p className="ep-preview-hint">Live preview</p>
@@ -1158,32 +1311,73 @@ export default function Soundboard({ user }: Props) {
                   </div>
                 )}
 
-                {/* Emoji */}
+                {/* Icon — Emoji or Image */}
                 <div className="ep-group">
-                  <span className="ep-label">Emoji</span>
-                  <div className="emoji-picker-wrap" ref={emojiPickerRef}>
+                  <span className="ep-label">Icon</span>
+                  <div className="icon-tab-bar">
                     <button
-                      className="emoji-trigger"
-                      onClick={() => setShowEmojiPicker(p => !p)}
-                      title="Pick emoji"
-                    >
-                      {editEmoji || SOUND_ICONS[editSound] || '🎵'}
-                    </button>
-                    {showEmojiPicker && (
-                      <div className="emoji-popover">
-                        <EmojiPicker
-                          data={async () => (await fetch('https://cdn.jsdelivr.net/npm/@emoji-mart/data')).json()}
-                          onEmojiSelect={(e: { native: string }) => {
-                            setEditEmoji(e.native)
-                            setShowEmojiPicker(false)
-                          }}
-                          theme="light"
-                          previewPosition="none"
-                          skinTonePosition="none"
-                        />
-                      </div>
-                    )}
+                      className={`icon-tab-btn${iconTab === 'emoji' ? ' active' : ''}`}
+                      onClick={() => { setIconTab('emoji'); setShowEmojiPicker(false) }}
+                    >Emoji</button>
+                    <button
+                      className={`icon-tab-btn${iconTab === 'image' ? ' active' : ''}`}
+                      onClick={() => setIconTab('image')}
+                    >Image</button>
                   </div>
+
+                  {iconTab === 'emoji' && (
+                    <div className="emoji-picker-wrap" ref={emojiPickerRef}>
+                      <button
+                        className="emoji-trigger"
+                        onClick={() => setShowEmojiPicker(p => !p)}
+                        title="Pick emoji"
+                      >
+                        {editEmoji || SOUND_ICONS[editSound] || '🎵'}
+                      </button>
+                      {showEmojiPicker && (
+                        <div className="emoji-popover">
+                          <EmojiPicker
+                            data={async () => (await fetch('https://cdn.jsdelivr.net/npm/@emoji-mart/data')).json()}
+                            onEmojiSelect={(e: { native: string }) => {
+                              setEditEmoji(e.native)
+                              setShowEmojiPicker(false)
+                            }}
+                            theme="light"
+                            previewPosition="none"
+                            skinTonePosition="none"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {iconTab === 'image' && (
+                    pendingIconPreview || pads[selPad!]?.iconImgUrl
+                      ? (
+                        <div className="icp-preview-wrap">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={pendingIconPreview ?? pads[selPad!]?.iconImgUrl!}
+                            alt=""
+                            className="icp-preview-img"
+                          />
+                          <button
+                            className="btn btn-outline icp-change-btn"
+                            onClick={() => { if (pendingIconPreview) { URL.revokeObjectURL(pendingIconPreview); setPendingIconPreview(null) }; setPendingIconBlob(null) }}
+                          >
+                            Change
+                          </button>
+                        </div>
+                      ) : (
+                        <ImageCropPicker
+                          onCrop={blob => {
+                            setPendingIconBlob(blob)
+                            setPendingIconPreview(URL.createObjectURL(blob))
+                          }}
+                          onCancel={() => setIconTab('emoji')}
+                        />
+                      )
+                  )}
                 </div>
 
                 {/* Label */}
@@ -1214,13 +1408,24 @@ export default function Soundboard({ user }: Props) {
 
             {/* Footer */}
             <div className="ep-footer">
-              <button className="btn btn-danger-outline" onClick={handleResetPad}>
-                Reset Pad
-              </button>
-              <div className="ep-footer-right">
-                <button className="btn btn-outline" onClick={handleCancelEdit}>Cancel</button>
-                <button className="btn btn-solid" onClick={handleSave}>Save</button>
-              </div>
+              {showResetOptions ? (
+                <div className="ep-reset-options">
+                  <button className="btn btn-danger-outline ep-reset-opt" onClick={handleClearSound}>Clear sound</button>
+                  <button className="btn btn-danger-outline ep-reset-opt" onClick={handleClearIcon}>Clear icon</button>
+                  <button className="btn btn-danger-outline ep-reset-opt" onClick={handleResetPad}>Reset pad</button>
+                  <button className="btn btn-outline ep-reset-opt-cancel" onClick={() => setShowResetOptions(false)}>✕</button>
+                </div>
+              ) : (
+                <>
+                  <button className="btn btn-danger-outline" onClick={() => setShowResetOptions(true)}>
+                    Reset
+                  </button>
+                  <div className="ep-footer-right">
+                    <button className="btn btn-outline" onClick={handleCancelEdit}>Cancel</button>
+                    <button className="btn btn-solid" onClick={handleSave}>Save</button>
+                  </div>
+                </>
+              )}
             </div>
 
           </div>

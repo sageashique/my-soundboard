@@ -19,12 +19,12 @@ type AudioNode = AudioBufferSourceNode | OscillatorNode
 
 // ── Demo Board 1: custom clips (position order = pad index order) ──────────
 const BOARD1_CLIPS = [
-  { file: 'bye-bye.mp3',             label: 'Bye Bye',          icon: '👋', color: 'green'  }, // pos 1  key 7
+  { file: 'sage-linkedin-msg.m4a',    label: 'From Sage',        icon: '🙋', color: 'green', iconImg: '/sage.jpg' }, // pos 1  key 7
   { file: 'spongebob-horn.wav',      label: 'Spongebob Horn',   icon: '🧽', color: 'yellow' }, // pos 2  key 8
   { file: 'zelda-open-chest.wav',    label: 'Zelda Chest',      icon: '⚔️', color: 'yellow' }, // pos 3  key 9
   { file: 'a-few-moments-later.mp3', label: 'Moments Later',    icon: '⏰', color: 'blue'   }, // pos 4  key −
   { file: 'dun-dun-dun.wav',         label: 'Dun Dun Dun',      icon: '🎭', color: 'purple' }, // pos 5  key 4
-  { file: 'we-do-not-care.wav',      label: "Don't Care",       icon: '🤷', color: 'red'    }, // pos 6  key 5
+  { file: 'bing-bing-bong.wav',      label: 'Bing Bing Bong',   icon: '🔔', color: 'pink'   }, // pos 6  key 5
   { file: 'whats-going-on-here.mp3', label: "What's Going On?", icon: '🤨', color: 'pink'   }, // pos 7  key 6
   { file: 'crowd-laughing.wav',      label: 'Laughs',           icon: '😂', color: 'yellow' }, // pos 8  key +
   { file: 'sad-trombone.wav',        label: 'Sad Trombone',     icon: '😢', color: 'blue'   }, // pos 9  key 1
@@ -32,7 +32,7 @@ const BOARD1_CLIPS = [
   { file: 'emotional-damage.wav',    label: 'Emotional Damage', icon: '💥', color: 'red'    }, // pos 11 key 3
   { file: 'crowd-cheering.mp3',      label: 'Cheers',           icon: '🎉', color: 'green'  }, // pos 12 key ENT
   { file: 'faaah.wav',               label: 'FAAAH!',           icon: '😮', color: 'pink'   }, // pos 13 key 0
-  { file: 'bing-bing-bong.wav',      label: 'Bing Bing Bong',   icon: '🔔', color: 'pink'   }, // pos 14 key .
+  { file: 'come-on-man.mp3',         label: 'Come On Man',      icon: '🤦', color: 'red'    }, // pos 14 key .
 ]
 
 function board1Pads(): PadState[] {
@@ -81,7 +81,7 @@ export default function DemoSoundboard() {
   const [showBoardSwitcher, setShowBoardSwitcher] = useState(false)
   const boardSwitcherRef = useRef<HTMLDivElement>(null)
 
-  const [dark, setDark] = useState(false)
+  const [dark, setDark] = useState(true)
   const [volume, setVolume] = useState(0.8)
   const [overlapMode, setOverlapMode] = useState(false)
   const [isIOS, setIsIOS] = useState(false)
@@ -90,7 +90,7 @@ export default function DemoSoundboard() {
   const [helpOpen, setHelpOpen] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const settingsRef = useRef<HTMLDivElement>(null)
-  const [firingPad, setFiringPad] = useState<number | null>(null)
+  const [firingPads, setFiringPads] = useState<Set<number>>(new Set())
   const [firingStop, setFiringStop] = useState(false)
   const [status, setStatus] = useState<string | null>(null)
 
@@ -99,6 +99,7 @@ export default function DemoSoundboard() {
   const [editIcon, setEditIcon] = useState('')
   const [editSound, setEditSound] = useState('')
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [demoIconTab, setDemoIconTab] = useState<'emoji' | 'image'>('emoji')
 
   // Audio refs
   const audioCtxRef   = useRef<AudioContext | null>(null)
@@ -171,10 +172,18 @@ export default function DemoSoundboard() {
     return { ctx: audioCtxRef.current, gain: gainRef.current! }
   }
 
+  function addFiring(idx: number) {
+    setFiringPads(prev => new Set([...prev, idx]))
+  }
+  function removeFiring(idx: number) {
+    setFiringPads(prev => { const s = new Set(prev); s.delete(idx); return s })
+  }
+
   function stopAll() {
     activeSrcsRef.current.forEach(n => { try { n.stop() } catch {} })
     activeSrcsRef.current.clear()
     clipAudiosRef.current.forEach(a => { a.pause(); a.currentTime = 0 })
+    setFiringPads(new Set())
     setStatus(null)
     setFiringStop(true)
     setTimeout(() => setFiringStop(false), 140)
@@ -187,39 +196,53 @@ export default function DemoSoundboard() {
       activeSrcsRef.current.forEach(n => { try { n.stop() } catch {} })
       activeSrcsRef.current.clear()
       clipAudiosRef.current.forEach(a => { a.pause(); a.currentTime = 0 })
+      setFiringPads(new Set())
     }
 
     const audio = clipAudiosRef.current.get(clip.file) ?? new Audio(`/demo-clips/${clip.file}`)
     clipAudiosRef.current.set(clip.file, audio)
     audio.volume = volume
     audio.currentTime = 0
+    addFiring(idx)
     audio.play()
       .then(() => {
         setStatus(`▶ ${pad.label}`)
-        audio.addEventListener('ended', () => setStatus(null), { once: true })
+        audio.addEventListener('ended', () => {
+          removeFiring(idx)
+          setStatus(prev => prev === `▶ ${pad.label}` ? null : prev)
+        }, { once: true })
       })
-      .catch(err => console.error('clip play failed:', clip.file, err))
+      .catch(err => {
+        removeFiring(idx)
+        console.error('clip play failed:', clip.file, err)
+      })
   }
 
   // ── Board 2: Web Audio synth ───────────────────────────────────────────
-  function triggerSynthPad(pad: PadState) {
+  function triggerSynthPad(idx: number, pad: PadState) {
     const { ctx, gain } = getCtx()
     if (!overlapMode) {
       activeSrcsRef.current.forEach(n => { try { n.stop() } catch {} })
       activeSrcsRef.current.clear()
       clipAudiosRef.current.forEach(a => { a.pause(); a.currentTime = 0 })
+      setFiringPads(new Set())
     }
     const node = playSound(pad.sound, ctx, gain, activeSrcsRef.current)
-    if (node) setStatus(`▶ ${pad.label}`)
+    if (node) {
+      addFiring(idx)
+      setStatus(`▶ ${pad.label}`)
+      node.onended = () => {
+        removeFiring(idx)
+        setStatus(prev => prev === `▶ ${pad.label}` ? null : prev)
+      }
+    }
   }
 
   // ── Main trigger ───────────────────────────────────────────────────────
   function triggerPad(idx: number) {
     const pad = pads[idx]
-    setFiringPad(idx)
-    setTimeout(() => setFiringPad(null), 140)
     if (activeBoardIdx === 0) triggerClipPad(idx, pad)
-    else                      triggerSynthPad(pad)
+    else                      triggerSynthPad(idx, pad)
   }
 
   // ── Volume ─────────────────────────────────────────────────────────────
@@ -234,8 +257,9 @@ export default function DemoSoundboard() {
     const pad = pads[idx]
     setSelPad(idx); setEditLabel(pad.label); setEditColor(pad.color)
     setEditIcon(pad.icon); setEditSound(pad.sound); setShowEmojiPicker(false)
+    setDemoIconTab('emoji')
   }
-  function closeEdit() { setSelPad(null); setShowEmojiPicker(false) }
+  function closeEdit() { setSelPad(null); setShowEmojiPicker(false); setDemoIconTab('emoji') }
   function saveEdit() {
     if (selPad === null) return
     const updated = boardPads.map((arr, bi) =>
@@ -277,7 +301,7 @@ export default function DemoSoundboard() {
         <div className="demo-loading-brand">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" alt="" className="sb-logo" />
-          <span className="sb-appname">[sage]SOUNDS</span>
+          <span className="sb-appname"><span className="logo-bracket">[</span><span className="logo-sage">sage</span><span className="logo-bracket">]</span><span className="logo-sounds">SOUNDS</span></span>
         </div>
         <div className="demo-mode-pill">🎛️ Demo Mode</div>
         <div className="demo-loading-row">
@@ -300,7 +324,7 @@ export default function DemoSoundboard() {
             <div className="sb-wordmark-row">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/logo.svg" alt="" className="sb-logo" />
-              <span className="sb-appname">[sage]SOUNDS</span>
+              <span className="sb-appname"><span className="logo-bracket">[</span><span className="logo-sage">sage</span><span className="logo-bracket">]</span><span className="logo-sounds">SOUNDS</span></span>
             </div>
             <a
               href="https://www.linkedin.com/in/sageashique"
@@ -366,15 +390,19 @@ export default function DemoSoundboard() {
               className={[
                 'pad', pad.gridClass, `c-${pad.color}`,
                 editMode && pad.index === selPad ? 'sel' : '',
-                pad.index === firingPad ? 'fire' : '',
+                firingPads.has(pad.index) ? 'fire' : '',
                 editMode && pad.index !== selPad ? 'edit-mode' : '',
               ].filter(Boolean).join(' ')}
               onClick={() => handlePadClick(pad.index)}
               onContextMenu={e => { e.preventDefault(); openEdit(pad.index) }}
             >
               <span className="pad-key">{pad.keyLabel}</span>
-              <span className="pad-icon">{pad.icon}</span>
+              {activeBoardIdx === 0 && BOARD1_CLIPS[pad.index]?.iconImg
+                ? <span className="pad-icon-badge"><img src={BOARD1_CLIPS[pad.index].iconImg} alt="" className="pad-icon-img" /></span>
+                : <span className="pad-icon-badge"><span className="pad-icon">{pad.icon}</span></span>
+              }
               <span className="pad-label">{pad.label}</span>
+              <div className="pad-wave" aria-hidden><span/><span/><span/></div>
             </div>
           ))}
 
@@ -391,8 +419,8 @@ export default function DemoSoundboard() {
             ? <button className="exit-edit-btn btn" onClick={() => { setEditMode(false); setSelPad(null) }}>
                 Exit Edit Mode
               </button>
-            : <div className={`status-pill${status ? ' active' : ''}`}>
-                {status || 'Tap a pad or press a numpad key to play'}
+            : <div className={`status-pill${(status || firingPads.size > 1) ? ' active' : ''}`}>
+                {firingPads.size > 1 ? '🎛️ Mixing…' : (status || 'Tap a pad or press a numpad key to play')}
               </div>
           }
         </div>
@@ -440,9 +468,9 @@ export default function DemoSoundboard() {
                   </label>
                 </div>
                 <div className="settings-row">
-                  <div className="settings-label">Dark mode</div>
+                  <div className="settings-label">Light mode</div>
                   <label className="toggle">
-                    <input type="checkbox" checked={dark} onChange={e => setDark(e.target.checked)} />
+                    <input type="checkbox" checked={!dark} onChange={e => setDark(!e.target.checked)} />
                     <span className="toggle-track" />
                     <span className="toggle-thumb" />
                   </label>
@@ -517,20 +545,39 @@ export default function DemoSoundboard() {
                 </div>
                 <div className="ep-group">
                   <div className="ep-label">Icon</div>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <div className="emoji-picker-wrap">
-                      <button className="emoji-trigger" onClick={() => setShowEmojiPicker(p => !p)} title="Pick emoji">
-                        {editIcon}
-                      </button>
-                      {showEmojiPicker && (
-                        <div className="emoji-popover">
-                          <EmojiPicker theme={dark ? 'dark' : 'light'}
-                            onEmojiSelect={(em: { native: string }) => { setEditIcon(em.native); setShowEmojiPicker(false) }} />
-                        </div>
-                      )}
-                    </div>
-                    <span style={{ fontSize: 11, color: 'var(--text3)' }}>Click to pick</span>
+                  <div className="icon-tab-bar">
+                    <button
+                      className={`icon-tab-btn${demoIconTab === 'emoji' ? ' active' : ''}`}
+                      onClick={() => setDemoIconTab('emoji')}
+                    >Emoji</button>
+                    <button
+                      className={`icon-tab-btn${demoIconTab === 'image' ? ' active' : ''}`}
+                      onClick={() => setDemoIconTab('image')}
+                    >Image</button>
                   </div>
+                  {demoIconTab === 'emoji' && (
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                      <div className="emoji-picker-wrap">
+                        <button className="emoji-trigger" onClick={() => setShowEmojiPicker(p => !p)} title="Pick emoji">
+                          {editIcon}
+                        </button>
+                        {showEmojiPicker && (
+                          <div className="emoji-popover">
+                            <EmojiPicker theme={dark ? 'dark' : 'light'}
+                              onEmojiSelect={(em: { native: string }) => { setEditIcon(em.native); setShowEmojiPicker(false) }} />
+                          </div>
+                        )}
+                      </div>
+                      <span style={{ fontSize: 11, color: 'var(--text3)' }}>Click to pick</span>
+                    </div>
+                  )}
+                  {demoIconTab === 'image' && (
+                    <div className="icp-demo-locked">
+                      <span className="icp-lock-icon">🔒</span>
+                      <span className="icp-lock-text">Custom image icons require an account.</span>
+                      <Link href="/auth" className="icp-lock-cta">Sign up free →</Link>
+                    </div>
+                  )}
                 </div>
                 <div className="ep-group">
                   <div className="ep-label">Color</div>
