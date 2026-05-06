@@ -99,6 +99,7 @@ export default function DemoSoundboard() {
   const [editIcon, setEditIcon] = useState('')
   const [editSound, setEditSound] = useState('')
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [demoIconTab, setDemoIconTab] = useState<'emoji' | 'image'>('emoji')
 
   // Audio refs
   const audioCtxRef   = useRef<AudioContext | null>(null)
@@ -256,8 +257,9 @@ export default function DemoSoundboard() {
     const pad = pads[idx]
     setSelPad(idx); setEditLabel(pad.label); setEditColor(pad.color)
     setEditIcon(pad.icon); setEditSound(pad.sound); setShowEmojiPicker(false)
+    setDemoIconTab('emoji')
   }
-  function closeEdit() { setSelPad(null); setShowEmojiPicker(false) }
+  function closeEdit() { setSelPad(null); setShowEmojiPicker(false); setDemoIconTab('emoji') }
   function saveEdit() {
     if (selPad === null) return
     const updated = boardPads.map((arr, bi) =>
@@ -543,20 +545,39 @@ export default function DemoSoundboard() {
                 </div>
                 <div className="ep-group">
                   <div className="ep-label">Icon</div>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <div className="emoji-picker-wrap">
-                      <button className="emoji-trigger" onClick={() => setShowEmojiPicker(p => !p)} title="Pick emoji">
-                        {editIcon}
-                      </button>
-                      {showEmojiPicker && (
-                        <div className="emoji-popover">
-                          <EmojiPicker theme={dark ? 'dark' : 'light'}
-                            onEmojiSelect={(em: { native: string }) => { setEditIcon(em.native); setShowEmojiPicker(false) }} />
-                        </div>
-                      )}
-                    </div>
-                    <span style={{ fontSize: 11, color: 'var(--text3)' }}>Click to pick</span>
+                  <div className="icon-tab-bar">
+                    <button
+                      className={`icon-tab-btn${demoIconTab === 'emoji' ? ' active' : ''}`}
+                      onClick={() => setDemoIconTab('emoji')}
+                    >Emoji</button>
+                    <button
+                      className={`icon-tab-btn${demoIconTab === 'image' ? ' active' : ''}`}
+                      onClick={() => setDemoIconTab('image')}
+                    >Image</button>
                   </div>
+                  {demoIconTab === 'emoji' && (
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                      <div className="emoji-picker-wrap">
+                        <button className="emoji-trigger" onClick={() => setShowEmojiPicker(p => !p)} title="Pick emoji">
+                          {editIcon}
+                        </button>
+                        {showEmojiPicker && (
+                          <div className="emoji-popover">
+                            <EmojiPicker theme={dark ? 'dark' : 'light'}
+                              onEmojiSelect={(em: { native: string }) => { setEditIcon(em.native); setShowEmojiPicker(false) }} />
+                          </div>
+                        )}
+                      </div>
+                      <span style={{ fontSize: 11, color: 'var(--text3)' }}>Click to pick</span>
+                    </div>
+                  )}
+                  {demoIconTab === 'image' && (
+                    <div className="icp-demo-locked">
+                      <span className="icp-lock-icon">🔒</span>
+                      <span className="icp-lock-text">Custom image icons require an account.</span>
+                      <Link href="/auth" className="icp-lock-cta">Sign up free →</Link>
+                    </div>
+                  )}
                 </div>
                 <div className="ep-group">
                   <div className="ep-label">Color</div>

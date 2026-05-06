@@ -1929,3 +1929,131 @@ input[type='text'] { width: 130px; }
   .pad-label { font-size: 8px; }
   .sb-page { padding: 16px 13px 40px; }
 }
+
+/* ── ICON PICKER — tabs (Emoji / Image) ───────────────────── */
+.icon-tab-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.icon-tab-btn {
+  flex: 1;
+  padding: 5px 0;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text2);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.icon-tab-btn:hover { background: var(--surface2); color: var(--text); }
+.icon-tab-btn.active { background: #6366f1; border-color: #6366f1; color: #fff; }
+
+/* ── IMAGE CROP PICKER (ImageCropPicker.tsx) ──────────────── */
+.icp-file-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1.5px dashed var(--border2);
+  border-radius: 10px;
+  padding: 18px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  background: var(--bg);
+  text-align: center;
+}
+.icp-file-zone:hover { border-color: #6366f1; background: var(--surface2); }
+.icp-file-icon { font-size: 22px; }
+.icp-file-text { font-size: 13px; font-weight: 600; color: var(--text); }
+.icp-file-sub { font-size: 11px; color: var(--text3); }
+
+.icp-crop-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+.icp-crop-img {
+  max-width: 100%;
+  max-height: 260px;
+  display: block;
+}
+.icp-crop-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+/* Image preview (after crop is done) */
+.icp-preview-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+.icp-preview-img {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border);
+}
+.icp-change-btn {
+  font-size: 12px;
+  padding: 5px 12px;
+}
+
+/* ep-preview-pad image (large preview in modal) */
+.ep-preview-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* ── DEMO LOCKED IMAGE TAB ────────────────────────────────── */
+.icp-demo-locked {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 12px;
+  border: 1px dashed var(--border2);
+  border-radius: 10px;
+  text-align: center;
+  background: var(--bg);
+}
+.icp-lock-icon { font-size: 20px; }
+.icp-lock-text { font-size: 12px; color: var(--text2); }
+.icp-lock-cta {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6366f1;
+  text-decoration: none;
+}
+.icp-lock-cta:hover { text-decoration: underline; }
+
+/* ── GRANULAR RESET OPTIONS ───────────────────────────────── */
+.ep-reset-options {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+.ep-reset-opt {
+  font-size: 12px;
+  padding: 6px 10px;
+  flex: 1;
+  min-width: 0;
+}
+.ep-reset-opt-cancel {
+  font-size: 12px;
+  padding: 6px 10px;
+}

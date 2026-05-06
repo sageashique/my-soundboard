@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import './about.css'
-import AboutHeroAnimation from '@/components/AboutHeroAnimation'
 
 export const metadata = {
   title: 'About — [sage]SOUNDS',
@@ -16,8 +15,7 @@ const features = [
   { emoji: '🎨', title: 'Custom labels + colors', body: 'Name each pad and color-code it so you always know what you\'re hitting.' },
   { emoji: '😀', title: 'Emoji icons', body: 'Add an emoji to make pads scannable at a glance, even under pressure.' },
   { emoji: '☁️', title: 'Cloud sync', body: 'Your entire setup saves to your account and loads on any device.' },
-  { emoji: '🎁', title: 'Free to start', body: 'Create an account in seconds. No credit card, no trial expiry.' },
-  { emoji: '🌙', title: 'Dark mode', body: 'Defaults to dark. Switch to light anytime from Settings.' },
+  { emoji: '🔒', title: 'Free to start', body: 'Create an account in seconds. No credit card, no trial expiry.' },
   { emoji: '📱', title: 'Works everywhere', body: 'Runs in any modern browser on desktop, tablet, or phone.' },
   { emoji: '🎙️', title: 'Live-session ready', body: 'Built for use during live meetings, streams, and recordings.' },
   { emoji: '🎤', title: 'No plugins needed', body: 'No downloads, no installs. Open a tab and go.' },
@@ -92,7 +90,7 @@ export default function AboutPage() {
         <Link href="/" className="ap-nav-logo">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" alt="" className="ap-nav-logo-icon" />
-          <span><span className="logo-bracket">[</span><span className="logo-sage">sage</span><span className="logo-bracket">]</span><span className="logo-sounds">SOUNDS</span></span>
+          [sage]SOUNDS
         </Link>
         <Link href="/auth" className="ap-nav-back">← Back to app</Link>
       </nav>
@@ -110,7 +108,22 @@ export default function AboutPage() {
           <Link href="/demo" className="ap-hero-cta">Try the demo →</Link>
         </div>
         <div className="ap-hero-preview">
-          <AboutHeroAnimation />
+          <div className="ap-devices">
+            <div className="ap-device-desktop">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/sagesound-app.png" alt="[sage]SOUNDS on desktop" className="ap-device-img ap-device-img-desktop" />
+            </div>
+            <div className="ap-devices-row">
+              <div className="ap-device-tablet">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/sagesound-app.png" alt="[sage]SOUNDS on tablet" className="ap-device-img ap-device-img-tablet" />
+              </div>
+              <div className="ap-device-phone">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/sagesound-app.png" alt="[sage]SOUNDS on phone" className="ap-device-img ap-device-img-phone" />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -188,10 +201,8 @@ export default function AboutPage() {
           <div className="ap-features-grid">
             {features.map(f => (
               <div key={f.title} className="ap-feature-item">
-                <div className="ap-feature-header">
-                  <span className="ap-feature-emoji">{f.emoji}</span>
-                  <div className="ap-feature-item-title">{f.title}</div>
-                </div>
+                <span className="ap-feature-emoji">{f.emoji}</span>
+                <div className="ap-feature-item-title">{f.title}</div>
                 <p className="ap-feature-item-body">{f.body}</p>
               </div>
             ))}

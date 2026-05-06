@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { useState, useRef, useEffect, FormEvent } from 'react'
+import { useState, useRef, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
@@ -21,30 +21,6 @@ export default function AuthPage() {
   const formRef = useRef<HTMLDivElement>(null)
   const [tab, setTab] = useState<'login' | 'signup'>('login')
   const [googleLoading, setGoogleLoading] = useState(false)
-  const [activePad, setActivePad] = useState<number | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    const recent: number[] = []
-
-    function fire() {
-      if (cancelled) return
-      let next
-      do { next = Math.floor(Math.random() * 9) }
-      while (recent.includes(next))
-      recent.push(next)
-      if (recent.length > 3) recent.shift()
-      setActivePad(next)
-      setTimeout(() => {
-        if (cancelled) return
-        setActivePad(null)
-        setTimeout(fire, 700 + Math.random() * 1300)
-      }, 1400)
-    }
-
-    const t = setTimeout(fire, 900)
-    return () => { cancelled = true; clearTimeout(t) }
-  }, [])
 
   async function handleGoogleSignIn() {
     setGoogleLoading(true)
@@ -88,24 +64,14 @@ export default function AuthPage() {
 
       {/* ── LEFT PANEL ── */}
       <div className="auth-split-left">
-
         <div className="auth-split-brand">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.svg" alt="" className="auth-split-logo-img" />
-          <div className="auth-split-brand-text">
-            <span className="auth-split-brandname"><span className="logo-bracket">[</span><span className="logo-sage">sage</span><span className="logo-bracket">]</span><span className="logo-sounds">SOUNDS</span></span>
-            <a
-              href="https://www.linkedin.com/in/sageashique"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="auth-byline"
-            >
-              <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-              </svg>
-              Built by Sage Ashique
-            </a>
+          <div className="auth-split-logo">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="4"/>
+              <path d="M8 12h8M12 8v8"/>
+            </svg>
           </div>
+          <span className="auth-split-brandname">[sage]SOUNDS</span>
           <button className="auth-mobile-signin" onClick={() => formRef.current?.scrollIntoView({ behavior: 'smooth' })}>Sign in →</button>
         </div>
 
@@ -114,53 +80,54 @@ export default function AuthPage() {
             Your sounds,<br />
             <span>one <kbd className="auth-tap-badge">tap</kbd> away.</span>
           </h1>
-
-          {/* Subheading — breakpoint-specific copy */}
-          <p className="auth-split-sub auth-sub-desktop">
-            Upload your own sounds, map them to keyboard shortcuts, and fire them instantly — no plugins, no lag, no fumbling.
-          </p>
-          <p className="auth-split-sub auth-sub-tablet">
-            Upload your own sounds, map them to shortcuts, and fire them instantly — no plugins, no fumbling.
-          </p>
-          <p className="auth-split-sub auth-sub-mobile">
-            Upload your own sounds and fire them instantly — no plugins needed.
+          <p className="auth-split-sub">
+            Built for live meetings, streams, and content creation.<span className="auth-sub-extra"> Tap a pad or press a key to drop any sound at exactly the right moment.</span>
           </p>
 
-          {/* Bullets — desktop full, tablet abbreviated */}
-          <ul className="auth-bullets auth-bullets-desktop">
-            <li><span>🎵</span> Upload any audio — MP3, WAV, or M4A, your sounds your way</li>
-            <li><span>⚡</span> Instant playback — fires the moment you tap or press a key</li>
-            <li><span>☁️</span> Everything syncs to your account, works on any device</li>
-          </ul>
-          <ul className="auth-bullets auth-bullets-tablet">
-            <li><span>🎵</span> Upload any audio — your sounds, your way</li>
-            <li><span>⚡</span> Instant playback, no lag</li>
-            <li><span>☁️</span> Syncs to your account, any device</li>
-          </ul>
-
-          {/* 3×3 animated pad grid */}
-          <div className="auth-demo-grid">
-            {demoPads.map((pad, i) => (
-              <div key={i} className={`auth-demo-pad adp-${pad.color}${activePad === i ? ' adp-active' : ''}`}>
-                <span className="auth-demo-emoji">{pad.emoji}</span>
-                <div className="auth-demo-bottom">
-                  <span className="auth-demo-label">{pad.label}</span>
-                  <div className="auth-demo-wave" aria-hidden="true">
-                    <span/><span/><span/>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="auth-split-pills">
+            <div className="auth-split-pills-track">
+              <span className="auth-split-pill">🎵 Upload your own audio</span>
+              <span className="auth-split-pill">🎙️ Works on any device</span>
+              <span className="auth-split-pill">🎛️ Up to 5 soundboards</span>
+              <span className="auth-split-pill">🔒 Free to get started</span>
+              <span className="auth-split-pill">☁️ Cross-device sync</span>
+              <span className="auth-split-pill">⌨️ Keyboard shortcuts</span>
+              <span className="auth-split-pill">🎵 Upload your own audio</span>
+              <span className="auth-split-pill">🎙️ Works on any device</span>
+              <span className="auth-split-pill">🎛️ Up to 5 soundboards</span>
+              <span className="auth-split-pill">🔒 Free to get started</span>
+              <span className="auth-split-pill">☁️ Cross-device sync</span>
+              <span className="auth-split-pill">⌨️ Keyboard shortcuts</span>
+            </div>
           </div>
 
-          {/* Split CTA row */}
-          <div className="auth-cta-row">
-            <Link href="/demo" className="auth-cta-btn auth-cta-demo">Try the Demo</Link>
-            <Link href="/about" className="auth-cta-btn auth-cta-about">About the App</Link>
+          <div className="auth-split-padgrid">
+            {/* Row 1 */}
+            <div className="auth-mini-pad mp-red">🥁<span>Kick</span></div>
+            <div className="auth-mini-pad mp-green">🪘<span>Snare</span></div>
+            <div className="auth-mini-pad mp-blue">🎵<span>Hi-Hat</span></div>
+            <div className="auth-mini-pad mp-yellow">📯<span>Horn</span></div>
+            {/* Row 2 */}
+            <div className="auth-mini-pad mp-purple">🎯<span>Rimshot</span></div>
+            <div className="auth-mini-pad mp-pink">🎸<span>808</span></div>
+            <div className="auth-mini-pad mp-red">⬆️<span>Riser</span></div>
+            <div className="auth-mini-pad mp-green">👏<span>Clap</span></div>
+            {/* Row 3 */}
+            <div className="auth-mini-pad mp-blue">🚨<span>Siren</span></div>
+            <div className="auth-mini-pad mp-yellow">💿<span>Scratch</span></div>
+            <div className="auth-mini-pad mp-purple">💨<span>Swoosh</span></div>
+            <div className="auth-mini-pad mp-pink auth-mini-enter">🔔<span>Notif</span></div>
+            {/* Row 4 */}
+            <div className="auth-mini-pad mp-green auth-mini-0">😂<span>Laugh</span></div>
+            <div className="auth-mini-pad mp-blue">🎹<span>Synth</span></div>
+            {/* Stop bar */}
+            <div className="auth-mini-stop">⏹ STOP ALL</div>
           </div>
 
-          {/* Trust line — desktop only */}
-          <p className="auth-trust-line">Free to start · No credit card · Works in any browser</p>
+          <Link href="/demo" className="auth-split-demo-cta">
+            🎛️ Try the demo — no account needed
+            <span>→</span>
+          </Link>
         </div>
       </div>
 
@@ -233,6 +200,10 @@ export default function AuthPage() {
               {loading ? 'Please wait…' : tab === 'login' ? 'Sign in →' : 'Create account →'}
             </button>
           </form>
+
+          <Link href="/demo" className="auth-split-demo-btn">
+            🎛️ Try the demo without an account
+          </Link>
 
           <div className="auth-split-footer">
             <Link href="/about" className="auth-split-footer-link">About the App</Link>

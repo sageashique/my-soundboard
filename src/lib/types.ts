@@ -12,6 +12,7 @@ export interface PadConfig {
   icon: string
   customTrackPath: string | null
   customTrackName: string | null
+  iconImgPath?: string | null
 }
 
 export interface PadState extends PadConfig {
@@ -20,7 +21,14 @@ export interface PadState extends PadConfig {
   keyTrigger: string
   customBuf: AudioBuffer | null
   customRawBuf: ArrayBuffer | null
-  customGain: number   // peak-normalization multiplier; 1.0 = no adjustment
+  customGain?: number
+  iconImgUrl?: string | null
+}
+
+export interface Board {
+  id: string
+  name: string
+  created_at: string
 }
 
 export interface ModalState {

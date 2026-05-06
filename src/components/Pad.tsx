@@ -32,7 +32,13 @@ const Pad = forwardRef<PadHandle, Props>(function Pad({ pad, selected, editMode,
     >
       <span className="pad-key">{pad.keyLabel}</span>
       {pad.customBuf && <span className="custom-dot" aria-hidden />}
-      <span className="pad-icon-badge"><span className="pad-icon">{pad.icon}</span></span>
+      <span className="pad-icon-badge">
+        {pad.iconImgUrl
+          // eslint-disable-next-line @next/next/no-img-element
+          ? <img src={pad.iconImgUrl} alt="" className="pad-icon-img" />
+          : <span className="pad-icon">{pad.icon}</span>
+        }
+      </span>
       <span className="pad-label">{pad.label}</span>
       <div className="pad-wave" aria-hidden><span/><span/><span/></div>
     </div>
