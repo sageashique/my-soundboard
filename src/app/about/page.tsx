@@ -114,8 +114,23 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* ── Jump links ── */}
+      <nav className="ap-jump-bar" aria-label="Page sections">
+        <a href="#builder" className="ap-jump-link">The Builder</a>
+        <span className="ap-jump-sep">·</span>
+        <a href="#why" className="ap-jump-link">Why I Built This</a>
+        <span className="ap-jump-sep">·</span>
+        <a href="#decisions" className="ap-jump-link">Build Decisions</a>
+        <span className="ap-jump-sep">·</span>
+        <a href="#features" className="ap-jump-link">Features</a>
+        <span className="ap-jump-sep">·</span>
+        <a href="#how-it-works" className="ap-jump-link">How It Works</a>
+        <span className="ap-jump-sep">·</span>
+        <a href="#built-with" className="ap-jump-link">Built With</a>
+      </nav>
+
       {/* ── Builder card ── */}
-      <section className="ap-section ap-section-alt">
+      <section id="builder" className="ap-section ap-section-alt">
         <div className="ap-section-inner">
           <p className="ap-label">The builder</p>
           <div className="ap-builder-card">
@@ -147,7 +162,7 @@ export default function AboutPage() {
       </section>
 
       {/* ── Why I built this ── */}
-      <section className="ap-section">
+      <section id="why" className="ap-section">
         <div className="ap-section-inner">
           <h2 className="ap-title">Why I built this</h2>
           <div className="ap-body-stack">
@@ -181,8 +196,78 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* ── Build decisions ── */}
+      <section id="decisions" className="ap-section ap-section-alt">
+        <div className="ap-section-inner">
+          <h2 className="ap-title">Build decisions</h2>
+          <div className="ap-body-stack">
+            <p className="ap-body">
+              I started with a real stack on day one. No &quot;I&apos;ll add auth later&quot; shortcuts. The first commit
+              already had user accounts, a database, and a deployment pipeline. If I was going to build
+              something, it was going to be deployable and ready to show — not a proof of concept I&apos;d have
+              to rebuild before anyone could use it.
+            </p>
+            <p className="ap-body">
+              The layout went through a full iteration. The first version used a QWERTY keyboard layout. It
+              worked, but it felt noisy — too many keys, too much visual clutter. I switched to a numpad grid
+              for a few reasons: I wanted to trigger sounds from my keyboard&apos;s numpad directly, it renders
+              much cleaner on mobile, and the layout maps intuitively to what people already know. The numpad
+              is usually the fastest path to your number keys if you have one. Getting the grid to stay intact
+              across screen sizes took real work — it kept breaking — but once it was right, it didn&apos;t move again.
+            </p>
+            <p className="ap-body">
+              Custom audio was never optional. Generic sound clips are boring, and I knew that before I wrote
+              a line of code. I listen to a lot of podcasters who run their own analog soundboards — custom
+              drops, sound effects, bits they&apos;ve built up over time. That&apos;s what I wanted to build a digital
+              version of. Your sounds, mapped the way you want them, ready to fire on demand.
+            </p>
+            <p className="ap-body">
+              Mobile audio was the hardest part of the build. Getting sounds to fire correctly on iOS took
+              more iteration than anything else. The platform has strict rules about when and how audio can
+              play, and most approaches that work on desktop fail silently on mobile. I went through several
+              before finding what worked, then documented it explicitly so it couldn&apos;t get accidentally undone later.
+            </p>
+            <p className="ap-body">
+              I added automatic volume normalization. If you upload three clips from different sources, you
+              don&apos;t want one to blow everyone&apos;s ears out mid-stream. Normalization runs in the background
+              when a board loads. It&apos;s invisible when it works, which is the point.
+            </p>
+            <p className="ap-body">
+              The brand took a few iterations. The app started as &quot;SageSound,&quot; which felt generic.
+              &quot;[sage]SOUNDS&quot; came from the bracket styling on the logo — it created a visual identity that
+              tied the name and the mark together. Dark mode became the default because it fits the
+              environments people actually use this in: dim recording setups, video calls, late-night streams.
+            </p>
+            <p className="ap-body">
+              Google sign-in was a deliberate call. The target user — someone running a live session —
+              doesn&apos;t want to manage another password. One click removes the biggest friction point between
+              landing on the page and actually using the app.
+            </p>
+            <p className="ap-body">
+              Custom image icons started as a joke. I told my wife it&apos;d be hilarious to build a soundboard
+              with photos of our friends and the phrases they say on repeat — things caught on video. So I
+              built it. The feature required an image picker, a crop tool, cloud storage, and a rendering
+              layer that handles photos, emoji, and the absence of both — all working on mobile. Getting it
+              right took a complete redesign of the edit flow. What started as a bit of entertainment ended
+              up being one of the most genuinely useful things in the app.
+            </p>
+            <p className="ap-body">
+              Testing was done on MacBook with Chrome, iPhone with Safari, and iPad with Safari. Those are
+              the environments I use, so those are the ones I made sure worked. Android wasn&apos;t tested —
+              we&apos;re an Apple family, no apologies.
+            </p>
+            <p className="ap-body">
+              The decisions that don&apos;t show up in the UI are the ones I&apos;m most deliberate about. A
+              requirements doc before the first line of code. Documented tradeoffs. A style guide for
+              typography and color. Notes that lock in hard-won knowledge so it can&apos;t get lost. That&apos;s
+              what separates a project that works from a project that holds up.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* ── Features ── */}
-      <section className="ap-section ap-section-alt">
+      <section id="features" className="ap-section">
         <div className="ap-section-inner ap-section-inner-wide">
           <h2 className="ap-title">Features</h2>
           <div className="ap-features-grid">
@@ -200,7 +285,7 @@ export default function AboutPage() {
       </section>
 
       {/* ── How it works ── */}
-      <section className="ap-section">
+      <section id="how-it-works" className="ap-section">
         <div className="ap-section-inner">
           <h2 className="ap-title">How it works</h2>
           <div className="ap-steps">
@@ -218,7 +303,7 @@ export default function AboutPage() {
       </section>
 
       {/* ── Built with ── */}
-      <section className="ap-section ap-section-alt">
+      <section id="built-with" className="ap-section ap-section-alt">
         <div className="ap-section-inner">
           <h2 className="ap-title">Built with</h2>
           <div className="ap-tech-grid">
