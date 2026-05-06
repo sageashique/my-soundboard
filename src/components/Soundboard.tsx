@@ -981,11 +981,15 @@ export default function Soundboard({ user }: Props) {
         <div className="top-meta-row">
           <div className="board-switcher" ref={boardSwitcherRef}>
             <button
-              className="board-name-btn"
+              className={`board-name-btn${showBoardSwitcher ? ' open' : ''}`}
               onClick={() => setShowBoardSwitcher(s => !s)}
             >
               <span className="board-name-text">{activeBoard?.name ?? ''}</span>
-              <span className="board-name-chevron">{showBoardSwitcher ? '▲' : '▼'}</span>
+              <span className="board-name-chevron">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </span>
             </button>
             {showBoardSwitcher && (
               <div className="board-dropdown">
