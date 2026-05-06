@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import './about.css'
 import AboutHeroAnimation from '@/components/AboutHeroAnimation'
+import JumpBar from '@/components/JumpBar'
 
 export const metadata = {
   title: 'About — [sage]SOUNDS',
@@ -115,19 +116,7 @@ export default function AboutPage() {
       </section>
 
       {/* ── Jump links ── */}
-      <nav className="ap-jump-bar" aria-label="Page sections">
-        <a href="#builder" className="ap-jump-link">The Builder</a>
-        <span className="ap-jump-sep">·</span>
-        <a href="#why" className="ap-jump-link">Why I Built This</a>
-        <span className="ap-jump-sep">·</span>
-        <a href="#decisions" className="ap-jump-link">Build Decisions</a>
-        <span className="ap-jump-sep">·</span>
-        <a href="#features" className="ap-jump-link">Features</a>
-        <span className="ap-jump-sep">·</span>
-        <a href="#how-it-works" className="ap-jump-link">How It Works</a>
-        <span className="ap-jump-sep">·</span>
-        <a href="#built-with" className="ap-jump-link">Built With</a>
-      </nav>
+      <JumpBar />
 
       {/* ── Builder card ── */}
       <section id="builder" className="ap-section ap-section-alt">
