@@ -407,7 +407,7 @@ export default function DemoSoundboard() {
                 firingPads.has(pad.index) ? 'fire' : '',
                 editMode && pad.index !== selPad ? 'edit-mode' : '',
               ].filter(Boolean).join(' ')}
-              style={activeBoardIdx === 0 && pad.index === 1 && showTooltip ? { overflow: 'visible', zIndex: 100 } : undefined}
+              style={activeBoardIdx === 0 && pad.index === 0 && showTooltip ? { overflow: 'visible', zIndex: 100 } : undefined}
               onClick={() => handlePadClick(pad.index)}
               onContextMenu={e => { e.preventDefault(); openEdit(pad.index) }}
             >
@@ -418,7 +418,7 @@ export default function DemoSoundboard() {
               }
               <span className="pad-label">{pad.label}</span>
               <div className="pad-wave" aria-hidden><span/><span/><span/></div>
-              {activeBoardIdx === 0 && pad.index === 1 && showTooltip && (
+              {activeBoardIdx === 0 && pad.index === 0 && showTooltip && (
                 <div className="demo-tooltip" onClick={e => e.stopPropagation()}>
                   <button className="demo-tooltip-close" onClick={dismissTooltip} aria-label="Dismiss">×</button>
                   <p className="demo-tooltip-text">Start here 👋<br/>Tap to hear a message from Sage.</p>

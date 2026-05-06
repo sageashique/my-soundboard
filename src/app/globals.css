@@ -1017,14 +1017,14 @@ input[type='range']::-webkit-slider-thumb {
 /* ── Demo tooltip ── */
 .demo-tooltip {
   position: absolute;
-  bottom: calc(100% + 10px);
+  top: calc(100% + 10px);
   left: 0;
-  background: #4f46e5;
+  background: #597B64;
   color: #ffffff;
   border-radius: 12px;
-  padding: 12px 36px 12px 14px;
+  padding: 14px 36px 14px 14px;
   width: 200px;
-  box-shadow: 0 8px 28px rgba(79,70,229,0.45), 0 2px 8px rgba(0,0,0,0.20);
+  box-shadow: 0 8px 28px rgba(89,123,100,0.45), 0 2px 8px rgba(0,0,0,0.20);
   z-index: 200;
   pointer-events: all;
 }
@@ -1051,7 +1051,7 @@ input[type='range']::-webkit-slider-thumb {
 .demo-tooltip-close:hover { color: #ffffff; }
 .demo-tooltip-arrow {
   position: absolute;
-  bottom: -7px;
+  top: -7px;
   left: 30px;
   width: 14px;
   height: 7px;
@@ -1060,11 +1060,11 @@ input[type='range']::-webkit-slider-thumb {
 .demo-tooltip-arrow::before {
   content: '';
   position: absolute;
-  top: -7px;
+  bottom: -7px;
   left: 0;
   width: 14px;
   height: 14px;
-  background: #4f46e5;
+  background: #597B64;
   transform: rotate(45deg);
   transform-origin: center;
 }
