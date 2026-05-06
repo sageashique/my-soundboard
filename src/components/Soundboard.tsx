@@ -606,10 +606,9 @@ export default function Soundboard({ user }: Props) {
   function handleClearSound() {
     if (selPad === null) return
     const p = pads[selPad]
-    if (!p.customTrackPath && !p.customBuf) { setShowResetOptions(false); return }
     setModal({
       title: 'Clear custom sound?',
-      body: 'Remove the custom audio from this pad? It will revert to a built-in sound.',
+      body: 'Remove the custom audio from this pad? It will revert to its default built-in sound.',
       okLabel: 'Clear sound',
       style: 'danger',
       cb: async () => {
@@ -639,10 +638,9 @@ export default function Soundboard({ user }: Props) {
   function handleClearIcon() {
     if (selPad === null) return
     const p = pads[selPad]
-    if (!p.iconImgPath && !p.iconImgUrl && !pendingIconBlob) { setShowResetOptions(false); return }
     setModal({
       title: 'Clear icon image?',
-      body: 'Remove the custom image from this pad? It will revert to the emoji icon.',
+      body: 'Remove the custom image from this pad? It will revert to the default emoji icon.',
       okLabel: 'Clear icon',
       style: 'danger',
       cb: async () => {
@@ -1245,10 +1243,10 @@ export default function Soundboard({ user }: Props) {
                 {/* Source card */}
                 <div className="ep-card">
                   <div className="ep-group">
-                    <span className="ep-label">Source</span>
-                    <div className="ep-source-toggle">
-                      <button className={`ep-src-btn${!useCustomSource ? ' active' : ''}`} onClick={() => setUseCustomSource(false)}>Built-in</button>
-                      <button className={`ep-src-btn${useCustomSource ? ' active' : ''}`} onClick={() => setUseCustomSource(true)}>Custom</button>
+                    <span className="ep-label">Audio Source</span>
+                    <div className="seg-bar">
+                      <button className={`seg-btn${useCustomSource ? ' active' : ''}`} onClick={() => setUseCustomSource(true)}>Custom</button>
+                      <button className={`seg-btn${!useCustomSource ? ' active' : ''}`} onClick={() => setUseCustomSource(false)}>Built-in</button>
                     </div>
                   </div>
 
@@ -1313,15 +1311,15 @@ export default function Soundboard({ user }: Props) {
                 {/* Icon card */}
                 <div className="ep-card">
                   <span className="ep-label">Icon</span>
-                  <div className="icon-tab-bar">
+                  <div className="seg-bar">
                     <button
-                      className={`icon-tab-btn${iconTab === 'emoji' ? ' active' : ''}`}
-                      onClick={() => { setIconTab('emoji'); setShowEmojiPicker(false) }}
-                    >Emoji</button>
-                    <button
-                      className={`icon-tab-btn${iconTab === 'image' ? ' active' : ''}`}
+                      className={`seg-btn${iconTab === 'image' ? ' active' : ''}`}
                       onClick={() => setIconTab('image')}
                     >Image</button>
+                    <button
+                      className={`seg-btn${iconTab === 'emoji' ? ' active' : ''}`}
+                      onClick={() => { setIconTab('emoji'); setShowEmojiPicker(false) }}
+                    >Emoji</button>
                   </div>
 
                   {iconTab === 'emoji' && (
@@ -1392,7 +1390,7 @@ export default function Soundboard({ user }: Props) {
 
                 {/* Label card */}
                 <div className="ep-card">
-                  <span className="ep-label">Label</span>
+                  <span className="ep-label">Label <span className="ep-label-cap">(max 20)</span></span>
                   <input
                     type="text" placeholder="Pad label..." maxLength={20}
                     value={editLabel} onChange={e => setEditLabel(e.target.value)}

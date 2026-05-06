@@ -541,21 +541,21 @@ export default function DemoSoundboard() {
                   </div>
                 )}
                 <div className="ep-card">
-                  <div className="ep-label">Label</div>
+                  <div className="ep-label">Label <span className="ep-label-cap">(max 20)</span></div>
                   <input type="text" value={editLabel} onChange={e => setEditLabel(e.target.value)}
-                    placeholder="Pad label" maxLength={16} />
+                    placeholder="Pad label" maxLength={20} />
                 </div>
                 <div className="ep-card">
                   <div className="ep-label">Icon</div>
-                  <div className="icon-tab-bar">
+                  <div className="seg-bar">
                     <button
-                      className={`icon-tab-btn${demoIconTab === 'emoji' ? ' active' : ''}`}
-                      onClick={() => setDemoIconTab('emoji')}
-                    >Emoji</button>
-                    <button
-                      className={`icon-tab-btn${demoIconTab === 'image' ? ' active' : ''}`}
+                      className={`seg-btn${demoIconTab === 'image' ? ' active' : ''}`}
                       onClick={() => setDemoIconTab('image')}
                     >Image</button>
+                    <button
+                      className={`seg-btn${demoIconTab === 'emoji' ? ' active' : ''}`}
+                      onClick={() => setDemoIconTab('emoji')}
+                    >Emoji</button>
                   </div>
                   {demoIconTab === 'emoji' && (
                     <div className="ep-emoji-row">

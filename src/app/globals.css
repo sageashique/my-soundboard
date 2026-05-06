@@ -1063,6 +1063,34 @@ input[type='range']::-webkit-slider-thumb {
 .btn-danger-outline:hover { background: rgba(217,79,61,0.06); }
 .btn-danger-outline:disabled { opacity: 0.3; cursor: not-allowed; }
 
+/* ── MENU ELEMENTS ── */
+.seg-bar {
+  display: flex;
+  gap: 4px;
+}
+.seg-btn {
+  flex: 1;
+  padding: 6px 0;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text2);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.seg-btn:hover { background: var(--surface2); color: var(--text); }
+.seg-btn.active { background: #6366f1; border-color: #6366f1; color: #fff; }
+.ep-label-cap {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 10px;
+  color: var(--text3);
+}
+
 /* EDIT PANEL (hint only — panel replaced by modal) */
 .edit-hint { font-size: 12px; color: var(--text3); }
 
@@ -1237,32 +1265,6 @@ input[type='range']::-webkit-slider-thumb {
   text-transform: uppercase;
   color: var(--text3);
 }
-.ep-source-toggle {
-  display: flex;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  padding: 3px;
-  gap: 3px;
-}
-.ep-src-btn {
-  flex: 1;
-  padding: 7px 12px;
-  font-size: 13px;
-  font-weight: 500;
-  background: transparent;
-  border: none;
-  border-radius: 7px;
-  cursor: pointer;
-  color: var(--text2);
-  transition: background 0.15s, color 0.15s;
-  font-family: 'Inter', sans-serif;
-}
-.ep-src-btn.active {
-  background: #4f46e5;
-  color: #ffffff;
-}
-.ep-src-btn:not(.active):hover { background: var(--border); }
 .ep-footer {
   display: flex;
   align-items: center;
@@ -1975,26 +1977,6 @@ input[type='text'] { width: 130px; }
 }
 
 /* ── ICON PICKER — tabs (Emoji / Image) ───────────────────── */
-.icon-tab-bar {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 8px;
-}
-.icon-tab-btn {
-  flex: 1;
-  padding: 5px 0;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: 'Inter', sans-serif;
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  background: var(--surface);
-  color: var(--text2);
-  cursor: pointer;
-  transition: background 0.12s, color 0.12s, border-color 0.12s;
-}
-.icon-tab-btn:hover { background: var(--surface2); color: var(--text); }
-.icon-tab-btn.active { background: #6366f1; border-color: #6366f1; color: #fff; }
 
 /* ── IMAGE CROP PICKER (ImageCropPicker.tsx) ──────────────── */
 .icp-file-zone {
