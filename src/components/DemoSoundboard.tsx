@@ -520,11 +520,13 @@ export default function DemoSoundboard() {
         <div className="ep-overlay" onClick={e => { if (e.target === e.currentTarget) closeEdit() }}>
           <div className="ep-modal">
             <div className="ep-header">
-              <div className="ep-header-left">
-                <div className={`ep-preview-pad c-${editColor} ep-header-pad`}>
+              <span className="ep-title">Edit pad</span>
+              <div className="ep-header-preview">
+                <div className={`ep-preview-pad c-${editColor}`}>
                   <span className="ep-preview-icon">{editIcon}</span>
+                  <span className="ep-preview-label">{editLabel || '—'}</span>
                 </div>
-                <span className="ep-title">Edit pad</span>
+                <p className="ep-preview-hint">Preview</p>
               </div>
               <button className="ep-close" onClick={closeEdit}>✕</button>
             </div>
