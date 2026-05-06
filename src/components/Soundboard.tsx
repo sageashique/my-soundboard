@@ -182,7 +182,6 @@ export default function Soundboard({ user }: Props) {
   const [pendingIconBlob, setPendingIconBlob] = useState<Blob | null>(null)
   const [pendingIconPreview, setPendingIconPreview] = useState<string | null>(null)
   const [showResetOptions, setShowResetOptions] = useState(false)
-  const boardSwitcherRef = useRef<HTMLDivElement>(null)
 
   const [modal, setModal] = useState<ModalState | null>(null)
   const [dbLoading, setDbLoading] = useState(true)
