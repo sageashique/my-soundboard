@@ -5,15 +5,15 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 const demoPads = [
-  { emoji: '🥁', label: 'Kick',    color: 'red'    },
-  { emoji: '🪘', label: 'Snare',   color: 'green'  },
-  { emoji: '🎵', label: 'Hi-Hat',  color: 'blue'   },
-  { emoji: '📯', label: 'Horn',    color: 'yellow' },
-  { emoji: '🎯', label: 'Rimshot', color: 'purple' },
-  { emoji: '🎸', label: '808',     color: 'pink'   },
-  { emoji: '⬆️', label: 'Riser',   color: 'red'    },
-  { emoji: '👏', label: 'Clap',    color: 'green'  },
-  { emoji: '🎹', label: 'Synth',   color: 'blue'   },
+  { img: '/Bored.jpg',    label: 'Boring',  color: 'red'    },
+  { emoji: '🪘',          label: 'Snare',   color: 'green'  },
+  { emoji: '🎵',          label: 'Hi-Hat',  color: 'blue'   },
+  { emoji: '📯',          label: 'Horn',    color: 'yellow' },
+  { img: '/Surprise.jpg', label: 'No Way!', color: 'purple' },
+  { emoji: '🎸',          label: '808',     color: 'pink'   },
+  { emoji: '⬆️',          label: 'Riser',   color: 'red'    },
+  { emoji: '👏',          label: 'Clap',    color: 'green'  },
+  { img: '/Sleepy.jpg',   label: 'ZZZ',     color: 'blue'   },
 ]
 
 export default function AuthPage() {
@@ -126,19 +126,35 @@ export default function AuthPage() {
             Upload your own sounds and fire them instantly — no plugins needed.
           </p>
 
-          {/* 3×3 animated pad grid */}
-          <div className="auth-demo-grid">
-            {demoPads.map((pad, i) => (
-              <div key={i} className={`auth-demo-pad adp-${pad.color}${activePad === i ? ' adp-active' : ''}`}>
-                <span className="auth-demo-emoji">{pad.emoji}</span>
-                <div className="auth-demo-bottom">
-                  <span className="auth-demo-label">{pad.label}</span>
-                  <div className="auth-demo-wave" aria-hidden="true">
-                    <span/><span/><span/>
-                  </div>
-                </div>
+          {/* 3×3 animated pad grid — wrapped in device shell */}
+          <div className="auth-device-shell">
+            <div className="auth-device-topbar">
+              <div className="auth-device-dot" />
+              <div className="auth-device-pills">
+                <div className="auth-device-pill" />
+                <div className="auth-device-pill" />
+                <div className="auth-device-pill" />
               </div>
-            ))}
+            </div>
+            <div className="auth-device-grid-wrap">
+              <div className="auth-demo-grid">
+                {demoPads.map((pad, i) => (
+                  <div key={i} className={`auth-demo-pad adp-${pad.color}${activePad === i ? ' adp-active' : ''}`}>
+                    {'img' in pad
+                      // eslint-disable-next-line @next/next/no-img-element
+                      ? <img src={pad.img} alt={pad.label} className="auth-demo-pad-img" />
+                      : <span className="auth-demo-emoji">{pad.emoji}</span>
+                    }
+                    <div className="auth-demo-bottom">
+                      <span className="auth-demo-label">{pad.label}</span>
+                      <div className="auth-demo-wave" aria-hidden="true">
+                        <span/><span/><span/>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* 2×2 feature grid — tablet+ */}
