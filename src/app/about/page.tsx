@@ -191,65 +191,59 @@ export default function AboutPage() {
           <h2 className="ap-title">Build decisions</h2>
           <div className="ap-body-stack">
             <p className="ap-body">
-              I started with a real stack on day one. No &quot;I&apos;ll add auth later&quot; shortcuts. The first commit
-              already had user accounts, a database, and a deployment pipeline. If I was going to build
-              something, it was going to be deployable and ready to show — not a proof of concept I&apos;d have
-              to rebuild before anyone could use it.
+              This started as an experiment. No plan, no spec — just an idea I wanted to see if I could
+              actually pull off. I moved fast at first, figuring things out as I went. Once it started
+              clicking, I got serious — real stack, user accounts, a database, a deployment pipeline. If I
+              was going to keep building on it, it had to be built right.
             </p>
             <p className="ap-body">
-              The layout went through a full iteration. The first version used a QWERTY keyboard layout. It
-              worked, but it felt noisy — too many keys, too much visual clutter. I switched to a numpad grid
-              for a few reasons: I wanted to trigger sounds from my keyboard&apos;s numpad directly, it renders
-              much cleaner on mobile, and the layout maps intuitively to what people already know. The numpad
-              is usually the fastest path to your number keys if you have one. Getting the grid to stay intact
-              across screen sizes took real work — it kept breaking — but once it was right, it didn&apos;t move again.
+              Early on I had a QWERTY keyboard layout. It worked, but every time I looked at it something
+              felt off — too many keys, too much noise. I switched to a numpad grid. It let me trigger
+              sounds directly from my keyboard, it looks way cleaner on mobile, and most people already
+              know how a numpad works. Getting it to hold across different screen sizes was genuinely
+              painful — it kept breaking in ways I didn&apos;t expect — but once I cracked it, it held.
             </p>
             <p className="ap-body">
-              Custom audio was never optional. Generic sound clips are boring, and I knew that before I wrote
-              a line of code. I listen to a lot of podcasters who run their own analog soundboards — custom
-              drops, sound effects, bits they&apos;ve built up over time. That&apos;s what I wanted to build a digital
-              version of. Your sounds, mapped the way you want them, ready to fire on demand.
+              Custom audio was the whole point. Generic clips are fine, but custom is where the fun really
+              begins. I was inspired by watching podcasters run their own soundboards — custom drops, inside
+              jokes, bits they&apos;d built up over time. That&apos;s what I wanted to make digital. Once I committed
+              to that, mobile became the real challenge. iOS has strict rules about when audio is allowed to
+              play, and most things that work fine on desktop just silently break on mobile. It took a lot
+              of iteration to find something that actually worked — and once I did, I documented it so I
+              couldn&apos;t accidentally undo it six weeks later.
             </p>
             <p className="ap-body">
-              Mobile audio was the hardest part of the build. Getting sounds to fire correctly on iOS took
-              more iteration than anything else. The platform has strict rules about when and how audio can
-              play, and most approaches that work on desktop fail silently on mobile. I went through several
-              before finding what worked, then documented it explicitly so it couldn&apos;t get accidentally undone later.
+              The details started stacking up. Volume normalization was a practical one — if you&apos;re pulling
+              clips from different sources, you can&apos;t have one blow everyone&apos;s ears out mid-stream. Custom
+              image icons started as something dumb: I thought it&apos;d be funny to put photos of our friends
+              on the soundboard with the phrases they repeat constantly. I was the only customer, and
+              customers drive the product — so I ran with it. What I thought would be a quick feature
+              turned into a full redesign of the edit flow — image picker, crop tool, cloud storage, a
+              rendering layer that handles photos, emoji, and the absence of both. What started as
+              entertainment ended up being one of the most genuinely useful things in the app.
             </p>
             <p className="ap-body">
-              I added automatic volume normalization. If you upload three clips from different sources, you
-              don&apos;t want one to blow everyone&apos;s ears out mid-stream. Normalization runs in the background
-              when a board loads. It&apos;s invisible when it works, which is the point.
+              The name took a while to land. I went through a few generic options before realizing I wanted
+              something that could stretch across more than one app. &quot;[sage]&quot; felt like the right way to
+              tie things together — a shared identity instead of a one-off name. &quot;[sage]SOUNDS&quot; is the
+              first one I&apos;ve shipped, but it won&apos;t be the last. There&apos;s a personal story behind the
+              brackets too, but that one&apos;s better over coffee. Dark mode was the default from day one —
+              the people who&apos;d actually use this are in dim rooms, on video calls, streaming late at night.
             </p>
             <p className="ap-body">
-              The brand took a few iterations. The app started as &quot;SageSound,&quot; which felt generic.
-              &quot;[sage]SOUNDS&quot; came from the bracket styling on the logo — it created a visual identity that
-              tied the name and the mark together. Dark mode became the default because it fits the
-              environments people actually use this in: dim recording setups, video calls, late-night streams.
+              The visual side came together later. Once I had a clear sense of what the app was, I built
+              out a proper style guide — something I could make decisions against instead of just eyeballing
+              things. That carried through everything: the soundboard, the auth page, the marketing site.
+              The auth page was its own design problem. How do you get someone from landing to actually
+              using the app without losing them in a sign-up flow? I landed on showing them a working demo
+              first. Let them play before asking them to commit. Testing was done on MacBook with Chrome,
+              iPhone and iPad with Safari. Android wasn&apos;t covered — Apple family, no apologies.
             </p>
             <p className="ap-body">
-              Google sign-in was a deliberate call. The target user — someone running a live session —
-              doesn&apos;t want to manage another password. One click removes the biggest friction point between
-              landing on the page and actually using the app.
-            </p>
-            <p className="ap-body">
-              Custom image icons started as a joke. I told my wife it&apos;d be hilarious to build a soundboard
-              with photos of our friends and the phrases they say on repeat — things caught on video. So I
-              built it. The feature required an image picker, a crop tool, cloud storage, and a rendering
-              layer that handles photos, emoji, and the absence of both — all working on mobile. Getting it
-              right took a complete redesign of the edit flow. What started as a bit of entertainment ended
-              up being one of the most genuinely useful things in the app.
-            </p>
-            <p className="ap-body">
-              Testing was done on MacBook with Chrome, iPhone with Safari, and iPad with Safari. Those are
-              the environments I use, so those are the ones I made sure worked. Android wasn&apos;t tested —
-              we&apos;re an Apple family, no apologies.
-            </p>
-            <p className="ap-body">
-              The decisions that don&apos;t show up in the UI are the ones I&apos;m most deliberate about. A
-              requirements doc before the first line of code. Documented tradeoffs. A style guide for
-              typography and color. Notes that lock in hard-won knowledge so it can&apos;t get lost. That&apos;s
-              what separates a project that works from a project that holds up.
+              V1 of this is unrecognizable. That&apos;s what actually moving on something looks like. You figure
+              things out the hard way, you write it down so you don&apos;t accidentally undo it later, and you
+              keep going. That&apos;s how I work on every product I build. [sage]SOUNDS is just the first one
+              you can get your hands on.
             </p>
           </div>
         </div>
