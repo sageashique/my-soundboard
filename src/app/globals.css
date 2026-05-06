@@ -250,38 +250,53 @@ body {
 .auth-sub-desktop { display: none; }
 .auth-sub-tablet  { display: none; }
 .auth-sub-mobile  { display: block; }
-/* Bullets */
-.auth-bullets {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 24px;
-  padding: 0;
-}
-.auth-bullets li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  color: #e2e8f0;
-  line-height: 1.4;
-  padding: 9px 12px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 8px;
-}
-.auth-bullets li span { font-size: 15px; flex-shrink: 0; }
-.auth-bullets-desktop { display: none; }
-.auth-bullets-tablet  { display: none; }
-/* Trust line */
-.auth-trust-line {
+/* Feature grid (2×2) — tablet+ */
+.auth-feature-grid {
   display: none;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+  max-width: 480px;
+  margin-bottom: 20px;
+}
+.auth-feature-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 12px;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+}
+.auth-feature-icon { font-size: 20px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+.auth-feature-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #e2e8f0;
+  line-height: 1.3;
+  margin-bottom: 3px;
+  letter-spacing: 0.01em;
+}
+.auth-feature-desc { font-size: 11px; color: #64748b; line-height: 1.45; }
+/* Trust chips — desktop only */
+.auth-trust-chips {
+  display: none;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 16px;
+}
+.auth-trust-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(99,102,241,0.08);
+  border: 1px solid rgba(99,102,241,0.22);
+  border-radius: 20px;
+  padding: 4px 11px;
   font-size: 11px;
-  color: #64748b;
-  letter-spacing: 0.04em;
-  margin-top: 14px;
-  max-width: 380px;
+  font-weight: 500;
+  color: #a5b4fc;
+  white-space: nowrap;
 }
 .auth-tap-badge {
   display: inline-block;
@@ -384,14 +399,14 @@ body {
   .auth-split-headline { font-size: 38px; }
   .auth-sub-mobile  { display: none; }
   .auth-sub-desktop { display: block; }
-  .auth-bullets-desktop { display: flex; }
-  .auth-trust-line { display: block; }
+  .auth-feature-grid { display: grid; }
+  .auth-trust-chips { display: flex; }
 }
-/* Auth tablet (769px–1023px) — medium copy, abbreviated bullets */
+/* Auth tablet (769px–1023px) — medium copy, feature grid */
 @media (min-width: 769px) and (max-width: 1023px) {
   .auth-sub-mobile  { display: none; }
   .auth-sub-tablet  { display: block; }
-  .auth-bullets-tablet { display: flex; }
+  .auth-feature-grid { display: grid; }
 }
 /* Auth mobile */
 @media (max-width: 768px) {

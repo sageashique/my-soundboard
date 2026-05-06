@@ -126,18 +126,6 @@ export default function AuthPage() {
             Upload your own sounds and fire them instantly — no plugins needed.
           </p>
 
-          {/* Bullets — desktop full, tablet abbreviated */}
-          <ul className="auth-bullets auth-bullets-desktop">
-            <li><span>🎵</span> Upload any audio — MP3, WAV, or M4A, your sounds your way</li>
-            <li><span>⚡</span> Instant playback — fires the moment you tap or press a key</li>
-            <li><span>☁️</span> Everything syncs to your account, works on any device</li>
-          </ul>
-          <ul className="auth-bullets auth-bullets-tablet">
-            <li><span>🎵</span> Upload any audio — your sounds, your way</li>
-            <li><span>⚡</span> Instant playback, no lag</li>
-            <li><span>☁️</span> Syncs to your account, any device</li>
-          </ul>
-
           {/* 3×3 animated pad grid */}
           <div className="auth-demo-grid">
             {demoPads.map((pad, i) => (
@@ -153,14 +141,59 @@ export default function AuthPage() {
             ))}
           </div>
 
+          {/* 2×2 feature grid — tablet+ */}
+          <div className="auth-feature-grid">
+            <div className="auth-feature-cell">
+              <span className="auth-feature-icon">🎵</span>
+              <div>
+                <div className="auth-feature-title">Upload any audio</div>
+                <div className="auth-feature-desc">MP3, WAV, or M4A — your sounds, your way</div>
+              </div>
+            </div>
+            <div className="auth-feature-cell">
+              <span className="auth-feature-icon">⚡</span>
+              <div>
+                <div className="auth-feature-title">Instant playback</div>
+                <div className="auth-feature-desc">Fires the moment you tap or press a key</div>
+              </div>
+            </div>
+            <div className="auth-feature-cell">
+              <span className="auth-feature-icon">🎨</span>
+              <div>
+                <div className="auth-feature-title">Fully customizable</div>
+                <div className="auth-feature-desc">Emoji or your own image on every pad</div>
+              </div>
+            </div>
+            <div className="auth-feature-cell">
+              <span className="auth-feature-icon">☁️</span>
+              <div>
+                <div className="auth-feature-title">Cloud synced</div>
+                <div className="auth-feature-desc">Your setup on any device, always ready</div>
+              </div>
+            </div>
+          </div>
+
           {/* Split CTA row */}
           <div className="auth-cta-row">
             <Link href="/demo" className="auth-cta-btn auth-cta-demo">Try the Demo</Link>
             <Link href="/about" className="auth-cta-btn auth-cta-about">About the App</Link>
           </div>
 
-          {/* Trust line — desktop only */}
-          <p className="auth-trust-line">Free to start · No credit card · Works in any browser</p>
+          {/* Trust chips — desktop only */}
+          <div className="auth-trust-chips">
+            {[
+              'Free to start',
+              'No credit card',
+              'Works in any browser',
+            ].map(label => (
+              <span key={label} className="auth-trust-chip">
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                  <polyline points="2,6 5,9 10,3" stroke="#818cf8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                {label}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
