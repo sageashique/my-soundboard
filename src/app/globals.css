@@ -1014,6 +1014,63 @@ input[type='range']::-webkit-slider-thumb {
   flex-shrink: 0;
 }
 .pad.fire .pad-label { display: none; }
+/* ── Demo tooltip ── */
+.demo-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-20%);
+  background: #ffffff;
+  color: #0f172a;
+  border-radius: 12px;
+  padding: 12px 14px;
+  width: 192px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.10);
+  z-index: 200;
+  pointer-events: all;
+}
+.demo-tooltip-text {
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
+  padding-right: 18px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 500;
+}
+.demo-tooltip-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  line-height: 1;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0;
+}
+.demo-tooltip-close:hover { color: #475569; }
+.demo-tooltip-arrow {
+  position: absolute;
+  bottom: -7px;
+  left: 20%;
+  width: 14px;
+  height: 7px;
+  overflow: hidden;
+}
+.demo-tooltip-arrow::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transform: rotate(45deg);
+  transform-origin: center;
+}
+
 .pad.fire .pad-wave { display: flex; }
 .pad-wave span { width: 3px; height: 3px; border-radius: 2px; background: currentColor; }
 .pad.fire .pad-wave span:nth-child(1) { animation: waveform-bar 0.36s ease-in-out 0s infinite alternate; }

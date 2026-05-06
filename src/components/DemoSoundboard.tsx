@@ -93,6 +93,16 @@ export default function DemoSoundboard() {
   const [firingPads, setFiringPads] = useState<Set<number>>(new Set())
   const [firingStop, setFiringStop] = useState(false)
   const [status, setStatus] = useState<string | null>(null)
+  const [showTooltip, setShowTooltip] = useState(false)
+
+  useEffect(() => {
+    if (!localStorage.getItem('sage-tooltip-dismissed')) setShowTooltip(true)
+  }, [])
+
+  function dismissTooltip() {
+    setShowTooltip(false)
+    localStorage.setItem('sage-tooltip-dismissed', '1')
+  }
 
   const [editLabel, setEditLabel] = useState('')
   const [editColor, setEditColor] = useState('red')
@@ -397,6 +407,7 @@ export default function DemoSoundboard() {
                 firingPads.has(pad.index) ? 'fire' : '',
                 editMode && pad.index !== selPad ? 'edit-mode' : '',
               ].filter(Boolean).join(' ')}
+              style={activeBoardIdx === 0 && pad.index === 1 && showTooltip ? { overflow: 'visible', zIndex: 100 } : undefined}
               onClick={() => handlePadClick(pad.index)}
               onContextMenu={e => { e.preventDefault(); openEdit(pad.index) }}
             >
@@ -407,6 +418,13 @@ export default function DemoSoundboard() {
               }
               <span className="pad-label">{pad.label}</span>
               <div className="pad-wave" aria-hidden><span/><span/><span/></div>
+              {activeBoardIdx === 0 && pad.index === 1 && showTooltip && (
+                <div className="demo-tooltip" onClick={e => e.stopPropagation()}>
+                  <button className="demo-tooltip-close" onClick={dismissTooltip} aria-label="Dismiss">×</button>
+                  <p className="demo-tooltip-text">Start here 👋<br/>Tap to hear a message from Sage.</p>
+                  <div className="demo-tooltip-arrow" />
+                </div>
+              )}
             </div>
           ))}
 
