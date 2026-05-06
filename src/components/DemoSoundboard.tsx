@@ -421,7 +421,9 @@ export default function DemoSoundboard() {
               {activeBoardIdx === 0 && pad.index === 0 && showTooltip && (
                 <div className="demo-tooltip" onClick={e => e.stopPropagation()}>
                   <button className="demo-tooltip-close" onClick={dismissTooltip} aria-label="Dismiss">×</button>
-                  <p className="demo-tooltip-text">Start here 👋<br/>Tap to hear a message from Sage.</p>
+                  <p className="demo-tooltip-title">☝️ Start here!</p>
+                  <hr className="demo-tooltip-divider" />
+                  <p className="demo-tooltip-text">Tap to hear a message from Sage. 👋</p>
                   <div className="demo-tooltip-arrow" />
                 </div>
               )}
