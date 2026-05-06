@@ -1130,9 +1130,22 @@ export default function Soundboard({ user }: Props) {
 
       <div className="divider" />
 
-      {/* Controls row: Edit Pads + Settings */}
+      {/* Controls row: Edit Pads / Reset All + Settings */}
       <div className="controls-bar controls-bar-split">
-        {!editing && (
+        {editing ? (
+          <button
+            className="btn btn-danger-outline btn-reset-all"
+            onClick={() => setModal({
+              title: 'Reset All Pads to Default',
+              body: 'This will clear all custom sounds, labels, colors, and icons for every pad and restore the original defaults. This cannot be undone.',
+              okLabel: 'Yes, reset all pads',
+              style: 'danger',
+              cb: handleResetAll,
+            })}
+          >
+            Reset All Pads to Default
+          </button>
+        ) : (
           <button
             className="btn btn-outline"
             onClick={() => setEditing(true)}
@@ -1192,23 +1205,6 @@ export default function Soundboard({ user }: Props) {
         </div>
       </div>
 
-      {/* Reset All — only visible in edit mode, lives under theme/edit controls */}
-      {editing && (
-        <div className="controls-bar controls-reset-row">
-          <button
-            className="btn btn-danger-outline btn-reset-all"
-            onClick={() => setModal({
-              title: 'Reset All Pads to Default',
-              body: 'This will clear all custom sounds, labels, colors, and icons for every pad and restore the original defaults. This cannot be undone.',
-              okLabel: 'Yes, reset all pads',
-              style: 'danger',
-              cb: handleResetAll,
-            })}
-          >
-            Reset All Pads to Default
-          </button>
-        </div>
-      )}
 
       {/* Edit Pad Modal */}
       {editing && selectedPad && (
@@ -1243,7 +1239,7 @@ export default function Soundboard({ user }: Props) {
               <div className="ep-controls">
 
                 {/* Source card */}
-                <div className="ep-source-card">
+                <div className="ep-card">
                   <div className="ep-group">
                     <span className="ep-label">Source</span>
                     <div className="ep-source-toggle">
@@ -1310,8 +1306,8 @@ export default function Soundboard({ user }: Props) {
                   )}
                 </div>
 
-                {/* Icon — Emoji or Image */}
-                <div className="ep-group">
+                {/* Icon card */}
+                <div className="ep-card">
                   <span className="ep-label">Icon</span>
                   <div className="icon-tab-bar">
                     <button
@@ -1382,8 +1378,8 @@ export default function Soundboard({ user }: Props) {
                   )}
                 </div>
 
-                {/* Label */}
-                <div className="ep-group">
+                {/* Label card */}
+                <div className="ep-card">
                   <span className="ep-label">Label</span>
                   <input
                     type="text" placeholder="Pad label..." maxLength={20}
@@ -1391,8 +1387,8 @@ export default function Soundboard({ user }: Props) {
                   />
                 </div>
 
-                {/* Color */}
-                <div className="ep-group">
+                {/* Color card */}
+                <div className="ep-card">
                   <span className="ep-label">Color</span>
                   <div className="color-row">
                     {COLORS.map(c => (

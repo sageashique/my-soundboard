@@ -962,6 +962,9 @@ input[type='range']::-webkit-slider-thumb {
 .controls-bar-split {
   justify-content: space-between;
 }
+.controls-bar-end {
+  justify-content: flex-end;
+}
 .ctrl-toggle {
   display: flex;
   background: var(--surface2);
@@ -1206,7 +1209,7 @@ input[type='range']::-webkit-slider-thumb {
   text-transform: uppercase;
   color: var(--text2);
 }
-.ep-source-card {
+.ep-card {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1215,6 +1218,10 @@ input[type='range']::-webkit-slider-thumb {
   border-radius: 12px;
   padding: 12px 14px;
 }
+.ep-card input[type='text'] { width: 100%; font-size: 16px; }
+.ep-card select { font-size: 16px; }
+.ep-card .color-row { gap: 10px; }
+.ep-card .cdot { width: 28px; height: 28px; }
 .ep-sub-group {
   display: flex;
   flex-direction: column;
@@ -1295,7 +1302,6 @@ input[type='range']::-webkit-slider-thumb {
 .reset-all-section { width: 100%; max-width: 420px; margin-left: auto; margin-right: auto; margin-top: 12px; padding: 12px 0 8px; border-top: 1px solid var(--border); }
 .bottom-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; }
 /* Reset All row — only rendered when editing, sits under theme/edit controls */
-.controls-reset-row { justify-content: flex-start; padding: 2px 0; margin-bottom: 16px; }
 .btn-reset-all { font-size: 12px; }
 .reset-confirm-msg { font-size: 13px; color: var(--text2); }
 .reset-confirm-actions { display: flex; gap: 10px; margin-top: 12px; }

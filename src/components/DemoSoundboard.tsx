@@ -429,7 +429,7 @@ export default function DemoSoundboard() {
         <div className="divider" />
 
         {/* Controls row: Edit pads + Settings (below the grid, matching user mode position) */}
-        <div className="controls-bar controls-bar-split">
+        <div className={`controls-bar ${editMode ? 'controls-bar-end' : 'controls-bar-split'}`}>
           {!editMode && (
             <button
               className="btn btn-outline"
@@ -533,19 +533,19 @@ export default function DemoSoundboard() {
               </div>
               <div className="ep-controls">
                 {activeBoardIdx === 1 && (
-                  <div className="ep-group">
+                  <div className="ep-card">
                     <div className="ep-label">Sound</div>
-                    <select value={editSound} onChange={e => setEditSound(e.target.value)} style={{ width: '100%' }}>
+                    <select value={editSound} onChange={e => setEditSound(e.target.value)}>
                       {SOUNDS.map(s => <option key={s} value={s}>{SOUND_ICONS[s]} {SOUND_LABELS[s]}</option>)}
                     </select>
                   </div>
                 )}
-                <div className="ep-group">
+                <div className="ep-card">
                   <div className="ep-label">Label</div>
                   <input type="text" value={editLabel} onChange={e => setEditLabel(e.target.value)}
-                    placeholder="Pad label" maxLength={16} style={{ width: '100%' }} />
+                    placeholder="Pad label" maxLength={16} />
                 </div>
-                <div className="ep-group">
+                <div className="ep-card">
                   <div className="ep-label">Icon</div>
                   <div className="icon-tab-bar">
                     <button
@@ -558,7 +558,7 @@ export default function DemoSoundboard() {
                     >Image</button>
                   </div>
                   {demoIconTab === 'emoji' && (
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                    <div className="ep-emoji-row">
                       <div className="emoji-picker-wrap">
                         <button className="emoji-trigger" onClick={() => setShowEmojiPicker(p => !p)} title="Pick emoji">
                           {editIcon}
@@ -570,7 +570,7 @@ export default function DemoSoundboard() {
                           </div>
                         )}
                       </div>
-                      <span style={{ fontSize: 11, color: 'var(--text3)' }}>Click to pick</span>
+                      <span className="ep-emoji-hint">Click to pick</span>
                     </div>
                   )}
                   {demoIconTab === 'image' && (
@@ -581,7 +581,7 @@ export default function DemoSoundboard() {
                     </div>
                   )}
                 </div>
-                <div className="ep-group">
+                <div className="ep-card">
                   <div className="ep-label">Color</div>
                   <div className="color-row">
                     {COLORS.map(c => (
