@@ -1215,7 +1215,18 @@ export default function Soundboard({ user }: Props) {
 
             {/* Header */}
             <div className="ep-header">
-              <span className="ep-title">Edit Pad</span>
+              <div className="ep-header-left">
+                <div className={`ep-preview-pad c-${selColor} ep-header-pad`}>
+                  {(() => {
+                    const previewSrc = pendingIconPreview ?? (iconTab === 'image' ? pads[selPad!]?.iconImgUrl : null)
+                    return previewSrc
+                      // eslint-disable-next-line @next/next/no-img-element
+                      ? <img src={previewSrc} alt="" className="ep-header-pad-img" />
+                      : <span className="ep-preview-icon">{editEmoji || SOUND_ICONS[editSound] || '🎵'}</span>
+                  })()}
+                </div>
+                <span className="ep-title">Edit Pad</span>
+              </div>
               <button className="ep-close" onClick={handleCancelEdit} aria-label="Close">✕</button>
             </div>
 
