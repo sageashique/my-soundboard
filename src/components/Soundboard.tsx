@@ -180,6 +180,7 @@ export default function Soundboard({ user }: Props) {
   const [iconTab, setIconTab] = useState<'emoji' | 'image'>('emoji')
   const [pendingIconBlob, setPendingIconBlob] = useState<Blob | null>(null)
   const [pendingIconPreview, setPendingIconPreview] = useState<string | null>(null)
+  const [replacingIcon, setReplacingIcon] = useState(false)
   const [showResetOptions, setShowResetOptions] = useState(false)
   const boardSwitcherRef = useRef<HTMLDivElement>(null)
 
@@ -499,6 +500,7 @@ export default function Soundboard({ user }: Props) {
     setIconTab(p.iconImgUrl ? 'image' : 'emoji')
     setPendingIconBlob(null)
     setPendingIconPreview(null)
+    setReplacingIcon(false)
     setShowResetOptions(false)
     setStatus(`Pad [${p.keyLabel}] selected`)
   }
@@ -650,6 +652,7 @@ export default function Soundboard({ user }: Props) {
         if (p.iconImgUrl) URL.revokeObjectURL(p.iconImgUrl)
         if (pendingIconPreview) { URL.revokeObjectURL(pendingIconPreview); setPendingIconPreview(null) }
         setPendingIconBlob(null)
+        setReplacingIcon(false)
         setPads(prev => prev.map((pd, i) => i === selPad
           ? { ...pd, iconImgPath: null, iconImgUrl: null }
           : pd
@@ -921,6 +924,7 @@ export default function Soundboard({ user }: Props) {
     setShowEmojiPicker(false)
     setPendingIconBlob(null)
     if (pendingIconPreview) { URL.revokeObjectURL(pendingIconPreview); setPendingIconPreview(null) }
+    setReplacingIcon(false)
     setShowResetOptions(false)
     setSelPad(null)
   }
@@ -1350,7 +1354,7 @@ export default function Soundboard({ user }: Props) {
                   )}
 
                   {iconTab === 'image' && (
-                    pendingIconPreview || pads[selPad!]?.iconImgUrl
+                    (pendingIconPreview || pads[selPad!]?.iconImgUrl) && !replacingIcon
                       ? (
                         <div className="icp-preview-wrap">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1361,7 +1365,11 @@ export default function Soundboard({ user }: Props) {
                           />
                           <button
                             className="btn btn-outline icp-change-btn"
-                            onClick={() => { if (pendingIconPreview) { URL.revokeObjectURL(pendingIconPreview); setPendingIconPreview(null) }; setPendingIconBlob(null) }}
+                            onClick={() => {
+                              if (pendingIconPreview) { URL.revokeObjectURL(pendingIconPreview); setPendingIconPreview(null) }
+                              setPendingIconBlob(null)
+                              setReplacingIcon(true)
+                            }}
                           >
                             Change
                           </button>
@@ -1371,8 +1379,12 @@ export default function Soundboard({ user }: Props) {
                           onCrop={blob => {
                             setPendingIconBlob(blob)
                             setPendingIconPreview(URL.createObjectURL(blob))
+                            setReplacingIcon(false)
                           }}
-                          onCancel={() => { if (!pads[selPad!]?.iconImgUrl) setIconTab('emoji') }}
+                          onCancel={() => {
+                            setReplacingIcon(false)
+                            if (!pads[selPad!]?.iconImgUrl) setIconTab('emoji')
+                          }}
                         />
                       )
                   )}
