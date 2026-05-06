@@ -1992,6 +1992,60 @@ input[type='text'] { width: 130px; }
 
 /* ── ICON PICKER — tabs (Emoji / Image) ───────────────────── */
 
+/* ── CROP OVERLAY ──────────────────────────────────────────── */
+.icp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+.icp-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.22);
+}
+.icp-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+/* In overlay: crop area fills available space, buttons always visible */
+.icp-modal .icp-crop-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.icp-modal .icp-crop-area {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+}
+.icp-modal .icp-crop-img { max-height: none; }
+@media (max-width: 599px) {
+  .icp-overlay { padding: 0; align-items: flex-end; }
+  .icp-modal {
+    border-radius: 20px 20px 0 0;
+    border-bottom: none;
+    height: 90svh;
+    max-width: 100%;
+  }
+}
+
 /* ── IMAGE CROP PICKER (ImageCropPicker.tsx) ──────────────── */
 .icp-file-zone {
   display: flex;

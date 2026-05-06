@@ -1,16 +1,14 @@
 'use client'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import ReactCrop, { centerCrop, makeAspectCrop, type Crop, type PixelCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 
 interface Props {
   onCrop: (blob: Blob) => void
   onCancel: () => void
-  onSrcChange?: (hasSrc: boolean) => void
-  cropFnRef?: React.MutableRefObject<(() => void) | null>
 }
 
-export default function ImageCropPicker({ onCrop, onCancel, onSrcChange, cropFnRef }: Props) {
+export default function ImageCropPicker({ onCrop, onCancel }: Props) {
   const [src, setSrc] = useState<string | null>(null)
   const [crop, setCrop] = useState<Crop>()
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
@@ -21,10 +19,7 @@ export default function ImageCropPicker({ onCrop, onCancel, onSrcChange, cropFnR
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = () => {
-      setSrc(reader.result as string)
-      onSrcChange?.(true)
-    }
+    reader.onload = () => setSrc(reader.result as string)
     reader.readAsDataURL(file)
     e.target.value = ''
   }
@@ -52,24 +47,8 @@ export default function ImageCropPicker({ onCrop, onCancel, onSrcChange, cropFnR
       completedCrop.height * scaleY,
       0, 0, 200, 200
     )
-    canvas.toBlob(blob => {
-      if (blob) {
-        onSrcChange?.(false)
-        onCrop(blob)
-      }
-    }, 'image/jpeg', 0.8)
-  }, [completedCrop, onCrop, onSrcChange])
-
-  // Keep ref in sync so parent's footer button always calls the latest version
-  useEffect(() => {
-    if (cropFnRef) cropFnRef.current = src ? handleCrop : null
-  })
-
-  const handleCancel = () => {
-    setSrc(null)
-    onSrcChange?.(false)
-    onCancel()
-  }
+    canvas.toBlob(blob => { if (blob) onCrop(blob) }, 'image/jpeg', 0.8)
+  }, [completedCrop, onCrop])
 
   if (!src) {
     return (
@@ -82,7 +61,7 @@ export default function ImageCropPicker({ onCrop, onCancel, onSrcChange, cropFnR
           style={{ display: 'none' }}
         />
         <span className="icp-file-icon">🖼️</span>
-        <span className="icp-file-text">Click to choose an image</span>
+        <span className="icp-file-text">Tap to choose an image</span>
         <span className="icp-file-sub">JPG · PNG · WebP</span>
       </div>
     )
@@ -109,15 +88,12 @@ export default function ImageCropPicker({ onCrop, onCancel, onSrcChange, cropFnR
           />
         </ReactCrop>
       </div>
-      {/* Own buttons only shown when parent footer isn't handling them */}
-      {!cropFnRef && (
-        <div className="icp-crop-actions">
-          <button className="btn btn-outline" onClick={handleCancel}>Cancel</button>
-          <button className="btn btn-solid" onClick={handleCrop} disabled={!completedCrop?.width}>
-            Use image
-          </button>
-        </div>
-      )}
+      <div className="icp-crop-actions">
+        <button className="btn btn-outline" onClick={onCancel}>Cancel</button>
+        <button className="btn btn-solid" onClick={handleCrop} disabled={!completedCrop?.width}>
+          Use image
+        </button>
+      </div>
     </div>
   )
 }
