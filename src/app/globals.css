@@ -223,17 +223,17 @@ body {
   transition: background 0.15s, border-color 0.15s;
 }
 .auth-cta-demo {
-  border: 1px solid rgba(129,140,248,0.45);
-  background: rgba(79,70,229,0.14);
+  border: 1px solid #6366f1;
+  background: #6366f1;
+  color: #ffffff;
+}
+.auth-cta-demo:hover { background: #4f46e5; border-color: #4f46e5; }
+.auth-cta-about {
+  border: 1px solid rgba(129,140,248,0.35);
+  background: rgba(79,70,229,0.08);
   color: #a5b4fc;
 }
-.auth-cta-demo:hover { background: rgba(79,70,229,0.24); border-color: rgba(129,140,248,0.6); }
-.auth-cta-about {
-  border: 1px solid rgba(100,116,139,0.35);
-  background: rgba(100,116,139,0.08);
-  color: #94a3b8;
-}
-.auth-cta-about:hover { background: rgba(100,116,139,0.16); border-color: rgba(100,116,139,0.5); }
+.auth-cta-about:hover { background: rgba(79,70,229,0.16); border-color: rgba(129,140,248,0.55); }
 .auth-split-brand {
   position: relative;
   z-index: 2;

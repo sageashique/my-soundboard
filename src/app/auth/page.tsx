@@ -191,8 +191,8 @@ export default function AuthPage() {
 
           {/* Split CTA row */}
           <div className="auth-cta-row">
-            <Link href="/demo" className="auth-cta-btn auth-cta-demo">Try the Demo</Link>
             <Link href="/about" className="auth-cta-btn auth-cta-about">About the App</Link>
+            <Link href="/demo" className="auth-cta-btn auth-cta-demo">Try the Demo</Link>
           </div>
 
           {/* Trust chips — desktop only */}
