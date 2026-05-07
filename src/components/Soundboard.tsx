@@ -13,6 +13,10 @@ const EmojiPicker = dynamic(() => import('@emoji-mart/react'), { ssr: false })
 const ImageCropPicker = dynamic(() => import('./ImageCropPicker'), { ssr: false })
 
 const STORAGE_BUCKET = 'custom-tracks'
+const MAX_FILE_MB = 10
+const LUFS_TARGET = -14
+const TRUE_PEAK_CEILING = 0.891  // -1 dBFS, leaves headroom for HTMLAudioElement volume scaling
+const VALID_AUDIO_MIMES = ['audio/mpeg', 'audio/wav', 'audio/mp4']
 
 // Detect audio MIME type from raw bytes (magic numbers)
 // Supported formats: MP3, WAV, M4A
@@ -43,7 +47,7 @@ function detectAudioMime(buf: ArrayBuffer): string {
 // Clipping guard: true peak of the ORIGINAL signal is measured and the gain is
 // capped so the output never exceeds -1 dBFS (≈ 0.891), leaving headroom for
 // the HTMLAudioElement's own volume scaling.
-async function computeNormGain(raw: ArrayBuffer, targetLufs = -14): Promise<number> {
+async function computeNormGain(raw: ArrayBuffer, targetLufs = LUFS_TARGET): Promise<number> {
   try {
     // Step 1: decode audio (dummy 1-frame context is fine for decoding)
     const decCtx = new OfflineAudioContext(1, 1, 44100)
@@ -103,9 +107,7 @@ async function computeNormGain(raw: ArrayBuffer, targetLufs = -14): Promise<numb
     const targetMs = Math.pow(10, (targetLufs + 0.691) / 10)
     const gain = Math.sqrt(targetMs / meanSq)
 
-    // Clipping guard: keep true peak below -1 dBFS (0.891) after scaling
-    const ceiling = 0.891
-    const safeGain = peak * gain > ceiling ? ceiling / peak : gain
+    const safeGain = peak * gain > TRUE_PEAK_CEILING ? TRUE_PEAK_CEILING / peak : gain
 
     // Cap boost at 8× to prevent amplifying near-silent noise floors
     return Math.min(safeGain, 8)
@@ -197,7 +199,7 @@ export default function Soundboard({ user }: Props) {
   // These are not AudioNodes so they live in a separate set; both sets must be
   // consulted for stop-all and overlap-off logic.
   // Map<element, customGain> so handleVolume can repatch volume on playing elements
-  const activeHtmlAudiosRef = useRef<Map<HTMLAudioElement, number>>(new Map())
+  const activeHtmlAudiosRef = useRef<Map<HTMLAudioElement, { gain: number; url: string }>>(new Map())
 
   // Pad refs for flash animation
   const padRefs = useRef<(PadHandle | null)[]>([])
@@ -241,7 +243,7 @@ export default function Soundboard({ user }: Props) {
     // Repatch volume on every currently-playing HTMLAudioElement so the slider
     // affects audio that's already in flight (custom uploads use HTMLAudioElement,
     // not Web Audio, so they aren't covered by the master gain node above).
-    activeHtmlAudiosRef.current.forEach((gain, audio) => {
+    activeHtmlAudiosRef.current.forEach(({ gain }, audio) => {
       audio.volume = Math.min(v * gain, 1)
     })
   }
@@ -259,7 +261,7 @@ export default function Soundboard({ user }: Props) {
     }
     activeSourcesRef.current.forEach(s => { try { s.stop() } catch { /* already stopped */ } })
     activeSourcesRef.current.clear()
-    activeHtmlAudiosRef.current.forEach((_, a) => { try { a.pause(); a.currentTime = 0 } catch { /* already ended */ } })
+    activeHtmlAudiosRef.current.forEach(({ url }, a) => { try { a.pause(); a.currentTime = 0 } catch { /* already ended */ } URL.revokeObjectURL(url) })
     activeHtmlAudiosRef.current.clear()
     currentSourceRef.current = null
     padRefs.current.forEach(r => r?.stopFire())
@@ -278,7 +280,7 @@ export default function Soundboard({ user }: Props) {
     if (!overlapMode) {
       activeSourcesRef.current.forEach(s => { try { s.stop() } catch { /* already ended */ } })
       activeSourcesRef.current.clear()
-      activeHtmlAudiosRef.current.forEach((_, a) => { try { a.pause(); a.currentTime = 0 } catch { /* already ended */ } })
+      activeHtmlAudiosRef.current.forEach(({ url }, a) => { try { a.pause(); a.currentTime = 0 } catch { /* already ended */ } URL.revokeObjectURL(url) })
       activeHtmlAudiosRef.current.clear()
       currentSourceRef.current = null
       padRefs.current.forEach(r => r?.stopFire())
@@ -297,7 +299,7 @@ export default function Soundboard({ user }: Props) {
         const url = URL.createObjectURL(blob)
         const htmlAudio = new Audio(url)
         htmlAudio.volume = Math.min(volume * (p.customGain ?? 1), 1)
-        activeHtmlAudiosRef.current.set(htmlAudio, p.customGain ?? 1)
+        activeHtmlAudiosRef.current.set(htmlAudio, { gain: p.customGain ?? 1, url })
         padRefs.current[index]?.startFire()
         setFiringPads(prev => new Set([...prev, index]))
         htmlAudio.play()
@@ -363,6 +365,8 @@ export default function Soundboard({ user }: Props) {
     if (error) throw error
     // If the user switched boards again while this was loading, discard results
     if (loadingBoardRef.current !== boardId) return
+    // Revoke any existing icon blob URLs before overwriting pads
+    setPads(prev => { prev.forEach(p => { if (p.iconImgUrl) URL.revokeObjectURL(p.iconImgUrl) }); return prev })
     const loaded = defaultPads()
     if (data && data.length > 0) {
       for (const row of data) {
@@ -746,8 +750,6 @@ export default function Soundboard({ user }: Props) {
   }
 
   // ── File upload ────────────────────────────────────────────────
-  const MAX_FILE_MB = 10
-  const VALID_AUDIO_MIMES = ['audio/mpeg', 'audio/wav', 'audio/mp4']
   async function handleFile(file: File) {
     if (file.size > MAX_FILE_MB * 1024 * 1024) { setStatus(`File too large — max ${MAX_FILE_MB} MB`); return }
     try {
