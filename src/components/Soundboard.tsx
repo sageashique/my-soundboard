@@ -565,7 +565,8 @@ export default function Soundboard({ user }: Props) {
           setPendingBuf(null); setPendingFileName(null); pendingRawRef.current = null
           setStatus(`Saved → [${p.keyLabel}] ${label}`, 'active')
         } catch (err) {
-          setStatus(`Upload failed: ${(err as Error).message}`)
+          console.error('Upload failed:', err)
+          setStatus('Upload failed. Please try again.')
           return
         }
       } else {
@@ -753,7 +754,7 @@ export default function Soundboard({ user }: Props) {
       setPendingFileName(name)
       if (!editLabel) setEditLabel(name.slice(0, 20))
       // Compute normalization gain in the background
-      computeNormGain(raw).then(g => setPendingGain(g))
+      computeNormGain(raw).then(g => setPendingGain(g)).catch(() => setPendingGain(1))
       // Try to decode for immediate playback preview; not all formats decode on all
       // browsers (e.g. M4A on Android Chrome). We still allow upload either way.
       try {

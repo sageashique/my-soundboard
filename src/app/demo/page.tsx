@@ -1,4 +1,5 @@
 import DemoSoundboard from '@/components/DemoSoundboard'
+import ErrorBoundary from '@/components/ErrorBoundary'
 
 export const metadata = {
   title: '[sage]SOUNDS — Demo',
@@ -6,5 +7,5 @@ export const metadata = {
 }
 
 export default function DemoPage() {
-  return <DemoSoundboard />
+  return <ErrorBoundary><DemoSoundboard /></ErrorBoundary>
 }

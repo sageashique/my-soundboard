@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import Soundboard from '@/components/Soundboard'
+import ErrorBoundary from '@/components/ErrorBoundary'
 
 export default function SoundboardPage() {
   const router = useRouter()
@@ -24,5 +25,5 @@ export default function SoundboardPage() {
 
   if (checking) return <div className="loading-screen">Loading…</div>
   if (!user) return null
-  return <Soundboard user={user} />
+  return <ErrorBoundary><Soundboard user={user} /></ErrorBoundary>
 }

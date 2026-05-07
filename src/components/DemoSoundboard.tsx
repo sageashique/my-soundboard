@@ -96,12 +96,12 @@ export default function DemoSoundboard() {
   const [showTooltip, setShowTooltip] = useState(false)
 
   useEffect(() => {
-    if (!localStorage.getItem('sage-tooltip-dismissed')) setShowTooltip(true)
+    if (!localStorage.getItem('[sage]:soundboard:tooltip-dismissed')) setShowTooltip(true)
   }, [])
 
   function dismissTooltip() {
     setShowTooltip(false)
-    localStorage.setItem('sage-tooltip-dismissed', '1')
+    localStorage.setItem('[sage]:soundboard:tooltip-dismissed', '1')
   }
 
   const [editLabel, setEditLabel] = useState('')
