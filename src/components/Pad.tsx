@@ -1,5 +1,5 @@
 'use client'
-import { forwardRef, useImperativeHandle, useRef } from 'react'
+import { forwardRef, memo, useImperativeHandle, useRef } from 'react'
 import type { PadState } from '@/lib/types'
 
 export interface PadHandle {
@@ -14,7 +14,7 @@ interface Props {
   onClick: () => void
 }
 
-const Pad = forwardRef<PadHandle, Props>(function Pad({ pad, selected, editMode, onClick }, ref) {
+const Pad = memo(forwardRef<PadHandle, Props>(function Pad({ pad, selected, editMode, onClick }, ref) {
   const elRef = useRef<HTMLDivElement>(null)
 
   useImperativeHandle(ref, () => ({
@@ -43,6 +43,6 @@ const Pad = forwardRef<PadHandle, Props>(function Pad({ pad, selected, editMode,
       <div className="pad-wave" aria-hidden><span/><span/><span/></div>
     </div>
   )
-})
+}))
 
 export default Pad

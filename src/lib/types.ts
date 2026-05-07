@@ -25,12 +25,6 @@ export interface PadState extends PadConfig {
   iconImgUrl?: string | null
 }
 
-export interface Board {
-  id: string
-  name: string
-  created_at: string
-}
-
 export interface ModalState {
   title: string
   body: string

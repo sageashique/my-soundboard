@@ -205,6 +205,9 @@ export default function Soundboard({ user }: Props) {
   // Keyboard held keys
   const heldRef = useRef(new Set<string>())
 
+  // Tracks which board was most recently requested — guards against rapid switching
+  const loadingBoardRef = useRef<string | null>(null)
+
   // Raw audio buffer + detected MIME type for upload
   const pendingRawRef = useRef<ArrayBuffer | null>(null)
   const pendingFileTypeRef = useRef<string>('audio/mpeg')
@@ -353,10 +356,13 @@ export default function Soundboard({ user }: Props) {
   const activeBoard = boards.find(b => b.id === activeBoardId)
 
   async function loadPadsForBoard(boardId: string) {
+    loadingBoardRef.current = boardId
     const { data, error } = await supabase
       .from('pad_configs').select('*')
       .eq('user_id', user.id).eq('board_id', boardId)
     if (error) throw error
+    // If the user switched boards again while this was loading, discard results
+    if (loadingBoardRef.current !== boardId) return
     const loaded = defaultPads()
     if (data && data.length > 0) {
       for (const row of data) {
@@ -509,7 +515,7 @@ export default function Soundboard({ user }: Props) {
 
   // ── Save pad ───────────────────────────────────────────────────
   async function handleSave() {
-    if (selPad === null) return
+    if (selPad === null || selPad < 0 || selPad >= pads.length) return
     const p = pads[selPad]
 
     // Handle icon image upload (independent of sound source)
@@ -741,13 +747,13 @@ export default function Soundboard({ user }: Props) {
 
   // ── File upload ────────────────────────────────────────────────
   const MAX_FILE_MB = 10
+  const VALID_AUDIO_MIMES = ['audio/mpeg', 'audio/wav', 'audio/mp4']
   async function handleFile(file: File) {
-    const isAudio = file.type.startsWith('audio/') || file.type === 'video/mp4'
-    if (!isAudio) { setStatus('Unsupported file — use MP3, WAV, or M4A'); return }
     if (file.size > MAX_FILE_MB * 1024 * 1024) { setStatus(`File too large — max ${MAX_FILE_MB} MB`); return }
     try {
       const raw = await file.arrayBuffer()
-      const mime = file.type || detectAudioMime(raw)
+      const mime = detectAudioMime(raw)
+      if (!VALID_AUDIO_MIMES.includes(mime)) { setStatus('Unsupported file — use MP3, WAV, or M4A'); return }
       pendingFileTypeRef.current = mime
       pendingRawRef.current = raw
       const name = file.name.replace(/\.[^.]+$/, '')
